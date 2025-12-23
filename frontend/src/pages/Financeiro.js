@@ -94,6 +94,16 @@ export default function Financeiro() {
     }
   };
 
+  const handleMarcarPago = async (despesaId) => {
+    try {
+      await axios.put(`${API}/despesas/${despesaId}/status?status=pago`, {}, getAuthHeader());
+      toast.success('Despesa marcada como paga!');
+      fetchData();
+    } catch (error) {
+      toast.error('Erro ao atualizar status');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       tipo: 'agua',
