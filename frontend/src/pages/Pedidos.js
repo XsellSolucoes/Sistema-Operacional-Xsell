@@ -1002,22 +1002,50 @@ export default function Pedidos() {
               <div className="border-t pt-4">
                 <h3 className="font-semibold text-lg mb-4">Adicionar Itens</h3>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-4 space-y-2">
-                      <Label>Produto</Label>
-                      <Select value={novoItem.produto_id} onValueChange={handleProdutoChange}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {produtos.map(produto => (
-                            <SelectItem key={produto.id} value={produto.id}>
-                              {produto.codigo} - {produto.descricao}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div className="grid grid-cols-5 gap-4">
+                    <div className="col-span-2 space-y-2">
+                      <Label>Código do Produto</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={novoItem.codigo_produto}
+                          onChange={(e) => setNovoItem({...novoItem, codigo_produto: e.target.value})}
+                          placeholder="PROD-000001"
+                          data-testid="codigo-produto-input"
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={buscarProdutoPorCodigo}
+                          disabled={buscandoProduto}
+                          size="icon"
+                        >
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
+                    <div className="col-span-3 space-y-2">
+                      <Label>Produto {novoItem.produto_nome && '(Encontrado)'}</Label>
+                      {novoItem.produto_nome ? (
+                        <div className="p-2 bg-green-50 border border-green-200 rounded-md text-sm">
+                          {novoItem.produto_nome}
+                        </div>
+                      ) : (
+                        <Select value={novoItem.produto_id} onValueChange={handleProdutoChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Ou selecione da lista" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {produtos.map(produto => (
+                              <SelectItem key={produto.id} value={produto.id}>
+                                {produto.codigo} - {produto.descricao}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-12 gap-4">
                     <div className="col-span-2 space-y-2">
                       <Label>Qtd</Label>
                       <Input
