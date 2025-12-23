@@ -99,7 +99,8 @@ export default function Produtos() {
       descricao: produto.descricao,
       preco_compra: produto.preco_compra.toString(),
       preco_venda: produto.preco_venda.toString(),
-      margem: produto.margem.toString()
+      margem: produto.margem.toString(),
+      fornecedor: produto.fornecedor || ''
     });
     setOpen(true);
   };
