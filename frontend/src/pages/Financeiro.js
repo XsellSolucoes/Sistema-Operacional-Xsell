@@ -304,6 +304,7 @@ export default function Financeiro() {
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -317,7 +318,24 @@ export default function Financeiro() {
                     <TableCell>
                       {new Date(despesa.data_vencimento).toLocaleDateString('pt-BR')}
                     </TableCell>
-                    <TableCell className="capitalize">{despesa.status}</TableCell>
+                    <TableCell>
+                      <Badge variant={despesa.status === 'pago' ? 'default' : 'secondary'}>
+                        {despesa.status.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {despesa.status === 'pendente' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMarcarPago(despesa.id)}
+                          data-testid={`marcar-pago-${despesa.id}`}
+                        >
+                          <Check className="h-4 w-4 mr-2" />
+                          Marcar Pago
+                        </Button>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
