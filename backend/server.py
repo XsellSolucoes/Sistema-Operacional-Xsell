@@ -95,6 +95,7 @@ class Produto(BaseModel):
     preco_compra: float
     preco_venda: float
     margem: float = 40.0
+    fornecedor: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -104,6 +105,7 @@ class ProdutoCreate(BaseModel):
     preco_compra: float
     preco_venda: Optional[float] = None
     margem: Optional[float] = 40.0
+    fornecedor: Optional[str] = None
 
 
 class ItemPedido(BaseModel):
