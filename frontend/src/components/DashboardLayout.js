@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   ShoppingCart, Users, Package, BarChart3, Wallet, 
-  FileText, Receipt, Menu, X, LogOut, Truck 
+  FileText, Receipt, Menu, X, LogOut, Truck, UserCog 
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,6 +13,7 @@ const menuItems = [
   { path: '/clientes', label: 'Clientes', icon: Users },
   { path: '/produtos', label: 'Produtos', icon: Package },
   { path: '/fornecedores', label: 'Fornecedores', icon: Truck },
+  { path: '/vendedores', label: 'Vendedores', icon: UserCog },
   { path: '/relatorios', label: 'Relatórios', icon: BarChart3 },
   { path: '/financeiro', label: 'Financeiro', icon: Wallet },
   { path: '/licitacoes', label: 'Licitações', icon: FileText },
