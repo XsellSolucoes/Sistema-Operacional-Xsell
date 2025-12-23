@@ -46,6 +46,8 @@ export default function Fornecedores() {
   const [fornecedores, setFornecedores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingFornecedor, setViewingFornecedor] = useState(null);
   const [editingFornecedor, setEditingFornecedor] = useState(null);
   const [categoriaAtiva, setCategoriaAtiva] = useState('todos');
   const [formData, setFormData] = useState({
