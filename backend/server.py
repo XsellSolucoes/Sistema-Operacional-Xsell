@@ -848,6 +848,60 @@ async def add_movimento_caixa(mov: MovimentacaoCaixa, current_user: User = Depen
     return {"message": "Movimento registrado", "novo_saldo": novo_saldo}
 
 
+@api_router.get("/fornecedores", response_model=List[Fornecedor])
+async def get_fornecedores(categoria: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    filter_query = {}
+    if categoria and categoria != "todos":
+        filter_query["categoria"] = categoria
+    
+    fornecedores = await db.fornecedores.find(filter_query, {"_id": 0}).to_list(1000)
+    for forn in fornecedores:
+        if isinstance(forn.get("created_at"), str):
+            forn["created_at"] = datetime.fromisoformat(forn["created_at"])
+    return fornecedores
+
+
+@api_router.post("/fornecedores", response_model=Fornecedor)
+async def create_fornecedor(forn_data: FornecedorCreate, current_user: User = Depends(get_current_user)):
+    import uuid
+    forn_id = str(uuid.uuid4())
+    
+    count = await db.fornecedores.count_documents({})
+    codigo = f"FORN-{count + 1:06d}"
+    
+    forn_doc = forn_data.model_dump()
+    forn_doc["id"] = forn_id
+    forn_doc["codigo"] = codigo
+    forn_doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.fornecedores.insert_one(forn_doc)
+    forn_doc["created_at"] = datetime.fromisoformat(forn_doc["created_at"])
+    return Fornecedor(**forn_doc)
+
+
+@api_router.put("/fornecedores/{fornecedor_id}", response_model=Fornecedor)
+async def update_fornecedor(fornecedor_id: str, forn_data: FornecedorCreate, current_user: User = Depends(get_current_user)):
+    result = await db.fornecedores.update_one(
+        {"id": fornecedor_id},
+        {"$set": forn_data.model_dump()}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Fornecedor not found")
+    
+    forn = await db.fornecedores.find_one({"id": fornecedor_id}, {"_id": 0})
+    if isinstance(forn.get("created_at"), str):
+        forn["created_at"] = datetime.fromisoformat(forn["created_at"])
+    return Fornecedor(**forn)
+
+
+@api_router.delete("/fornecedores/{fornecedor_id}")
+async def delete_fornecedor(fornecedor_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.fornecedores.delete_one({"id": fornecedor_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Fornecedor not found")
+    return {"message": "Fornecedor deleted"}
+
+
 @api_router.get("/relatorios/geral")
 async def get_relatorio_geral(
     data_inicio: Optional[str] = None,
