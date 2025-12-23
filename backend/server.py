@@ -515,6 +515,16 @@ async def delete_produto(produto_id: str, current_user: User = Depends(get_curre
     return {"message": "Produto deleted"}
 
 
+@api_router.get("/produtos/codigo/{codigo}", response_model=Produto)
+async def get_produto_by_codigo(codigo: str, current_user: User = Depends(get_current_user)):
+    produto = await db.produtos.find_one({"codigo": codigo}, {"_id": 0})
+    if not produto:
+        raise HTTPException(status_code=404, detail="Produto not found")
+    if isinstance(produto.get("created_at"), str):
+        produto["created_at"] = datetime.fromisoformat(produto["created_at"])
+    return Produto(**produto)
+
+
 @api_router.get("/pedidos", response_model=List[Pedido])
 async def get_pedidos(current_user: User = Depends(get_current_user)):
     pedidos = await db.pedidos.find({}, {"_id": 0}).sort("data", -1).to_list(1000)
