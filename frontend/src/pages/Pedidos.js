@@ -121,6 +121,37 @@ export default function Pedidos() {
     }
   };
 
+  const buscarProdutoPorCodigo = async () => {
+    if (!novoItem.codigo_produto) {
+      toast.error('Digite o código do produto');
+      return;
+    }
+
+    setBuscandoProduto(true);
+    try {
+      const response = await axios.get(`${API}/produtos/codigo/${novoItem.codigo_produto}`, getAuthHeader());
+      setNovoItem({
+        ...novoItem,
+        produto_id: response.data.id,
+        produto_nome: `${response.data.codigo} - ${response.data.descricao}`,
+        preco_compra: response.data.preco_compra.toString(),
+        preco_venda: response.data.preco_venda.toString()
+      });
+      toast.success('Produto encontrado!');
+    } catch (error) {
+      toast.error('Produto não encontrado');
+      setNovoItem({
+        ...novoItem,
+        produto_id: '',
+        produto_nome: '',
+        preco_compra: '0',
+        preco_venda: '0'
+      });
+    } finally {
+      setBuscandoProduto(false);
+    }
+  };
+
   const handleProdutoChange = (produtoId) => {
     const produto = produtos.find(p => p.id === produtoId);
     if (produto) {
