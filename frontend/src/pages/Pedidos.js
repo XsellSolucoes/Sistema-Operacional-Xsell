@@ -1400,14 +1400,27 @@ export default function Pedidos() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
             <Button 
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-white"
+              onClick={() => {
+                setViewOpen(false);
+                handlePrintCliente(viewingPedido);
+              }}
+              data-testid="print-cliente-button"
+            >
+              <Printer className="h-4 w-4 mr-2" />
+              Via Cliente
+            </Button>
+            <Button 
               className="bg-secondary hover:bg-secondary/90"
               onClick={() => {
                 setViewOpen(false);
-                handlePrint(viewingPedido);
+                handlePrintInterno(viewingPedido);
               }}
+              data-testid="print-interno-button"
             >
               <Printer className="h-4 w-4 mr-2" />
-              Imprimir
+              Via Interna
             </Button>
           </DialogFooter>
         </DialogContent>
