@@ -89,6 +89,13 @@ function App() {
             </DashboardLayout>
           </PrivateRoute>
         } />
+        <Route path="/fornecedores" element={
+          <PrivateRoute>
+            <DashboardLayout user={user}>
+              <Fornecedores />
+            </DashboardLayout>
+          </PrivateRoute>
+        } />
         <Route path="/relatorios" element={
           <PrivateRoute>
             <DashboardLayout user={user}>
