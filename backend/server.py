@@ -180,6 +180,7 @@ class Licitacao(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str
+    numero_licitacao: str
     cidade: str
     estado: str
     orgao_publico: str
