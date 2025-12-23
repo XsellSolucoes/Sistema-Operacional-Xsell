@@ -954,7 +954,19 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 p-4 bg-orange-50 rounded-md">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Prazo de Entrega</Label>
+                  <Input
+                    value={formData.prazo_entrega}
+                    onChange={(e) => setFormData({...formData, prazo_entrega: e.target.value})}
+                    placeholder="Ex: 5 dias úteis, 2 semanas"
+                    data-testid="prazo-entrega-input"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 p-4 bg-orange-50 rounded-md">
                 <div className="space-y-2">
                   <Label>Outras Despesas (R$)</Label>
                   <Input
@@ -965,6 +977,15 @@ export default function Pedidos() {
                     data-testid="outras-despesas-input"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Descrição da Despesa</Label>
+                  <Input
+                    value={formData.descricao_outras_despesas}
+                    onChange={(e) => setFormData({...formData, descricao_outras_despesas: e.target.value})}
+                    placeholder="Ex: Taxas de importação"
+                    data-testid="descricao-despesas-input"
+                  />
+                </div>
                 <div className="flex items-end">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -973,7 +994,7 @@ export default function Pedidos() {
                       onChange={(e) => setFormData({...formData, repassar_outras_despesas: e.target.checked})}
                       className="rounded"
                     />
-                    <span className="text-sm font-medium">Repassar outras despesas ao cliente</span>
+                    <span className="text-sm font-medium">Repassar ao cliente</span>
                   </label>
                 </div>
               </div>
