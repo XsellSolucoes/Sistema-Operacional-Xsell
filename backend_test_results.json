@@ -1,0 +1,118 @@
+{
+  "summary": {
+    "total_tests": 18,
+    "passed_tests": 18,
+    "success_rate": 100.0,
+    "timestamp": "2025-12-23T12:20:21.651245"
+  },
+  "detailed_results": [
+    {
+      "test": "API Health Check",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:20.693317"
+    },
+    {
+      "test": "Login Existing User",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:20.962946"
+    },
+    {
+      "test": "Get Current User",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.052208"
+    },
+    {
+      "test": "Create Client",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.103335"
+    },
+    {
+      "test": "Get Clients",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.145548"
+    },
+    {
+      "test": "Update Client",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.186798"
+    },
+    {
+      "test": "Delete Client",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.223077"
+    },
+    {
+      "test": "Create Product",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.279646"
+    },
+    {
+      "test": "Product Price Calculation",
+      "success": true,
+      "details": "Correct price: 140.0",
+      "timestamp": "2025-12-23T12:20:21.280129"
+    },
+    {
+      "test": "Get Products",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.313981"
+    },
+    {
+      "test": "Update Product",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.354804"
+    },
+    {
+      "test": "Delete Product",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.428678"
+    },
+    {
+      "test": "Get Orders",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.466150"
+    },
+    {
+      "test": "Get Cash Balance",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.502540"
+    },
+    {
+      "test": "Get Expenses",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.539142"
+    },
+    {
+      "test": "Get Tenders",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.574258"
+    },
+    {
+      "test": "Get Budgets",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.609498"
+    },
+    {
+      "test": "Get General Report",
+      "success": true,
+      "details": "Status: 200",
+      "timestamp": "2025-12-23T12:20:21.650535"
+    }
+  ]
+}
