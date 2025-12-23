@@ -110,7 +110,8 @@ export default function Produtos() {
       descricao: '',
       preco_compra: '',
       preco_venda: '',
-      margem: '40'
+      margem: '40',
+      fornecedor: ''
     });
     setEditingProduto(null);
   };
