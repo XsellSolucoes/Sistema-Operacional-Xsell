@@ -549,8 +549,25 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         raise HTTPException(status_code=404, detail="Cliente not found")
     
     custo_total = sum(item.preco_compra * item.quantidade for item in pedido_data.itens)
-    valor_total_venda = sum(item.preco_venda * item.quantidade for item in pedido_data.itens)
-    despesas_totais = sum(item.despesas * item.quantidade for item in pedido_data.itens) + pedido_data.frete
+    
+    # Calcular valor de venda incluindo personalização repassada ao cliente
+    valor_total_venda = sum(
+        (item.preco_venda + (item.valor_personalizacao if item.repassar_personalizacao else 0)) * item.quantidade 
+        for item in pedido_data.itens
+    )
+    
+    # Adicionar outras despesas ao valor de venda se repassar
+    if pedido_data.repassar_outras_despesas:
+        valor_total_venda += pedido_data.outras_despesas
+    
+    # Calcular despesas totais (incluindo personalizações não repassadas)
+    despesas_totais = (
+        sum(item.despesas * item.quantidade for item in pedido_data.itens) + 
+        pedido_data.frete + 
+        pedido_data.outras_despesas +
+        sum((item.valor_personalizacao if not item.repassar_personalizacao else 0) * item.quantidade for item in pedido_data.itens)
+    )
+    
     lucro_total = valor_total_venda - custo_total - despesas_totais
     
     pedido_doc = {
@@ -561,6 +578,8 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         "cliente_nome": cliente["nome"],
         "itens": [item.model_dump() for item in pedido_data.itens],
         "frete": pedido_data.frete,
+        "outras_despesas": pedido_data.outras_despesas,
+        "repassar_outras_despesas": pedido_data.repassar_outras_despesas,
         "forma_pagamento": pedido_data.forma_pagamento,
         "tipo_venda": pedido_data.tipo_venda,
         "vendedor": pedido_data.vendedor,
