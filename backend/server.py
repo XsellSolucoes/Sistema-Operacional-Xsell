@@ -197,6 +197,7 @@ class Licitacao(BaseModel):
 
 
 class LicitacaoCreate(BaseModel):
+    numero_licitacao: str
     cidade: str
     estado: str
     orgao_publico: str
