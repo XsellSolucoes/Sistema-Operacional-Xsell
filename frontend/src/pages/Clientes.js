@@ -20,6 +20,8 @@ export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingCliente, setViewingCliente] = useState(null);
   const [editingCliente, setEditingCliente] = useState(null);
   const [formData, setFormData] = useState({
     codigo: '',
