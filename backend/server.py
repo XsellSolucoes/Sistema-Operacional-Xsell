@@ -134,7 +134,9 @@ class Pedido(BaseModel):
     itens: List[ItemPedido]
     frete: float = 0.0
     outras_despesas: float = 0.0
+    descricao_outras_despesas: Optional[str] = None
     repassar_outras_despesas: bool = False
+    prazo_entrega: str = ""
     forma_pagamento: str
     tipo_venda: str
     vendedor: str
