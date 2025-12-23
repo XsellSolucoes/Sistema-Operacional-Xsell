@@ -205,8 +205,8 @@ export default function Fornecedores() {
   return (
     <div className="flex gap-6" data-testid="fornecedores-page">
       <aside className="w-64 space-y-2">
-        <div className="bg-white rounded-md border p-4">
-          <h3 className="font-heading font-semibold mb-4 text-primary">Categorias</h3>
+        <div className="bg-primary rounded-md p-4 shadow-md">
+          <h3 className="font-heading font-semibold mb-4 text-primary-foreground">Categorias</h3>
           <div className="space-y-1">
             {CATEGORIAS.map((cat) => (
               <button
@@ -215,7 +215,7 @@ export default function Fornecedores() {
                 className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors duration-200 ${
                   categoriaAtiva === cat.value
                     ? 'bg-secondary text-secondary-foreground font-medium'
-                    : 'hover:bg-accent'
+                    : 'text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground'
                 }`}
                 data-testid={`categoria-${cat.value}`}
               >
