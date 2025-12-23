@@ -228,6 +228,70 @@ class DespesaCreate(BaseModel):
     valor: float
     data_despesa: datetime
     data_vencimento: datetime
+    status: Optional[str] = "pendente"
+
+
+class Fornecedor(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    codigo: str
+    tipo_fornecedor: str
+    razao_social: str
+    nome_fantasia: str
+    cnpj_cpf: str
+    inscricao_estadual: Optional[str] = None
+    cep: str
+    logradouro: str
+    numero: str
+    complemento: Optional[str] = None
+    bairro: str
+    cidade: str
+    estado: str
+    nome_contato: str
+    telefone: str
+    whatsapp: str
+    email: str
+    banco: Optional[str] = None
+    agencia: Optional[str] = None
+    conta_corrente: Optional[str] = None
+    tipo_conta: Optional[str] = None
+    chave_pix: Optional[str] = None
+    produtos_servicos: str
+    prazo_entrega: str
+    condicoes_pagamento: str
+    observacoes: Optional[str] = None
+    categoria: str
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class FornecedorCreate(BaseModel):
+    tipo_fornecedor: str
+    razao_social: str
+    nome_fantasia: str
+    cnpj_cpf: str
+    inscricao_estadual: Optional[str] = None
+    cep: str
+    logradouro: str
+    numero: str
+    complemento: Optional[str] = None
+    bairro: str
+    cidade: str
+    estado: str
+    nome_contato: str
+    telefone: str
+    whatsapp: str
+    email: str
+    banco: Optional[str] = None
+    agencia: Optional[str] = None
+    conta_corrente: Optional[str] = None
+    tipo_conta: Optional[str] = None
+    chave_pix: Optional[str] = None
+    produtos_servicos: str
+    prazo_entrega: str
+    condicoes_pagamento: str
+    observacoes: Optional[str] = None
+    categoria: str
 
 
 class Caixa(BaseModel):
