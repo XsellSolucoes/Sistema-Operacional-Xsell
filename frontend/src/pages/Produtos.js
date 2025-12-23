@@ -174,6 +174,16 @@ export default function Produtos() {
                   data-testid="produto-descricao-input"
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="fornecedor">Fornecedor (Opcional)</Label>
+                <Input
+                  id="fornecedor"
+                  value={formData.fornecedor}
+                  onChange={(e) => setFormData({...formData, fornecedor: e.target.value})}
+                  placeholder="Nome do fornecedor"
+                  data-testid="produto-fornecedor-input"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="preco_compra">Preço de Compra</Label>
