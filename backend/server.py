@@ -925,6 +925,66 @@ async def delete_fornecedor(fornecedor_id: str, current_user: User = Depends(get
     return {"message": "Fornecedor deleted"}
 
 
+@api_router.get("/vendedores", response_model=List[Vendedor])
+async def get_vendedores(current_user: User = Depends(get_current_user)):
+    vendedores = await db.vendedores.find({}, {"_id": 0}).to_list(1000)
+    for vend in vendedores:
+        if isinstance(vend.get("created_at"), str):
+            vend["created_at"] = datetime.fromisoformat(vend["created_at"])
+    return vendedores
+
+
+@api_router.post("/vendedores", response_model=Vendedor)
+async def create_vendedor(vend_data: VendedorCreate, current_user: User = Depends(get_current_user)):
+    import uuid
+    vend_id = str(uuid.uuid4())
+    
+    count = await db.vendedores.count_documents({})
+    codigo = f"VEND-{count + 1:06d}"
+    
+    vend_doc = vend_data.model_dump()
+    vend_doc["id"] = vend_id
+    vend_doc["codigo"] = codigo
+    vend_doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.vendedores.insert_one(vend_doc)
+    vend_doc["created_at"] = datetime.fromisoformat(vend_doc["created_at"])
+    return Vendedor(**vend_doc)
+
+
+@api_router.put("/vendedores/{vendedor_id}", response_model=Vendedor)
+async def update_vendedor(vendedor_id: str, vend_data: VendedorCreate, current_user: User = Depends(get_current_user)):
+    result = await db.vendedores.update_one(
+        {"id": vendedor_id},
+        {"$set": vend_data.model_dump()}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vendedor not found")
+    
+    vend = await db.vendedores.find_one({"id": vendedor_id}, {"_id": 0})
+    if isinstance(vend.get("created_at"), str):
+        vend["created_at"] = datetime.fromisoformat(vend["created_at"])
+    return Vendedor(**vend)
+
+
+@api_router.delete("/vendedores/{vendedor_id}")
+async def delete_vendedor(vendedor_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.vendedores.delete_one({"id": vendedor_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vendedor not found")
+    return {"message": "Vendedor deleted"}
+
+
+@api_router.get("/clientes/codigo/{codigo}", response_model=Cliente)
+async def get_cliente_by_codigo(codigo: str, current_user: User = Depends(get_current_user)):
+    cliente = await db.clientes.find_one({"codigo": codigo}, {"_id": 0})
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    if isinstance(cliente.get("created_at"), str):
+        cliente["created_at"] = datetime.fromisoformat(cliente["created_at"])
+    return Cliente(**cliente)
+
+
 @api_router.get("/relatorios/geral")
 async def get_relatorio_geral(
     data_inicio: Optional[str] = None,
