@@ -316,6 +316,11 @@ async def login(user_data: UserLogin):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@api_router.get("/")
+async def root():
+    return {"message": "XSELL API is running", "status": "ok"}
+
+
 @api_router.get("/auth/me", response_model=User)
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
