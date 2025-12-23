@@ -6,6 +6,7 @@ import Pedidos from './pages/Pedidos';
 import Clientes from './pages/Clientes';
 import Produtos from './pages/Produtos';
 import Fornecedores from './pages/Fornecedores';
+import Vendedores from './pages/Vendedores';
 import Relatorios from './pages/Relatorios';
 import Financeiro from './pages/Financeiro';
 import Licitacoes from './pages/Licitacoes';
