@@ -209,7 +209,9 @@ export default function Pedidos() {
 
     setItens([...itens, item]);
     setNovoItem({
+      codigo_produto: '',
       produto_id: '',
+      produto_nome: '',
       quantidade: '1',
       preco_compra: '0',
       preco_venda: '0',
