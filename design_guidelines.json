@@ -1,0 +1,132 @@
+{
+  "identity": {
+    "name": "XSELL Manager",
+    "persona": "The Efficient Ledger",
+    "vibe": "Professional, Robust, High-Contrast, Control-Room",
+    "logo_url": "https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png"
+  },
+  "typography": {
+    "primary_font": "Public Sans",
+    "heading_font": "Manrope",
+    "mono_font": "JetBrains Mono",
+    "scale": {
+      "h1": "text-4xl font-bold tracking-tight",
+      "h2": "text-3xl font-semibold tracking-tight",
+      "h3": "text-2xl font-semibold",
+      "body": "text-sm leading-relaxed",
+      "small": "text-xs font-medium text-muted-foreground"
+    },
+    "import_url": "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Public+Sans:wght@300;400;500;600;700&display=swap"
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#0f172a",
+        "foreground": "#f8fafc",
+        "description": "Deep Slate 900 - Authority, Stability"
+      },
+      "secondary": {
+        "DEFAULT": "#f97316",
+        "foreground": "#ffffff",
+        "description": "Vibrant Orange 500 - Action, Energy, Highlights"
+      },
+      "accent": {
+        "DEFAULT": "#f1f5f9",
+        "foreground": "#0f172a",
+        "description": "Slate 100 - Subtle interactions"
+      },
+      "background": "#f8fafc",
+      "surface": "#ffffff",
+      "border": "#e2e8f0",
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "error": "#ef4444"
+    },
+    "usage_rules": [
+      "Use Primary (Slate 900) for Sidebar, Headings, and Primary Buttons.",
+      "Use Secondary (Orange 500) sparingly for 'Create New', 'Submit', or critical alerts.",
+      "Background should be Slate 50 (#f8fafc) to reduce eye strain.",
+      "Cards and Tables must be White (#ffffff) with a subtle border (#e2e8f0).",
+      "NEVER use gradients for backgrounds. Use solid colors or subtle noise textures."
+    ]
+  },
+  "layout": {
+    "grid_system": "Tailwind Grid",
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "section_gap": "gap-6 md:gap-8",
+      "component_gap": "gap-4"
+    },
+    "structure": {
+      "sidebar_width": "w-64",
+      "header_height": "h-16",
+      "max_content_width": "max-w-7xl mx-auto"
+    },
+    "z_index": {
+      "modal": 50,
+      "dropdown": 40,
+      "sticky_header": 30,
+      "sidebar": 20
+    }
+  },
+  "components": {
+    "radius": "rounded-md",
+    "shadows": {
+      "card": "shadow-sm hover:shadow-md transition-shadow duration-200",
+      "dropdown": "shadow-lg border border-slate-100"
+    },
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+      "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-sm",
+      "outline": "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+      "ghost": "hover:bg-accent hover:text-accent-foreground"
+    },
+    "inputs": {
+      "style": "bg-white border-input focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200"
+    },
+    "cards": {
+      "style": "bg-card text-card-foreground rounded-md border shadow-sm"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-md bg-white/80 border-b border-white/20",
+    "textures": "Use subtle noise texture on the sidebar background if possible.",
+    "motion": {
+      "hover": "transition-all duration-200 ease-in-out",
+      "enter": "animate-in fade-in zoom-in-95 duration-300"
+    }
+  },
+  "image_urls": {
+    "login_hero": "https://images.unsplash.com/photo-1748934871239-22cdb836f07b?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "dashboard_empty_state": "https://images.unsplash.com/photo-1692133226337-55e513450a32?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "logo": "https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png"
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'lucide-react' for icons, 'recharts' for charts, 'date-fns' for dates.",
+    "2. THEME: Configure tailwind.config.js to use the specific Slate and Orange palette defined above.",
+    "3. FONTS: Add the Google Fonts import to index.css immediately.",
+    "4. LAYOUT: Create a 'DashboardLayout' component that includes the Sidebar and Header. All protected pages must be wrapped in this.",
+    "5. LOGIN: Create a split-screen login page. Left side form, Right side image (login_hero) with a dark overlay and a quote.",
+    "6. TABLES: Use Shadcn Table component. Ensure headers are sticky. Add 'data-testid' to all rows.",
+    "7. PDF: Use 'react-to-print' or 'jspdf' for generating documents. Create a dedicated 'PrintLayout' component that is hidden from screen but used for printing.",
+    "8. CALCULATIONS: All financial calculations (profit, margin) must happen in real-time on the frontend for preview, but validated on backend.",
+    "9. RESPONSIVE: Ensure the Sidebar becomes a Sheet/Drawer on mobile.",
+    "10. TESTING: Add 'data-testid' to every interactive element (buttons, inputs, rows)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky headers.",
+    "You MUST NOT apply universal transition. Eg: 'transition: all'. This results in breaking transforms.",
+    "You MUST NOT center align the app container.",
+    "Always use modern button styles like pill-shaped, or sharp button with interaction animations.",
+    "NEVER use AI assistant Emoji characters like 🤖🧠 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Components MUST use named exports.",
+    "Pages MUST use default exports.",
+    "Use 'sonner' for toasts."
+  ]
+}
