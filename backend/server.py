@@ -150,6 +150,8 @@ class PedidoCreate(BaseModel):
     cliente_id: str
     itens: List[ItemPedido]
     frete: float = 0.0
+    outras_despesas: float = 0.0
+    repassar_outras_despesas: bool = False
     forma_pagamento: str
     tipo_venda: str
     vendedor: str
