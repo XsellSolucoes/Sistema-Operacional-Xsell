@@ -524,7 +524,9 @@ export default function Pedidos() {
       vendedor_id: '',
       frete: '0',
       outras_despesas: '0',
+      descricao_outras_despesas: '',
       repassar_outras_despesas: false,
+      prazo_entrega: '',
       status: 'pendente'
     });
     setItens([]);
