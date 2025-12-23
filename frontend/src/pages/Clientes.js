@@ -309,6 +309,42 @@ export default function Clientes() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Cliente</DialogTitle>
+            <DialogDescription>Informações completas do cliente</DialogDescription>
+          </DialogHeader>
+          {viewingCliente && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="font-medium">Código:</span> {viewingCliente.codigo}</div>
+                <div><span className="font-medium">CNPJ:</span> {viewingCliente.cnpj}</div>
+                <div className="col-span-2"><span className="font-medium">Nome:</span> {viewingCliente.nome}</div>
+                <div className="col-span-2"><span className="font-medium">Razão Social:</span> {viewingCliente.razao_social}</div>
+                <div className="col-span-2"><span className="font-medium">Nome Fantasia:</span> {viewingCliente.nome_fantasia}</div>
+                <div className="col-span-2"><span className="font-medium">Endereço:</span> {viewingCliente.endereco}</div>
+                <div><span className="font-medium">Cidade:</span> {viewingCliente.cidade}</div>
+                <div><span className="font-medium">Estado:</span> {viewingCliente.estado}</div>
+                <div><span className="font-medium">CEP:</span> {viewingCliente.cep}</div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
+            <Button 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => {
+                setViewOpen(false);
+                handleEdit(viewingCliente);
+              }}
+            >
+              Editar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
