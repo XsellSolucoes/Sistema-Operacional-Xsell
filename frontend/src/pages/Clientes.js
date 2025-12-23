@@ -277,6 +277,17 @@ export default function Clientes() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => {
+                          setViewingCliente(cliente);
+                          setViewOpen(true);
+                        }}
+                        data-testid={`view-cliente-${cliente.id}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEdit(cliente)}
                         data-testid={`edit-cliente-${cliente.id}`}
                       >
