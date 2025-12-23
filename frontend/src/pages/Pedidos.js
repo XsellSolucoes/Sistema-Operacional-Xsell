@@ -286,7 +286,9 @@ export default function Pedidos() {
         itens,
         frete: parseFloat(formData.frete),
         outras_despesas: parseFloat(formData.outras_despesas),
+        descricao_outras_despesas: formData.descricao_outras_despesas,
         repassar_outras_despesas: formData.repassar_outras_despesas,
+        prazo_entrega: formData.prazo_entrega,
         forma_pagamento: formData.forma_pagamento,
         tipo_venda: formData.tipo_venda,
         vendedor: vendedor.nome
