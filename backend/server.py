@@ -296,6 +296,27 @@ class FornecedorCreate(BaseModel):
     categoria: str
 
 
+class Vendedor(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    codigo: str
+    nome: str
+    email: EmailStr
+    telefone: str
+    nivel_acesso: str
+    ativo: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class VendedorCreate(BaseModel):
+    nome: str
+    email: EmailStr
+    telefone: str
+    nivel_acesso: str
+    ativo: Optional[bool] = True
+
+
 class Caixa(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
