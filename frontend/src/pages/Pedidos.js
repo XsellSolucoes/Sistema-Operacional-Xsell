@@ -342,6 +342,268 @@ export default function Pedidos() {
     }
   };
 
+  const handlePrintCliente = (pedido) => {
+    const printWindow = window.open('', '_blank');
+    const cliente = clientes.find(c => c.id === pedido.cliente_id);
+    
+    // Calcular despesas repassadas
+    const despesasRepassadas = [];
+    pedido.itens.forEach(item => {
+      if (item.personalizado && item.repassar_personalizacao) {
+        despesasRepassadas.push(`${item.tipo_personalizacao} (${item.produto_descricao}): R$ ${(item.valor_personalizacao * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+      }
+    });
+    
+    if (pedido.repassar_outras_despesas && pedido.outras_despesas > 0) {
+      despesasRepassadas.push(`${pedido.descricao_outras_despesas || 'Outras despesas'}: R$ ${pedido.outras_despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+    }
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pedido ${pedido.numero} - Via Cliente</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; }
+            .logo { max-width: 200px; margin-bottom: 10px; }
+            .info-section { margin-bottom: 20px; }
+            .info-label { font-weight: bold; color: #1e3a8a; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+            th { background-color: #1e3a8a; color: white; }
+            .totals { margin-top: 20px; text-align: right; }
+            .total-row { margin: 5px 0; font-size: 16px; }
+            .total-final { font-size: 20px; font-weight: bold; color: #f97316; margin-top: 10px; }
+            .despesas-box { background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
+            <h1>PEDIDO DE VENDA - VIA CLIENTE</h1>
+            <p style="font-size: 18px; color: #666;">Nº ${pedido.numero}</p>
+          </div>
+
+          <div class="info-section">
+            <p><span class="info-label">Data:</span> ${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+            <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
+            ${cliente ? `
+              <p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>
+              <p><span class="info-label">Endereço:</span> ${cliente.endereco}, ${cliente.cidade}/${cliente.estado}</p>
+            ` : ''}
+            <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
+            ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
+          </div>
+
+          <h3>Itens do Pedido</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Valor Unit.</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.itens.map(item => {
+                let precoFinal = item.preco_venda;
+                let descricao = item.produto_descricao;
+                
+                if (item.personalizado && item.repassar_personalizacao) {
+                  precoFinal += item.valor_personalizacao;
+                  descricao += ` (${item.tipo_personalizacao})`;
+                }
+                
+                return `
+                  <tr>
+                    <td>${item.produto_codigo}</td>
+                    <td>${descricao}</td>
+                    <td>${item.quantidade}</td>
+                    <td>R$ ${precoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td>R$ ${(precoFinal * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          ${despesasRepassadas.length > 0 ? `
+            <div class="despesas-box">
+              <h4 style="margin-top: 0; color: #856404;">Despesas Adicionais Incluídas:</h4>
+              <ul style="margin: 10px 0; padding-left: 20px;">
+                ${despesasRepassadas.map(d => `<li>${d}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          <div class="totals">
+            <div class="total-row">
+              <span class="info-label">Subtotal:</span> 
+              R$ ${pedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            ${pedido.frete > 0 ? `
+              <div class="total-row">
+                <span class="info-label">Frete:</span> 
+                R$ ${pedido.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+            ` : ''}
+            <div class="total-final">
+              Total: R$ ${(pedido.valor_total_venda + pedido.frete).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+
+          <div style="margin-top: 40px;">
+            <p><span class="info-label">Forma de Pagamento:</span> ${pedido.forma_pagamento.toUpperCase()}</p>
+          </div>
+
+          <div style="margin-top: 40px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
+            <h4 style="color: #1e3a8a; margin-bottom: 10px;">Dados para Pagamento</h4>
+            <p><strong>Banco do Brasil</strong></p>
+            <p>Agência: 1529-6 | Conta Corrente: 81517-9</p>
+            <p>Favorecido: XSELL SOLUÇÕES CORPORATIVAS LTDA</p>
+            <p>Pix: comercial@xsellsolucoes.com.br</p>
+          </div>
+
+          <div class="footer">
+            <p>XSELL Soluções Corporativas LTDA | comercial@xsellsolucoes.com.br</p>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 250);
+  };
+
+  const handlePrintInterno = (pedido) => {
+    const printWindow = window.open('', '_blank');
+    const cliente = clientes.find(c => c.id === pedido.cliente_id);
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pedido ${pedido.numero} - Via Interna</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
+            .logo { max-width: 200px; margin-bottom: 10px; }
+            .via-interna { background-color: #dc2626; color: white; padding: 10px; border-radius: 5px; display: inline-block; }
+            .info-section { margin-bottom: 20px; }
+            .info-label { font-weight: bold; color: #dc2626; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #dc2626; color: white; }
+            .totals { margin-top: 20px; text-align: right; background-color: #f3f4f6; padding: 15px; border-radius: 5px; }
+            .total-row { margin: 5px 0; font-size: 14px; }
+            .lucro-final { font-size: 20px; font-weight: bold; color: #059669; margin-top: 10px; }
+            .warning-box { background-color: #fee2e2; border: 2px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
+            <h1>PEDIDO - VIA INTERNA</h1>
+            <p class="via-interna">USO INTERNO - NÃO ENVIAR AO CLIENTE</p>
+            <p style="font-size: 18px; color: #666;">Nº ${pedido.numero}</p>
+          </div>
+
+          <div class="info-section">
+            <p><span class="info-label">Data:</span> ${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+            <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
+            ${cliente ? `<p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>` : ''}
+            <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
+            ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
+            <p><span class="info-label">Status:</span> ${pedido.status}</p>
+          </div>
+
+          <h3>Detalhamento Completo dos Itens</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Qtd</th>
+                <th>P. Compra</th>
+                <th>P. Venda</th>
+                <th>Personalização</th>
+                <th>Despesas</th>
+                <th>Lucro Unit.</th>
+                <th>Lucro Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.itens.map(item => {
+                let custoUnit = item.preco_compra;
+                let vendaUnit = item.preco_venda;
+                
+                if (item.personalizado && !item.repassar_personalizacao) {
+                  custoUnit += item.valor_personalizacao;
+                } else if (item.personalizado && item.repassar_personalizacao) {
+                  vendaUnit += item.valor_personalizacao;
+                }
+                
+                const lucroUnit = vendaUnit - custoUnit - item.despesas;
+                const lucroTotal = lucroUnit * item.quantidade;
+                
+                return `
+                  <tr>
+                    <td>${item.produto_codigo} - ${item.produto_descricao}</td>
+                    <td>${item.quantidade}</td>
+                    <td>R$ ${item.preco_compra.toFixed(2)}</td>
+                    <td>R$ ${item.preco_venda.toFixed(2)}</td>
+                    <td>${item.personalizado ? `${item.tipo_personalizacao}<br>R$ ${item.valor_personalizacao.toFixed(2)}<br>${item.repassar_personalizacao ? '(Repassado)' : '(Interno)'}` : '-'}</td>
+                    <td>R$ ${item.despesas.toFixed(2)}</td>
+                    <td>R$ ${lucroUnit.toFixed(2)}</td>
+                    <td style="font-weight: bold; color: ${lucroTotal >= 0 ? '#059669' : '#dc2626'}">R$ ${lucroTotal.toFixed(2)}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="warning-box">
+            <h4 style="margin-top: 0; color: #dc2626;">⚠️ Despesas Completas:</h4>
+            <p><strong>Frete:</strong> R$ ${pedido.frete.toFixed(2)}</p>
+            ${pedido.outras_despesas > 0 ? `
+              <p><strong>${pedido.descricao_outras_despesas || 'Outras Despesas'}:</strong> R$ ${pedido.outras_despesas.toFixed(2)} 
+              ${pedido.repassar_outras_despesas ? '<span style="color: #059669;">(Repassado ao cliente)</span>' : '<span style="color: #dc2626;">(Custo interno)</span>'}</p>
+            ` : ''}
+          </div>
+
+          <div class="totals">
+            <div class="total-row">
+              <span class="info-label">Custo Total:</span> 
+              R$ ${pedido.custo_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row">
+              <span class="info-label">Valor de Venda:</span> 
+              R$ ${pedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row">
+              <span class="info-label">Despesas Totais:</span> 
+              R$ ${pedido.despesas_totais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="lucro-final">
+              Lucro Total: R$ ${pedido.lucro_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row" style="color: #6b7280;">
+              Margem: ${pedido.valor_total_venda > 0 ? ((pedido.lucro_total / pedido.valor_total_venda) * 100).toFixed(2) : 0}%
+            </div>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 250);
+  };
+
   const handlePrint = (pedido) => {
     const printWindow = window.open('', '_blank');
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
