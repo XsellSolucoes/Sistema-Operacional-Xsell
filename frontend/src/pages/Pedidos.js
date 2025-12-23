@@ -49,13 +49,17 @@ export default function Pedidos() {
     vendedor_id: '',
     frete: '0',
     outras_despesas: '0',
+    descricao_outras_despesas: '',
     repassar_outras_despesas: false,
+    prazo_entrega: '',
     status: 'pendente'
   });
   
   const [itens, setItens] = useState([]);
   const [novoItem, setNovoItem] = useState({
+    codigo_produto: '',
     produto_id: '',
+    produto_nome: '',
     quantidade: '1',
     preco_compra: '0',
     preco_venda: '0',
@@ -65,6 +69,7 @@ export default function Pedidos() {
     valor_personalizacao: '0',
     repassar_personalizacao: false
   });
+  const [buscandoProduto, setBuscandoProduto] = useState(false);
 
   useEffect(() => {
     fetchData();
