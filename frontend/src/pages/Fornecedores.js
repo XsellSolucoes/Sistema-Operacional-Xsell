@@ -562,6 +562,17 @@ export default function Fornecedores() {
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setViewingFornecedor(fornecedor);
+                            setViewOpen(true);
+                          }}
+                          data-testid={`view-fornecedor-${fornecedor.id}`}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleEdit(fornecedor)}
                           data-testid={`edit-fornecedor-${fornecedor.id}`}
                         >
