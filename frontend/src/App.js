@@ -97,6 +97,13 @@ function App() {
             </DashboardLayout>
           </PrivateRoute>
         } />
+        <Route path="/vendedores" element={
+          <PrivateRoute>
+            <DashboardLayout user={user}>
+              <Vendedores />
+            </DashboardLayout>
+          </PrivateRoute>
+        } />
         <Route path="/relatorios" element={
           <PrivateRoute>
             <DashboardLayout user={user}>
