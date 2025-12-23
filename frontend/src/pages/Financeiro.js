@@ -99,7 +99,8 @@ export default function Financeiro() {
       descricao: '',
       valor: '',
       data_despesa: new Date().toISOString().split('T')[0],
-      data_vencimento: new Date().toISOString().split('T')[0]
+      data_vencimento: new Date().toISOString().split('T')[0],
+      status: 'pendente'
     });
   };
 
