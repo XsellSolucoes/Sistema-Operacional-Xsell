@@ -117,6 +117,10 @@ class ItemPedido(BaseModel):
     preco_venda: float
     despesas: float = 0.0
     lucro_item: float
+    personalizado: bool = False
+    tipo_personalizacao: Optional[str] = None
+    valor_personalizacao: float = 0.0
+    repassar_personalizacao: bool = False
 
 
 class Pedido(BaseModel):
