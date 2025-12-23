@@ -1291,14 +1291,27 @@ export default function Pedidos() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handlePrint(pedido)}
-                        data-testid={`print-pedido-${pedido.id}`}
-                      >
-                        <Printer className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            data-testid={`print-pedido-${pedido.id}`}
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem onClick={() => handlePrintCliente(pedido)}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Via Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handlePrintInterno(pedido)}>
+                            <Printer className="h-4 w-4 mr-2" />
+                            Via Interna
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button
                         variant="ghost"
                         size="icon"
