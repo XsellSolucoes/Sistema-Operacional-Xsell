@@ -594,6 +594,90 @@ export default function Fornecedores() {
             )}
           </CardContent>
         </Card>
+
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhes do Fornecedor</DialogTitle>
+              <DialogDescription>Informações completas do fornecedor</DialogDescription>
+            </DialogHeader>
+            {viewingFornecedor && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Identificação</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Código:</span> {viewingFornecedor.codigo}</div>
+                    <div><span className="font-medium">Tipo:</span> {viewingFornecedor.tipo_fornecedor === 'juridica' ? 'Pessoa Jurídica' : 'Pessoa Física'}</div>
+                    <div><span className="font-medium">Razão Social:</span> {viewingFornecedor.razao_social}</div>
+                    <div><span className="font-medium">Nome Fantasia:</span> {viewingFornecedor.nome_fantasia}</div>
+                    <div><span className="font-medium">CNPJ/CPF:</span> {viewingFornecedor.cnpj_cpf}</div>
+                    {viewingFornecedor.inscricao_estadual && (
+                      <div><span className="font-medium">IE:</span> {viewingFornecedor.inscricao_estadual}</div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Endereço</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">CEP:</span> {viewingFornecedor.cep}</div>
+                    <div><span className="font-medium">Logradouro:</span> {viewingFornecedor.logradouro}</div>
+                    <div><span className="font-medium">Número:</span> {viewingFornecedor.numero}</div>
+                    <div><span className="font-medium">Bairro:</span> {viewingFornecedor.bairro}</div>
+                    <div><span className="font-medium">Cidade:</span> {viewingFornecedor.cidade}</div>
+                    <div><span className="font-medium">Estado:</span> {viewingFornecedor.estado}</div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Contato</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Responsável:</span> {viewingFornecedor.nome_contato}</div>
+                    <div><span className="font-medium">Email:</span> {viewingFornecedor.email}</div>
+                    <div><span className="font-medium">Telefone:</span> {viewingFornecedor.telefone}</div>
+                    <div><span className="font-medium">WhatsApp:</span> {viewingFornecedor.whatsapp}</div>
+                  </div>
+                </div>
+
+                {(viewingFornecedor.banco || viewingFornecedor.chave_pix) && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Dados Bancários</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      {viewingFornecedor.banco && <div><span className="font-medium">Banco:</span> {viewingFornecedor.banco}</div>}
+                      {viewingFornecedor.agencia && <div><span className="font-medium">Agência:</span> {viewingFornecedor.agencia}</div>}
+                      {viewingFornecedor.conta_corrente && <div><span className="font-medium">Conta:</span> {viewingFornecedor.conta_corrente}</div>}
+                      {viewingFornecedor.chave_pix && <div><span className="font-medium">Chave Pix:</span> {viewingFornecedor.chave_pix}</div>}
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Informações Comerciais</h3>
+                  <div className="space-y-2 text-sm">
+                    <div><span className="font-medium">Produtos/Serviços:</span> {viewingFornecedor.produtos_servicos}</div>
+                    <div><span className="font-medium">Prazo de Entrega:</span> {viewingFornecedor.prazo_entrega}</div>
+                    <div><span className="font-medium">Condições de Pagamento:</span> {viewingFornecedor.condicoes_pagamento}</div>
+                    {viewingFornecedor.observacoes && (
+                      <div><span className="font-medium">Observações:</span> {viewingFornecedor.observacoes}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
+              <Button 
+                className="bg-secondary hover:bg-secondary/90"
+                onClick={() => {
+                  setViewOpen(false);
+                  handleEdit(viewingFornecedor);
+                }}
+              >
+                Editar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
