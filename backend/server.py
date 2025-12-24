@@ -773,6 +773,21 @@ async def get_licitacoes(current_user: User = Depends(get_current_user)):
             lic["previsao_pagamento"] = datetime.fromisoformat(lic["previsao_pagamento"])
         if isinstance(lic.get("created_at"), str):
             lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+        # Handle legacy data without new fields
+        if "status_pagamento" not in lic:
+            lic["status_pagamento"] = lic.get("status", "pendente")
+        if "valor_total_venda" not in lic:
+            lic["valor_total_venda"] = sum(p.get("preco_venda", 0) * p.get("quantidade_empenhada", 0) for p in lic.get("produtos", []))
+        if "valor_total_compra" not in lic:
+            lic["valor_total_compra"] = sum(p.get("preco_compra", 0) * p.get("quantidade_empenhada", 0) for p in lic.get("produtos", []))
+        if "despesas_totais" not in lic:
+            lic["despesas_totais"] = lic.get("frete", 0) + lic.get("impostos", 0) + lic.get("outras_despesas", 0)
+        if "frete" not in lic:
+            lic["frete"] = 0.0
+        if "impostos" not in lic:
+            lic["impostos"] = 0.0
+        if "outras_despesas" not in lic:
+            lic["outras_despesas"] = 0.0
     return licitacoes
 
 
