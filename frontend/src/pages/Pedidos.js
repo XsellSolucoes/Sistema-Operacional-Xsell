@@ -253,21 +253,11 @@ export default function Pedidos() {
 
   const calcularTotais = () => {
     const custoTotal = itens.reduce((sum, item) => {
-      let custo = item.preco_compra * item.quantidade;
-      // Adiciona custo de personalização não repassada
-      if (item.personalizado && !item.repassar_personalizacao) {
-        custo += item.valor_personalizacao * item.quantidade;
-      }
-      return sum + custo;
+      return sum + (item.preco_compra * item.quantidade);
     }, 0);
     
     let valorTotalVenda = itens.reduce((sum, item) => {
-      let venda = item.preco_venda * item.quantidade;
-      // Adiciona valor de personalização repassada
-      if (item.personalizado && item.repassar_personalizacao) {
-        venda += item.valor_personalizacao * item.quantidade;
-      }
-      return sum + venda;
+      return sum + (item.preco_venda * item.quantidade);
     }, 0);
     
     // Adiciona frete ao valor se repassar
