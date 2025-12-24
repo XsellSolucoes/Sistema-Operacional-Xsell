@@ -186,6 +186,9 @@ class ItemOrcamento(BaseModel):
     preco_unitario: float
     preco_total: float
     imagem_url: Optional[str] = None
+    personalizado: bool = False
+    tipo_personalizacao: Optional[str] = None
+    valor_personalizacao: float = 0.0
 
 
 class Orcamento(BaseModel):
@@ -210,8 +213,15 @@ class Orcamento(BaseModel):
     prazo_entrega: str
     frete_por_conta: str = "destinatario"
     valor_frete: float = 0.0
+    repassar_frete: bool = True
+    outras_despesas: float = 0.0
+    descricao_outras_despesas: Optional[str] = None
+    repassar_outras_despesas: bool = False
     observacoes: str = "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
     status: str = "aberto"
+    dias_cobrar_resposta: Optional[int] = None
+    data_cobrar_resposta: Optional[datetime] = None
+    cliente_cobrado: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
