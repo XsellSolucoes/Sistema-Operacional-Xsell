@@ -91,41 +91,35 @@
 
 ---
 
-## Testing Protocol - Orçamentos (Novas Funcionalidades) - Fase 2
+## Testing Protocol - Alterações e Correções v2
 
 - Date: 2024-12-24
-- Module: Orçamentos - Novas Funcionalidades
 - Testing Type: Both backend and frontend
 
-## New Features to Test
-1. **Personalização de Itens:**
-   - Campo "Tipo de Personalização" (Gravação a Laser, Serigrafia, etc.)
-   - Valor da personalização por item
-   - Cálculo correto do subtotal com personalização
+## Changes Made
 
-2. **Repasse de Frete:**
-   - Campo para valor do frete
-   - Opção "Repassar frete ao cliente" (checkbox)
-   - Cálculo correto no total final
+### 1. Pedidos
+- Adicionado campo `repassar_frete` no backend e frontend
+- Atualizado cálculo de totais para considerar repasse de frete
+- Validação de vendedor obrigatório já existia
 
-3. **Outras Despesas:**
-   - Campo para valor de outras despesas
-   - Descrição das despesas
-   - Opção "Repassar despesas ao cliente" (checkbox)
-   - Cálculo correto no total final
+### 2. Clientes
+- Removido campo código manual (agora é sequencial automático CLI-XXXXXX)
+- Adicionados campos: email, inscricao_estadual, telefone, whatsapp
+- Dialog de visualização atualizado com novos campos
 
-4. **Sistema de Cobrança de Resposta:**
-   - Seleção de dias para cobrar resposta (1, 2, 3, 5, 10 dias)
-   - Cálculo automático da data de cobrança
-   - Mudança de cor quando próximo da data
-   - Botão "Já Cobrei o Cliente" para marcar como cobrado
+### 3. Produtos
+- Adicionado suporte a variações (cor, capacidade, material)
+- Dialog de visualização com detalhes e variações
+- Botão de visualizar na tabela
 
-5. **Cálculos de Totais:**
-   - Subtotal de itens (quantidade * preço unitário + personalização)
-   - Frete (se repassar_frete = true)
-   - Outras despesas (se repassar_outras_despesas = true)
-   - Desconto
-   - Total final correto
+### 4. Fornecedores
+- Categorias reordenadas em ordem alfabética
+
+### 5. Financeiro
+- Adicionados botões Editar e Excluir em cada despesa
+- Endpoint PUT /api/despesas/{id} para edição
+- Correção na data de vencimento (usando T12:00:00 para evitar timezone issues)
 
 ## Incorporate User Feedback
-- User requested: personalização com tipo e valor, repasse de frete/despesas, sistema de lembrete para cobrar cliente
+- User requested multiple fixes and improvements across 5 modules
