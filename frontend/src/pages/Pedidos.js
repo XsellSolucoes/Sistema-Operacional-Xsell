@@ -545,6 +545,7 @@ export default function Pedidos() {
   const handlePrintInterno = (pedido) => {
     const printWindow = window.open('', '_blank');
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
+    const despesasDetalhadas = pedido.despesas_detalhadas || [];
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -565,6 +566,8 @@ export default function Pedidos() {
             .total-row { margin: 5px 0; font-size: 14px; }
             .lucro-final { font-size: 20px; font-weight: bold; color: #059669; margin-top: 10px; }
             .warning-box { background-color: #fee2e2; border: 2px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 5px; }
+            .despesa-repassada { color: #059669; }
+            .despesa-interna { color: #dc2626; }
           </style>
         </head>
         <body>
@@ -589,11 +592,11 @@ export default function Pedidos() {
             <thead>
               <tr>
                 <th>Produto</th>
+                <th>Variação</th>
                 <th>Qtd</th>
                 <th>P. Compra</th>
                 <th>P. Venda</th>
                 <th>Personalização</th>
-                <th>Despesas</th>
                 <th>Lucro Unit.</th>
                 <th>Lucro Total</th>
               </tr>
@@ -609,17 +612,17 @@ export default function Pedidos() {
                   vendaUnit += item.valor_personalizacao;
                 }
                 
-                const lucroUnit = vendaUnit - custoUnit - item.despesas;
+                const lucroUnit = vendaUnit - custoUnit;
                 const lucroTotal = lucroUnit * item.quantidade;
                 
                 return `
                   <tr>
                     <td>${item.produto_codigo} - ${item.produto_descricao}</td>
+                    <td>${item.variacao || '-'}</td>
                     <td>${item.quantidade}</td>
                     <td>R$ ${item.preco_compra.toFixed(2)}</td>
                     <td>R$ ${item.preco_venda.toFixed(2)}</td>
-                    <td>${item.personalizado ? `${item.tipo_personalizacao}<br>R$ ${item.valor_personalizacao.toFixed(2)}<br>${item.repassar_personalizacao ? '(Repassado)' : '(Interno)'}` : '-'}</td>
-                    <td>R$ ${item.despesas.toFixed(2)}</td>
+                    <td>${item.personalizado ? `${item.tipo_personalizacao}<br>R$ ${item.valor_personalizacao.toFixed(2)}<br>${item.repassar_personalizacao ? '<span class="despesa-repassada">(Repassado)</span>' : '<span class="despesa-interna">(Interno)</span>'}` : '-'}</td>
                     <td>R$ ${lucroUnit.toFixed(2)}</td>
                     <td style="font-weight: bold; color: ${lucroTotal >= 0 ? '#059669' : '#dc2626'}">R$ ${lucroTotal.toFixed(2)}</td>
                   </tr>
@@ -629,12 +632,35 @@ export default function Pedidos() {
           </table>
 
           <div class="warning-box">
-            <h4 style="margin-top: 0; color: #dc2626;">⚠️ Despesas Completas:</h4>
-            <p><strong>Frete:</strong> R$ ${pedido.frete.toFixed(2)}</p>
-            ${pedido.outras_despesas > 0 ? `
-              <p><strong>${pedido.descricao_outras_despesas || 'Outras Despesas'}:</strong> R$ ${pedido.outras_despesas.toFixed(2)} 
-              ${pedido.repassar_outras_despesas ? '<span style="color: #059669;">(Repassado ao cliente)</span>' : '<span style="color: #dc2626;">(Custo interno)</span>'}</p>
-            ` : ''}
+            <h4 style="margin-top: 0; color: #dc2626;">⚠️ Despesas Completas do Pedido:</h4>
+            <table style="width: 100%; margin: 10px 0;">
+              <thead>
+                <tr style="background-color: #fecaca;">
+                  <th style="text-align: left;">Descrição</th>
+                  <th style="text-align: right;">Valor</th>
+                  <th style="text-align: center;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frete</td>
+                  <td style="text-align: right;">R$ ${pedido.frete.toFixed(2)}</td>
+                  <td style="text-align: center;">${pedido.repassar_frete ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
+                </tr>
+                ${despesasDetalhadas.map(d => `
+                  <tr>
+                    <td>${d.descricao}</td>
+                    <td style="text-align: right;">R$ ${d.valor.toFixed(2)}</td>
+                    <td style="text-align: center;">${d.repassar ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
+                  </tr>
+                `).join('')}
+                <tr style="font-weight: bold; background-color: #fecaca;">
+                  <td>TOTAL DESPESAS</td>
+                  <td style="text-align: right;">R$ ${pedido.despesas_totais.toFixed(2)}</td>
+                  <td style="text-align: center;">-</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <div class="totals">
