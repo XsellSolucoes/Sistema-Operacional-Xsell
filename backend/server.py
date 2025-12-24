@@ -161,6 +161,17 @@ class PedidoCreate(BaseModel):
     vendedor: str
 
 
+class ItemOrcamento(BaseModel):
+    produto_id: Optional[str] = None
+    produto_codigo: Optional[str] = None
+    descricao: str
+    quantidade: float
+    unidade: str = "UN"
+    preco_unitario: float
+    preco_total: float
+    imagem_url: Optional[str] = None
+
+
 class Orcamento(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -169,12 +180,20 @@ class Orcamento(BaseModel):
     data: datetime
     cliente_id: str
     cliente_nome: str
-    itens: List[ItemPedido]
+    cliente_cnpj: Optional[str] = None
+    cliente_endereco: Optional[str] = None
+    cliente_telefone: Optional[str] = None
+    cliente_email: Optional[str] = None
+    vendedor: Optional[str] = None
+    itens: List[Dict[str, Any]]
     valor_total: float
-    validade_dias: int
+    desconto: float = 0.0
+    valor_final: float = 0.0
+    validade_dias: int = 15
     forma_pagamento: str
     prazo_entrega: str
-    frete_por_conta: str
+    frete_por_conta: str = "destinatario"
+    valor_frete: float = 0.0
     observacoes: str = "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
     status: str = "aberto"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -182,11 +201,14 @@ class Orcamento(BaseModel):
 
 class OrcamentoCreate(BaseModel):
     cliente_id: str
-    itens: List[ItemPedido]
-    validade_dias: int
+    vendedor: Optional[str] = None
+    itens: List[Dict[str, Any]]
+    validade_dias: int = 15
     forma_pagamento: str
     prazo_entrega: str
-    frete_por_conta: str
+    frete_por_conta: str = "destinatario"
+    valor_frete: float = 0.0
+    desconto: float = 0.0
     observacoes: Optional[str] = "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
 
 
