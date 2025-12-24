@@ -527,8 +527,14 @@ async def get_clientes(current_user: User = Depends(get_current_user)):
 async def create_cliente(cliente_data: ClienteCreate, current_user: User = Depends(get_current_user)):
     import uuid
     cliente_id = str(uuid.uuid4())
+    
+    # Gerar código sequencial automático
+    count = await db.clientes.count_documents({})
+    codigo = f"CLI-{count + 1:06d}"
+    
     cliente_doc = cliente_data.model_dump()
     cliente_doc["id"] = cliente_id
+    cliente_doc["codigo"] = codigo
     cliente_doc["created_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.clientes.insert_one(cliente_doc)
