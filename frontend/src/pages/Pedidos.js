@@ -455,14 +455,14 @@ export default function Pedidos() {
               <span class="info-label">Subtotal:</span> 
               R$ ${pedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
-            ${pedido.frete > 0 ? `
+            ${pedido.frete > 0 && pedido.repassar_frete ? `
               <div class="total-row">
                 <span class="info-label">Frete:</span> 
                 R$ ${pedido.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
             ` : ''}
             <div class="total-final">
-              Total: R$ ${(pedido.valor_total_venda + pedido.frete).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              Total: R$ ${(pedido.valor_total_venda + (pedido.repassar_frete ? pedido.frete : 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
           </div>
 
