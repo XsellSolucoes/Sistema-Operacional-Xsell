@@ -290,15 +290,17 @@ export default function Pedidos() {
       valorTotalVenda += parseFloat(formData.frete || 0);
     }
     
-    // Adiciona outras despesas ao valor se repassar
-    if (formData.repassar_outras_despesas) {
-      valorTotalVenda += parseFloat(formData.outras_despesas || 0);
-    }
+    // Adiciona despesas repassadas ao valor de venda
+    despesasPedido.forEach(d => {
+      if (d.repassar) {
+        valorTotalVenda += d.valor;
+      }
+    });
     
+    // Total de todas as despesas (frete + despesas do pedido)
     const despesasTotais = (
-      itens.reduce((sum, item) => sum + (item.despesas * item.quantidade), 0) + 
       parseFloat(formData.frete || 0) + 
-      parseFloat(formData.outras_despesas || 0)
+      despesasPedido.reduce((sum, d) => sum + d.valor, 0)
     );
     
     const lucroTotal = valorTotalVenda - custoTotal - despesasTotais;
