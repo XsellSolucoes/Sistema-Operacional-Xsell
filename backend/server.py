@@ -119,6 +119,7 @@ class Produto(BaseModel):
     preco_venda: float
     margem: float = 40.0
     fornecedor: Optional[str] = None
+    variacoes: Optional[List[Dict[str, Any]]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -129,6 +130,7 @@ class ProdutoCreate(BaseModel):
     preco_venda: Optional[float] = None
     margem: Optional[float] = 40.0
     fornecedor: Optional[str] = None
+    variacoes: Optional[List[Dict[str, Any]]] = None
 
 
 class ItemPedido(BaseModel):
