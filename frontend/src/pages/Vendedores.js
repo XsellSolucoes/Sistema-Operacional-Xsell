@@ -245,6 +245,16 @@ export default function Vendedores() {
             </form>
           </DialogContent>
         </Dialog>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+              ⚠️ Acesso Restrito
+            </Badge>
+            <span className="text-sm text-muted-foreground">
+              Apenas Presidente pode cadastrar/editar vendedores
+            </span>
+          </div>
+        )}
       </div>
 
       <Card className="shadow-sm">
