@@ -1183,8 +1183,11 @@ async def get_relatorio_geral(
     data_fim: Optional[str] = None,
     cliente_id: Optional[str] = None,
     vendedor: Optional[str] = None,
+    segmento: Optional[str] = None,
+    cidade: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
+    # Build filter for pedidos
     filter_pedidos = {}
     if data_inicio and data_fim:
         filter_pedidos["data"] = {
@@ -1195,19 +1198,148 @@ async def get_relatorio_geral(
         filter_pedidos["cliente_id"] = cliente_id
     if vendedor:
         filter_pedidos["vendedor"] = vendedor
+    if segmento and segmento != "todos":
+        filter_pedidos["tipo_venda"] = segmento
     
+    # Build filter for licitações
+    filter_licitacoes = {}
+    if data_inicio and data_fim:
+        filter_licitacoes["data_empenho"] = {
+            "$gte": datetime.fromisoformat(data_inicio).isoformat(),
+            "$lte": datetime.fromisoformat(data_fim).isoformat()
+        }
+    if cidade:
+        filter_licitacoes["cidade"] = {"$regex": cidade, "$options": "i"}
+    
+    # Build filter for despesas
+    filter_despesas = {}
+    if data_inicio and data_fim:
+        filter_despesas["data_despesa"] = {
+            "$gte": datetime.fromisoformat(data_inicio).isoformat(),
+            "$lte": datetime.fromisoformat(data_fim).isoformat()
+        }
+    
+    # Fetch data
     pedidos = await db.pedidos.find(filter_pedidos, {"_id": 0}).to_list(1000)
-    licitacoes = await db.licitacoes.find({}, {"_id": 0}).to_list(1000)
-    despesas = await db.despesas.find({}, {"_id": 0}).to_list(1000)
     
-    total_faturado = sum(p["valor_total_venda"] for p in pedidos)
-    total_custo = sum(p["custo_total"] for p in pedidos)
-    total_lucro_pedidos = sum(p["lucro_total"] for p in pedidos)
-    total_lucro_licitacoes = sum(l["lucro_total"] for l in licitacoes)
-    total_despesas = sum(d["valor"] for d in despesas)
+    # If segmento is "licitacao", only get licitações, otherwise filter based on segmento
+    if segmento == "licitacao":
+        licitacoes = await db.licitacoes.find(filter_licitacoes, {"_id": 0}).to_list(1000)
+        pedidos = []  # Clear pedidos when filtering by licitação
+    elif segmento and segmento != "todos":
+        licitacoes = []  # Clear licitações when filtering by other segments
+    else:
+        licitacoes = await db.licitacoes.find(filter_licitacoes, {"_id": 0}).to_list(1000)
+    
+    despesas = await db.despesas.find(filter_despesas, {"_id": 0}).to_list(1000)
+    
+    # If cidade filter is set, also filter pedidos by cliente cidade
+    if cidade:
+        cliente_ids_in_cidade = []
+        clientes = await db.clientes.find({"cidade": {"$regex": cidade, "$options": "i"}}, {"_id": 0, "id": 1}).to_list(1000)
+        cliente_ids_in_cidade = [c["id"] for c in clientes]
+        pedidos = [p for p in pedidos if p.get("cliente_id") in cliente_ids_in_cidade]
+    
+    # Calculate totals
+    total_faturado_pedidos = sum(p.get("valor_total_venda", 0) for p in pedidos)
+    total_faturado_licitacoes = sum(lic.get("valor_total_venda", 0) for lic in licitacoes)
+    total_faturado = total_faturado_pedidos + total_faturado_licitacoes
+    
+    total_custo_pedidos = sum(p.get("custo_total", 0) for p in pedidos)
+    total_custo_licitacoes = sum(lic.get("valor_total_compra", 0) for lic in licitacoes)
+    total_custo = total_custo_pedidos + total_custo_licitacoes
+    
+    total_lucro_pedidos = sum(p.get("lucro_total", 0) for p in pedidos)
+    total_lucro_licitacoes = sum(lic.get("lucro_total", 0) for lic in licitacoes)
+    
+    total_despesas = sum(d.get("valor", 0) for d in despesas)
+    
+    # Group by segmento
+    segmentos_pedidos = {}
+    for p in pedidos:
+        seg = p.get("tipo_venda", "outros")
+        if seg not in segmentos_pedidos:
+            segmentos_pedidos[seg] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+        segmentos_pedidos[seg]["quantidade"] += 1
+        segmentos_pedidos[seg]["faturamento"] += p.get("valor_total_venda", 0)
+        segmentos_pedidos[seg]["lucro"] += p.get("lucro_total", 0)
+    
+    # Add licitações as a segment
+    if licitacoes:
+        segmentos_pedidos["licitacao"] = {
+            "quantidade": len(licitacoes),
+            "faturamento": total_faturado_licitacoes,
+            "lucro": total_lucro_licitacoes
+        }
+    
+    # Group by vendedor
+    vendedores_stats = {}
+    for p in pedidos:
+        vend = p.get("vendedor", "Não informado")
+        if vend not in vendedores_stats:
+            vendedores_stats[vend] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+        vendedores_stats[vend]["quantidade"] += 1
+        vendedores_stats[vend]["faturamento"] += p.get("valor_total_venda", 0)
+        vendedores_stats[vend]["lucro"] += p.get("lucro_total", 0)
+    
+    # Group by cidade (from clientes)
+    cidades_stats = {}
+    clientes_dict = {}
+    clientes_all = await db.clientes.find({}, {"_id": 0}).to_list(1000)
+    for c in clientes_all:
+        clientes_dict[c["id"]] = c
+    
+    for p in pedidos:
+        cliente = clientes_dict.get(p.get("cliente_id"), {})
+        cid = cliente.get("cidade", "Não informada")
+        if cid not in cidades_stats:
+            cidades_stats[cid] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+        cidades_stats[cid]["quantidade"] += 1
+        cidades_stats[cid]["faturamento"] += p.get("valor_total_venda", 0)
+        cidades_stats[cid]["lucro"] += p.get("lucro_total", 0)
+    
+    # Add licitações cities
+    for lic in licitacoes:
+        cid = lic.get("cidade", "Não informada")
+        if cid not in cidades_stats:
+            cidades_stats[cid] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+        cidades_stats[cid]["quantidade"] += 1
+        cidades_stats[cid]["faturamento"] += lic.get("valor_total_venda", 0)
+        cidades_stats[cid]["lucro"] += lic.get("lucro_total", 0)
+    
+    # Recent transactions (last 10)
+    transacoes_recentes = []
+    for p in sorted(pedidos, key=lambda x: x.get("data", ""), reverse=True)[:10]:
+        transacoes_recentes.append({
+            "tipo": "Pedido",
+            "numero": p.get("numero", ""),
+            "cliente": p.get("cliente_nome", ""),
+            "valor": p.get("valor_total_venda", 0),
+            "lucro": p.get("lucro_total", 0),
+            "data": p.get("data", ""),
+            "segmento": p.get("tipo_venda", ""),
+            "vendedor": p.get("vendedor", "")
+        })
+    
+    for lic in sorted(licitacoes, key=lambda x: x.get("data_empenho", ""), reverse=True)[:10]:
+        transacoes_recentes.append({
+            "tipo": "Licitação",
+            "numero": lic.get("numero_licitacao", ""),
+            "cliente": lic.get("orgao_publico", ""),
+            "valor": lic.get("valor_total_venda", 0),
+            "lucro": lic.get("lucro_total", 0),
+            "data": lic.get("data_empenho", ""),
+            "segmento": "licitacao",
+            "vendedor": "-"
+        })
+    
+    # Sort all transactions by date
+    transacoes_recentes = sorted(transacoes_recentes, key=lambda x: x.get("data", ""), reverse=True)[:10]
     
     return {
         "total_faturado": total_faturado,
+        "total_faturado_pedidos": total_faturado_pedidos,
+        "total_faturado_licitacoes": total_faturado_licitacoes,
         "total_custo": total_custo,
         "total_lucro_pedidos": total_lucro_pedidos,
         "total_lucro_licitacoes": total_lucro_licitacoes,
@@ -1215,7 +1347,48 @@ async def get_relatorio_geral(
         "total_despesas": total_despesas,
         "lucro_liquido": total_lucro_pedidos + total_lucro_licitacoes - total_despesas,
         "quantidade_pedidos": len(pedidos),
-        "quantidade_licitacoes": len(licitacoes)
+        "quantidade_licitacoes": len(licitacoes),
+        "por_segmento": segmentos_pedidos,
+        "por_vendedor": vendedores_stats,
+        "por_cidade": cidades_stats,
+        "transacoes_recentes": transacoes_recentes
+    }
+
+
+@api_router.get("/relatorios/filtros")
+async def get_filtros_disponiveis(current_user: User = Depends(get_current_user)):
+    """Return available filter options for the reports page"""
+    # Get unique vendedores
+    vendedores = await db.vendedores.find({"ativo": True}, {"_id": 0, "nome": 1}).to_list(100)
+    vendedores_list = [v["nome"] for v in vendedores]
+    
+    # Get unique cidades from clientes and licitações
+    clientes = await db.clientes.find({}, {"_id": 0, "cidade": 1}).to_list(1000)
+    licitacoes = await db.licitacoes.find({}, {"_id": 0, "cidade": 1}).to_list(1000)
+    
+    cidades_set = set()
+    for c in clientes:
+        if c.get("cidade"):
+            cidades_set.add(c["cidade"])
+    for lic in licitacoes:
+        if lic.get("cidade"):
+            cidades_set.add(lic["cidade"])
+    
+    cidades_list = sorted(list(cidades_set))
+    
+    # Segmentos disponíveis
+    segmentos = [
+        {"value": "todos", "label": "Todos"},
+        {"value": "licitacao", "label": "Licitação"},
+        {"value": "consumidor_final", "label": "Consumidor Final"},
+        {"value": "revenda", "label": "Revenda"},
+        {"value": "brindeiros", "label": "Brindeiros"}
+    ]
+    
+    return {
+        "vendedores": vendedores_list,
+        "cidades": cidades_list,
+        "segmentos": segmentos
     }
 
 
