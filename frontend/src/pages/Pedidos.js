@@ -141,22 +141,27 @@ export default function Pedidos() {
     setBuscandoProduto(true);
     try {
       const response = await axios.get(`${API}/produtos/codigo/${novoItem.codigo_produto}`, getAuthHeader());
+      const produto = response.data;
+      setProdutoEncontrado(produto);
       setNovoItem({
         ...novoItem,
-        produto_id: response.data.id,
-        produto_nome: `${response.data.codigo} - ${response.data.descricao}`,
-        preco_compra: response.data.preco_compra.toString(),
-        preco_venda: response.data.preco_venda.toString()
+        produto_id: produto.id,
+        produto_nome: `${produto.codigo} - ${produto.descricao}`,
+        preco_compra: produto.preco_compra.toString(),
+        preco_venda: produto.preco_venda.toString(),
+        variacao_selecionada: ''
       });
       toast.success('Produto encontrado!');
     } catch (error) {
       toast.error('Produto não encontrado');
+      setProdutoEncontrado(null);
       setNovoItem({
         ...novoItem,
         produto_id: '',
         produto_nome: '',
         preco_compra: '0',
-        preco_venda: '0'
+        preco_venda: '0',
+        variacao_selecionada: ''
       });
     } finally {
       setBuscandoProduto(false);
@@ -166,11 +171,14 @@ export default function Pedidos() {
   const handleProdutoChange = (produtoId) => {
     const produto = produtos.find(p => p.id === produtoId);
     if (produto) {
+      setProdutoEncontrado(produto);
       setNovoItem({
         ...novoItem,
         produto_id: produtoId,
+        produto_nome: `${produto.codigo} - ${produto.descricao}`,
         preco_compra: produto.preco_compra.toString(),
-        preco_venda: produto.preco_venda.toString()
+        preco_venda: produto.preco_venda.toString(),
+        variacao_selecionada: ''
       });
     }
   };
