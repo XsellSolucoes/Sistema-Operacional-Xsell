@@ -193,22 +193,9 @@ export default function Pedidos() {
     const quantidade = parseFloat(novoItem.quantidade);
     const precoCompra = parseFloat(novoItem.preco_compra);
     const precoVenda = parseFloat(novoItem.preco_venda);
-    const valorPersonalizacao = parseFloat(novoItem.valor_personalizacao);
     
-    // Cálculo do lucro por item
-    let custoTotal = precoCompra;
-    let vendaTotal = precoVenda;
-    
-    // Se personalizado e repassar, adiciona ao valor de venda
-    if (novoItem.personalizado && novoItem.repassar_personalizacao) {
-      vendaTotal += valorPersonalizacao;
-    }
-    // Se personalizado e não repassar, adiciona ao custo
-    else if (novoItem.personalizado && !novoItem.repassar_personalizacao) {
-      custoTotal += valorPersonalizacao;
-    }
-    
-    const lucroItem = (vendaTotal - custoTotal) * quantidade;
+    // Cálculo do lucro por item (sem valor de personalização)
+    const lucroItem = (precoVenda - precoCompra) * quantidade;
 
     const item = {
       produto_id: novoItem.produto_id,
@@ -220,8 +207,6 @@ export default function Pedidos() {
       lucro_item: lucroItem,
       personalizado: novoItem.personalizado,
       tipo_personalizacao: novoItem.tipo_personalizacao || null,
-      valor_personalizacao: valorPersonalizacao,
-      repassar_personalizacao: novoItem.repassar_personalizacao,
       variacao: novoItem.variacao_selecionada || null
     };
 
