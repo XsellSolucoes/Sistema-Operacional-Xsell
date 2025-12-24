@@ -697,6 +697,13 @@ async def get_orcamentos(current_user: User = Depends(get_current_user)):
             orc["data"] = datetime.fromisoformat(orc["data"])
         if isinstance(orc.get("created_at"), str):
             orc["created_at"] = datetime.fromisoformat(orc["created_at"])
+        # Handle legacy data
+        if "valor_final" not in orc:
+            orc["valor_final"] = orc.get("valor_total", 0) - orc.get("desconto", 0)
+        if "desconto" not in orc:
+            orc["desconto"] = 0.0
+        if "valor_frete" not in orc:
+            orc["valor_frete"] = 0.0
     return orcamentos
 
 
@@ -711,6 +718,14 @@ async def get_orcamento(orcamento_id: str, current_user: User = Depends(get_curr
     if isinstance(orcamento.get("created_at"), str):
         orcamento["created_at"] = datetime.fromisoformat(orcamento["created_at"])
     
+    # Handle legacy data
+    if "valor_final" not in orcamento:
+        orcamento["valor_final"] = orcamento.get("valor_total", 0) - orcamento.get("desconto", 0)
+    if "desconto" not in orcamento:
+        orcamento["desconto"] = 0.0
+    if "valor_frete" not in orcamento:
+        orcamento["valor_frete"] = 0.0
+    
     return Orcamento(**orcamento)
 
 
@@ -719,23 +734,35 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
     import uuid
     orc_id = str(uuid.uuid4())
     
-    count = await db.orcamentos.count_documents({})
-    numero = f"ORC-{count + 1:06d}"
+    # Get next number based on year
+    ano_atual = datetime.now().year
+    count = await db.orcamentos.count_documents({"numero": {"$regex": f"^ORC-{ano_atual}"}})
+    numero = f"ORC-{ano_atual}-{count + 1:04d}"
     
     cliente = await db.clientes.find_one({"id": orc_data.cliente_id}, {"_id": 0})
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente not found")
     
-    valor_total = sum(item.preco_venda * item.quantidade for item in orc_data.itens)
+    # Calculate totals
+    valor_total = sum(item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0)) for item in orc_data.itens)
+    valor_final = valor_total + orc_data.valor_frete - orc_data.desconto
     
     orc_doc = {
         "id": orc_id,
         "numero": numero,
         "data": datetime.now(timezone.utc).isoformat(),
         "cliente_id": orc_data.cliente_id,
-        "cliente_nome": cliente["nome"],
-        "itens": [item.model_dump() for item in orc_data.itens],
+        "cliente_nome": cliente.get("nome") or cliente.get("razao_social", ""),
+        "cliente_cnpj": cliente.get("cnpj", ""),
+        "cliente_endereco": cliente.get("endereco", ""),
+        "cliente_telefone": cliente.get("telefone", ""),
+        "cliente_email": cliente.get("email", ""),
+        "vendedor": orc_data.vendedor,
+        "itens": orc_data.itens,
         "valor_total": valor_total,
+        "desconto": orc_data.desconto,
+        "valor_frete": orc_data.valor_frete,
+        "valor_final": valor_final,
         "validade_dias": orc_data.validade_dias,
         "forma_pagamento": orc_data.forma_pagamento,
         "prazo_entrega": orc_data.prazo_entrega,
@@ -751,26 +778,111 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
     return Orcamento(**orc_doc)
 
 
-@api_router.post("/orcamentos/{orcamento_id}/convert", response_model=Pedido)
-async def convert_orcamento_to_pedido(orcamento_id: str, vendedor: str, current_user: User = Depends(get_current_user)):
+@api_router.put("/orcamentos/{orcamento_id}", response_model=Orcamento)
+async def update_orcamento(orcamento_id: str, orc_data: OrcamentoCreate, current_user: User = Depends(get_current_user)):
+    existing = await db.orcamentos.find_one({"id": orcamento_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Orçamento not found")
+    
+    cliente = await db.clientes.find_one({"id": orc_data.cliente_id}, {"_id": 0})
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    
+    # Calculate totals
+    valor_total = sum(item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0)) for item in orc_data.itens)
+    valor_final = valor_total + orc_data.valor_frete - orc_data.desconto
+    
+    update_doc = {
+        "cliente_id": orc_data.cliente_id,
+        "cliente_nome": cliente.get("nome") or cliente.get("razao_social", ""),
+        "cliente_cnpj": cliente.get("cnpj", ""),
+        "cliente_endereco": cliente.get("endereco", ""),
+        "cliente_telefone": cliente.get("telefone", ""),
+        "cliente_email": cliente.get("email", ""),
+        "vendedor": orc_data.vendedor,
+        "itens": orc_data.itens,
+        "valor_total": valor_total,
+        "desconto": orc_data.desconto,
+        "valor_frete": orc_data.valor_frete,
+        "valor_final": valor_final,
+        "validade_dias": orc_data.validade_dias,
+        "forma_pagamento": orc_data.forma_pagamento,
+        "prazo_entrega": orc_data.prazo_entrega,
+        "frete_por_conta": orc_data.frete_por_conta,
+        "observacoes": orc_data.observacoes
+    }
+    
+    await db.orcamentos.update_one({"id": orcamento_id}, {"$set": update_doc})
+    
+    orc = await db.orcamentos.find_one({"id": orcamento_id}, {"_id": 0})
+    if isinstance(orc.get("data"), str):
+        orc["data"] = datetime.fromisoformat(orc["data"])
+    if isinstance(orc.get("created_at"), str):
+        orc["created_at"] = datetime.fromisoformat(orc["created_at"])
+    
+    return Orcamento(**orc)
+
+
+@api_router.post("/orcamentos/{orcamento_id}/convert")
+async def convert_orcamento_to_pedido(orcamento_id: str, vendedor: Optional[str] = None, current_user: User = Depends(get_current_user)):
     orc = await db.orcamentos.find_one({"id": orcamento_id}, {"_id": 0})
     if not orc:
         raise HTTPException(status_code=404, detail="Orçamento not found")
     
-    pedido_data = PedidoCreate(
-        cliente_id=orc["cliente_id"],
-        itens=[ItemPedido(**item) for item in orc["itens"]],
-        frete=0.0,
-        forma_pagamento=orc["forma_pagamento"],
-        tipo_venda="orcamento",
-        vendedor=vendedor
-    )
+    if orc.get("status") == "convertido":
+        raise HTTPException(status_code=400, detail="Orçamento já foi convertido em pedido")
     
-    pedido = await create_pedido(pedido_data, current_user)
+    import uuid
+    pedido_id = str(uuid.uuid4())
     
+    # Get next pedido number
+    ano_atual = datetime.now().year
+    count = await db.pedidos.count_documents({"numero": {"$regex": f"^PED-{ano_atual}"}})
+    numero_pedido = f"PED-{ano_atual}-{count + 1:04d}"
+    
+    # Convert items to pedido format
+    itens_pedido = []
+    for item in orc.get("itens", []):
+        itens_pedido.append({
+            "produto_id": item.get("produto_id", ""),
+            "produto_codigo": item.get("produto_codigo", ""),
+            "produto_descricao": item.get("descricao", ""),
+            "quantidade": item.get("quantidade", 1),
+            "preco_venda": item.get("preco_unitario", 0),
+            "preco_compra": 0,
+            "subtotal": item.get("preco_total", 0),
+            "personalizado": False,
+            "tipo_personalizacao": "",
+            "valor_personalizacao": 0
+        })
+    
+    pedido_doc = {
+        "id": pedido_id,
+        "numero": numero_pedido,
+        "data": datetime.now(timezone.utc).isoformat(),
+        "cliente_id": orc["cliente_id"],
+        "cliente_nome": orc.get("cliente_nome", ""),
+        "vendedor": vendedor or orc.get("vendedor", ""),
+        "itens": itens_pedido,
+        "frete": orc.get("valor_frete", 0),
+        "outras_despesas": 0,
+        "descricao_outras_despesas": "",
+        "repassar_despesas_cliente": False,
+        "prazo_entrega": orc.get("prazo_entrega", ""),
+        "forma_pagamento": orc.get("forma_pagamento", ""),
+        "tipo_venda": "consumidor_final",
+        "custo_total": 0,
+        "valor_total_venda": orc.get("valor_final", orc.get("valor_total", 0)),
+        "lucro_total": 0,
+        "status": "pedido_feito",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "orcamento_origem": orcamento_id
+    }
+    
+    await db.pedidos.insert_one(pedido_doc)
     await db.orcamentos.update_one({"id": orcamento_id}, {"$set": {"status": "convertido"}})
     
-    return pedido
+    return {"message": "Orçamento convertido em pedido com sucesso", "pedido_id": pedido_id, "pedido_numero": numero_pedido}
 
 
 @api_router.delete("/orcamentos/{orcamento_id}")
