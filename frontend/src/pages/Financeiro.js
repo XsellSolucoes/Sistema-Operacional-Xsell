@@ -279,8 +279,8 @@ export default function Financeiro() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nova Despesa</DialogTitle>
-                <DialogDescription>Cadastre uma nova despesa</DialogDescription>
+                <DialogTitle>{editingDespesa ? 'Editar Despesa' : 'Nova Despesa'}</DialogTitle>
+                <DialogDescription>{editingDespesa ? 'Atualize os dados da despesa' : 'Cadastre uma nova despesa'}</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmitDespesa} className="space-y-4">
                 <div className="space-y-2">
