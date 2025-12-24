@@ -248,6 +248,11 @@ export default function Pedidos() {
       return sum + venda;
     }, 0);
     
+    // Adiciona frete ao valor se repassar
+    if (formData.repassar_frete) {
+      valorTotalVenda += parseFloat(formData.frete || 0);
+    }
+    
     // Adiciona outras despesas ao valor se repassar
     if (formData.repassar_outras_despesas) {
       valorTotalVenda += parseFloat(formData.outras_despesas || 0);
@@ -289,6 +294,7 @@ export default function Pedidos() {
         cliente_id: formData.cliente_id,
         itens,
         frete: parseFloat(formData.frete),
+        repassar_frete: formData.repassar_frete,
         outras_despesas: parseFloat(formData.outras_despesas),
         descricao_outras_despesas: formData.descricao_outras_despesas,
         repassar_outras_despesas: formData.repassar_outras_despesas,
