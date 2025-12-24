@@ -1468,8 +1468,44 @@ async def get_vendedores(current_user: User = Depends(get_current_user)):
     return vendedores
 
 
+async def verificar_nivel_presidente(current_user: User):
+    """Verifica se o usuário atual tem nível Presidente"""
+    # Buscar o vendedor pelo email do usuário logado
+    vendedor = await db.vendedores.find_one({"email": current_user.email}, {"_id": 0})
+    
+    if not vendedor:
+        # Se não for vendedor cadastrado, verificar se é o admin/primeiro usuário
+        # ou simplesmente negar acesso
+        raise HTTPException(
+            status_code=403, 
+            detail="Acesso negado. Você precisa ser um vendedor com nível Presidente para realizar esta ação."
+        )
+    
+    if vendedor.get("nivel_acesso", "").lower() != "presidente":
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Acesso negado. Apenas usuários com nível 'Presidente' podem realizar esta ação. Seu nível atual: {vendedor.get('nivel_acesso', 'Não definido')}"
+        )
+    
+    return vendedor
+
+
+@api_router.get("/vendedores/me")
+async def get_current_vendedor(current_user: User = Depends(get_current_user)):
+    """Retorna informações do vendedor atual logado"""
+    vendedor = await db.vendedores.find_one({"email": current_user.email}, {"_id": 0})
+    if vendedor:
+        if isinstance(vendedor.get("created_at"), str):
+            vendedor["created_at"] = datetime.fromisoformat(vendedor["created_at"])
+        return {"vendedor": vendedor, "is_presidente": vendedor.get("nivel_acesso", "").lower() == "presidente"}
+    return {"vendedor": None, "is_presidente": False}
+
+
 @api_router.post("/vendedores", response_model=Vendedor)
 async def create_vendedor(vend_data: VendedorCreate, current_user: User = Depends(get_current_user)):
+    # Verificar se é Presidente (apenas Presidente pode criar vendedores)
+    await verificar_nivel_presidente(current_user)
+    
     import uuid
     vend_id = str(uuid.uuid4())
     
@@ -1488,6 +1524,9 @@ async def create_vendedor(vend_data: VendedorCreate, current_user: User = Depend
 
 @api_router.put("/vendedores/{vendedor_id}", response_model=Vendedor)
 async def update_vendedor(vendedor_id: str, vend_data: VendedorCreate, current_user: User = Depends(get_current_user)):
+    # Verificar se é Presidente (apenas Presidente pode alterar vendedores/níveis)
+    await verificar_nivel_presidente(current_user)
+    
     result = await db.vendedores.update_one(
         {"id": vendedor_id},
         {"$set": vend_data.model_dump()}
@@ -1503,6 +1542,9 @@ async def update_vendedor(vendedor_id: str, vend_data: VendedorCreate, current_u
 
 @api_router.delete("/vendedores/{vendedor_id}")
 async def delete_vendedor(vendedor_id: str, current_user: User = Depends(get_current_user)):
+    # Verificar se é Presidente (apenas Presidente pode excluir vendedores)
+    await verificar_nivel_presidente(current_user)
+    
     result = await db.vendedores.delete_one({"id": vendedor_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Vendedor not found")
