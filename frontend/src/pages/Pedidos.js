@@ -65,13 +65,22 @@ export default function Pedidos() {
     quantidade: '1',
     preco_compra: '0',
     preco_venda: '0',
-    despesas: '0',
     personalizado: false,
     tipo_personalizacao: '',
     valor_personalizacao: '0',
-    repassar_personalizacao: false
+    repassar_personalizacao: false,
+    variacao_selecionada: ''
   });
+  const [produtoEncontrado, setProdutoEncontrado] = useState(null);
   const [buscandoProduto, setBuscandoProduto] = useState(false);
+  
+  // Estado para múltiplas despesas
+  const [despesasPedido, setDespesasPedido] = useState([]);
+  const [novaDespesa, setNovaDespesa] = useState({
+    descricao: '',
+    valor: '',
+    repassar: false
+  });
 
   useEffect(() => {
     fetchData();
