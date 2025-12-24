@@ -1,0 +1,149 @@
+{
+  "timestamp": "2025-12-24T10:12:23.103773",
+  "total_tests": 28,
+  "passed_tests": 27,
+  "failed_tests": 1,
+  "success_rate": 96.42857142857143,
+  "test_results": [
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Available Filters",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Filters Structure Validation",
+      "success": true,
+      "details": "Keys present: ['vendedores', 'cidades', 'segmentos']"
+    },
+    {
+      "test": "Segmentos Options Validation",
+      "success": true,
+      "details": "Segmentos: ['todos', 'licitacao', 'consumidor_final', 'revenda', 'brindeiros']"
+    },
+    {
+      "test": "Get General Report (no filters)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Report Structure Validation",
+      "success": true,
+      "details": "Missing keys: []"
+    },
+    {
+      "test": "Numeric Fields Validation",
+      "success": true,
+      "details": "Numeric values: [('total_faturado', 29910.0), ('total_custo', 18750.0), ('lucro_total', 8730.0), ('total_despesas', 250.0), ('lucro_liquido', 8480.0)]"
+    },
+    {
+      "test": "Lucro L\u00edquido Calculation",
+      "success": true,
+      "details": "Expected: 8480.0, Actual: 8480.0"
+    },
+    {
+      "test": "Get Report with Date Filter (Current Month)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Date Filter Response Structure",
+      "success": true,
+      "details": "Keys: ['total_faturado', 'total_faturado_pedidos', 'total_faturado_licitacoes', 'total_custo', 'total_lucro_pedidos', 'total_lucro_licitacoes', 'lucro_total', 'total_despesas', 'lucro_liquido', 'quantidade_pedidos', 'quantidade_licitacoes', 'por_segmento', 'por_vendedor', 'por_cidade', 'transacoes_recentes']"
+    },
+    {
+      "test": "Get Report with Date Filter (Last 7 Days)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Licita\u00e7\u00e3o Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Licita\u00e7\u00e3o Filter - Structure Check",
+      "success": true,
+      "details": "Licita\u00e7\u00f5es: 2, Pedidos: 0"
+    },
+    {
+      "test": "Get Report with Consumidor Final Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Revenda Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Brindeiros Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Vendedor Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Cidade Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Report with Combined Filters",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Combined Filters Response",
+      "success": true,
+      "details": "Total faturado: 0"
+    },
+    {
+      "test": "Get Report for Analysis",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Por Segmento Structure",
+      "success": true,
+      "details": "Segment keys: ['quantidade', 'faturamento', 'lucro']"
+    },
+    {
+      "test": "Por Vendedor Structure",
+      "success": true,
+      "details": "Vendedor keys: ['quantidade', 'faturamento', 'lucro']"
+    },
+    {
+      "test": "Por Cidade Structure",
+      "success": true,
+      "details": "Cidade keys: ['quantidade', 'faturamento', 'lucro']"
+    },
+    {
+      "test": "Transa\u00e7\u00f5es Recentes Structure",
+      "success": true,
+      "details": "Transaction keys: ['tipo', 'numero', 'cliente', 'valor', 'lucro', 'data', 'segmento', 'vendedor']"
+    },
+    {
+      "test": "Invalid Date Format",
+      "success": false,
+      "details": "Status: 200 (Expected: 422) - Unknown error"
+    },
+    {
+      "test": "Future Date Filter",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Future Date Results",
+      "success": true,
+      "details": "Faturado: 0, Pedidos: 0"
+    }
+  ]
+}
