@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-12-24T09:42:00.431205",
-  "total_tests": 22,
-  "passed_tests": 21,
-  "failed_tests": 1,
-  "success_rate": 95.45454545454545,
+  "timestamp": "2025-12-24T11:53:20.389407",
+  "total_tests": 32,
+  "passed_tests": 30,
+  "failed_tests": 2,
+  "success_rate": 93.75,
   "test_results": [
     {
       "test": "User Login",
@@ -11,109 +11,159 @@
       "details": "Status: 200"
     },
     {
-      "test": "Get Licita\u00e7\u00f5es (empty)",
+      "test": "Setup: Create Test Cliente",
       "success": true,
       "details": "Status: 200"
     },
     {
-      "test": "Create Licita\u00e7\u00e3o",
+      "test": "Setup: Create Test Produto",
       "success": true,
       "details": "Status: 200"
     },
     {
-      "test": "Automatic Calculations",
-      "success": true,
-      "details": "Venda: 3100.0, Compra: 2000.0, Despesas: 550.0, Lucro: 550.0"
-    },
-    {
-      "test": "Get Specific Licita\u00e7\u00e3o",
+      "test": "P1: Create Or\u00e7amento with Personalization & New Fields",
       "success": true,
       "details": "Status: 200"
     },
     {
-      "test": "Update Licita\u00e7\u00e3o",
+      "test": "P1: Automatic Numbering Format (ORC-2025-XXXX)",
       "success": true,
-      "details": "Status: 200"
+      "details": "Generated number: ORC-2025-0004, Expected format: ORC-2025-XXXX"
     },
     {
-      "test": "Update Status to Programado",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Get Cash Balance Before Payment",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Update Status to Pago",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Get Cash Balance After Payment",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Cash Integration on Payment",
-      "success": true,
-      "details": "Before: 7020.0, After: 8220.0, Expected: 8220.0"
-    },
-    {
-      "test": "Get All Licita\u00e7\u00f5es",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Find Created Licita\u00e7\u00e3o in List",
-      "success": true,
-      "details": "Found 2 licita\u00e7\u00f5es total"
-    },
-    {
-      "test": "Delete Licita\u00e7\u00e3o",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "Verify Deletion (should fail)",
-      "success": true,
-      "details": "Status: 404"
-    },
-    {
-      "test": "Create Invalid Licita\u00e7\u00e3o (empty fields)",
-      "success": true,
-      "details": "Status: 422"
-    },
-    {
-      "test": "Get Non-existent Licita\u00e7\u00e3o",
-      "success": true,
-      "details": "Status: 404"
-    },
-    {
-      "test": "Update Non-existent Licita\u00e7\u00e3o",
+      "test": "P1: Automatic Calculations with Frete/Despesas Repasse",
       "success": false,
-      "details": "Status: 422 (Expected: 404) - [{'type': 'missing', 'loc': ['body', 'cidade'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'estado'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'orgao_publico'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'numero_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'data_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'numero_nota_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'produtos'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}]"
+      "details": "Subtotal: 540.0, Final: 595.0, Expected Final: 575.0"
     },
     {
-      "test": "Delete Non-existent Licita\u00e7\u00e3o",
+      "test": "P1: Days to Charge Response Configuration",
       "success": true,
-      "details": "Status: 404"
+      "details": "dias_cobrar_resposta: 5, data_cobrar_resposta: 2025-12-29T11:53:19.713741Z"
     },
     {
-      "test": "Create Licita\u00e7\u00e3o with Zero Values",
+      "test": "P1: Get Specific Or\u00e7amento with New Fields",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Personalization Fields Preserved",
+      "success": true,
+      "details": "personalizado: True, tipo: Grava\u00e7\u00e3o a Laser, valor: 10.0"
+    },
+    {
+      "test": "P1: Mark Cliente as Cobrado",
       "success": true,
       "details": "Status: 200"
     },
     {
-      "test": "Zero Values Calculations",
+      "test": "P1: Cliente Cobrado Status Update",
       "success": true,
-      "details": "All totals should be 0: Venda=0.0, Compra=0.0, Despesas=0.0, Lucro=0.0"
+      "details": "cliente_cobrado: True"
     },
     {
-      "test": "Delete Zero Values Licita\u00e7\u00e3o",
+      "test": "P1: Edit Or\u00e7amento with Different Repasse Options",
       "success": true,
       "details": "Status: 200"
+    },
+    {
+      "test": "P1: Calculations with Repasse = False",
+      "success": false,
+      "details": "Final value: 515.0, Expected: 495.0"
+    },
+    {
+      "test": "P1: Convert Or\u00e7amento to Pedido",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Pedido Creation from Or\u00e7amento",
+      "success": true,
+      "details": "Created pedido: PED-2025-0004"
+    },
+    {
+      "test": "P1: Get All Or\u00e7amentos for Status Cards",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Find Created Or\u00e7amento in List",
+      "success": true,
+      "details": "Found 4 or\u00e7amentos total, 0 abertos, 4 convertidos"
+    },
+    {
+      "test": "P1: Create Or\u00e7amento with 1-day Response Time",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Urgent Or\u00e7amento Created for Cobran\u00e7a Testing",
+      "success": true,
+      "details": "Created urgent or\u00e7amento: ORC-2025-0005"
+    },
+    {
+      "test": "P2: Create Expense Due Today",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Create Expense Due Tomorrow",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Get Expenses Near Expiration",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Alert Card Data (Expenses Near Due)",
+      "success": true,
+      "details": "Found 5 expenses near expiration"
+    },
+    {
+      "test": "P2: Get Notification Configuration",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Email Destination Configuration",
+      "success": true,
+      "details": "Email destino: pauloconsultordenegocios@gmail.com, Expected: pauloconsultordenegocios@gmail.com"
+    },
+    {
+      "test": "P2: Send Email Notification Endpoint",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Email Processing Logic",
+      "success": true,
+      "details": "Message: API Key do Resend n\u00e3o configurada. Configure RESEND_API_KEY no arquivo .env, Expenses found: 5"
+    },
+    {
+      "test": "P3: Get Current User Level (/api/vendedores/me)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P3: User Level Check (test@xsell.com NOT president)",
+      "success": true,
+      "details": "is_presidente: False, vendedor: None"
+    },
+    {
+      "test": "P3: Non-President Create Vendedor (should fail 403)",
+      "success": true,
+      "details": "Status: 403"
+    },
+    {
+      "test": "P3: Get Vendedores List (should work)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P3: Non-President Edit Vendedor (should fail 403)",
+      "success": true,
+      "details": "Status: 403"
     }
   ]
 }
