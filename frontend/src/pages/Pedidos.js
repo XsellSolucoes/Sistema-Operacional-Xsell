@@ -783,12 +783,24 @@ export default function Pedidos() {
                 </div>
                 <div className="space-y-2">
                   <Label>Frete (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.frete}
-                    onChange={(e) => setFormData({...formData, frete: e.target.value})}
-                  />
+                  <div className="flex gap-2 items-end">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.frete}
+                      onChange={(e) => setFormData({...formData, frete: e.target.value})}
+                      className="flex-1"
+                    />
+                    <label className="flex items-center space-x-2 cursor-pointer whitespace-nowrap pb-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.repassar_frete}
+                        onChange={(e) => setFormData({...formData, repassar_frete: e.target.checked})}
+                        className="rounded"
+                      />
+                      <span className="text-xs">Repassar</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
