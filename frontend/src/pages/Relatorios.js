@@ -63,6 +63,7 @@ export default function Relatorios() {
     if (filtros.data_inicio && filtros.data_fim) {
       fetchRelatorio();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchFiltrosDisponiveis = async () => {
