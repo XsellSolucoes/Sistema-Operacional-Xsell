@@ -62,3 +62,29 @@
 ## Files of Reference
 - /app/backend/server.py (endpoint /api/relatorios/geral and /api/relatorios/filtros)
 - /app/frontend/src/pages/Relatorios.js
+
+## Testing Protocol - P1, P2, P3
+
+### P1 - Módulo Orçamentos
+- Date: 2024-12-24
+- Features: Novo Orçamento, vinculação clientes/produtos, numeração automática, conversão para pedido, PDF, anexar imagem
+
+### P2 - Notificações de Vencimento
+- Email para pauloconsultordenegocios@gmail.com
+- Alerta 1 dia antes do vencimento
+- Card de alerta no Financeiro
+
+### P3 - Controle de Acesso
+- Apenas Presidente pode cadastrar/editar vendedores
+- Verificação de nível implementada
+
+## Test Credentials
+- Email: test@xsell.com
+- Password: Test123!
+- Email Presidente: deve corresponder ao email do vendedor com nivel_acesso=presidente
+
+## Files of Reference
+- /app/backend/server.py
+- /app/frontend/src/pages/Orcamentos.js
+- /app/frontend/src/pages/Financeiro.js
+- /app/frontend/src/pages/Vendedores.js
