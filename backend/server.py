@@ -1271,7 +1271,6 @@ async def delete_despesa(despesa_id: str, current_user: User = Depends(get_curre
 async def get_despesas_proximas_vencimento(current_user: User = Depends(get_current_user)):
     """Get despesas that are due within 1 day"""
     hoje = datetime.now(timezone.utc)
-    amanha = hoje + timedelta(days=1)
     
     despesas = await db.despesas.find({"status": "pendente"}, {"_id": 0}).to_list(1000)
     
@@ -1306,7 +1305,6 @@ async def enviar_notificacao_vencimentos(current_user: User = Depends(get_curren
     
     # Get despesas próximas ao vencimento
     hoje = datetime.now(timezone.utc)
-    amanha = hoje + timedelta(days=1)
     
     despesas = await db.despesas.find({"status": "pendente"}, {"_id": 0}).to_list(1000)
     
