@@ -23,6 +23,8 @@ export default function Vendedores() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editingVendedor, setEditingVendedor] = useState(null);
+  const [isPresidente, setIsPresidente] = useState(false);
+  const [currentVendedor, setCurrentVendedor] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
@@ -33,7 +35,18 @@ export default function Vendedores() {
 
   useEffect(() => {
     fetchVendedores();
+    checkCurrentUserLevel();
   }, []);
+
+  const checkCurrentUserLevel = async () => {
+    try {
+      const response = await axios.get(`${API}/vendedores/me`, getAuthHeader());
+      setIsPresidente(response.data.is_presidente);
+      setCurrentVendedor(response.data.vendedor);
+    } catch (error) {
+      console.error('Erro ao verificar nível:', error);
+    }
+  };
 
   const fetchVendedores = async () => {
     try {
@@ -60,7 +73,8 @@ export default function Vendedores() {
       resetForm();
       fetchVendedores();
     } catch (error) {
-      toast.error('Erro ao salvar vendedor');
+      const detail = error.response?.data?.detail || 'Erro ao salvar vendedor';
+      toast.error(detail);
     }
   };
 
@@ -71,7 +85,8 @@ export default function Vendedores() {
       toast.success('Vendedor excluído com sucesso!');
       fetchVendedores();
     } catch (error) {
-      toast.error('Erro ao excluir vendedor');
+      const detail = error.response?.data?.detail || 'Erro ao excluir vendedor';
+      toast.error(detail);
     }
   };
 
