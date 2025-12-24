@@ -134,14 +134,15 @@ class ProdutoCreate(BaseModel):
 
 
 class ItemPedido(BaseModel):
-    produto_id: str
+    produto_id: str = ""
     produto_codigo: str
     produto_descricao: str
     quantidade: float
-    preco_compra: float
+    preco_compra: float = 0.0
     preco_venda: float
     despesas: float = 0.0
-    lucro_item: float
+    lucro_item: float = 0.0
+    subtotal: float = 0.0
     personalizado: bool = False
     tipo_personalizacao: Optional[str] = None
     valor_personalizacao: float = 0.0
@@ -156,20 +157,20 @@ class Pedido(BaseModel):
     data: datetime
     cliente_id: str
     cliente_nome: str
-    itens: List[ItemPedido]
+    itens: List[Dict[str, Any]]
     frete: float = 0.0
     repassar_frete: bool = False
     outras_despesas: float = 0.0
     descricao_outras_despesas: Optional[str] = None
     repassar_outras_despesas: bool = False
     prazo_entrega: str = ""
-    forma_pagamento: str
-    tipo_venda: str
-    vendedor: str
-    custo_total: float
-    valor_total_venda: float
-    despesas_totais: float
-    lucro_total: float
+    forma_pagamento: str = ""
+    tipo_venda: str = ""
+    vendedor: Optional[str] = None
+    custo_total: float = 0.0
+    valor_total_venda: float = 0.0
+    despesas_totais: float = 0.0
+    lucro_total: float = 0.0
     status: str = "pendente"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
