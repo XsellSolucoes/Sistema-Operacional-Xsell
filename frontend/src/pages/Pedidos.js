@@ -1174,31 +1174,6 @@ export default function Pedidos() {
                         ))}
                       </TableBody>
                     </Table>
-                  </div>
-                )}
-                                  </Badge>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">Não</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              R$ {item.lucro_item.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => removerItem(index)}
-                              >
-                                <X className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
 
                     <div className="mt-4 space-y-2 text-right p-4 bg-gray-50 rounded-md">
                       <div className="text-sm">
