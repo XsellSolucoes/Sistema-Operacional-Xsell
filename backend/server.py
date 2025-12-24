@@ -1272,6 +1272,29 @@ async def update_despesa_status(despesa_id: str, status: str, current_user: User
     return {"message": "Status updated"}
 
 
+@api_router.put("/despesas/{despesa_id}", response_model=Despesa)
+async def update_despesa(despesa_id: str, desp_data: DespesaCreate, current_user: User = Depends(get_current_user)):
+    desp = await db.despesas.find_one({"id": despesa_id}, {"_id": 0})
+    if not desp:
+        raise HTTPException(status_code=404, detail="Despesa not found")
+    
+    update_doc = desp_data.model_dump()
+    update_doc["data_despesa"] = update_doc["data_despesa"].isoformat()
+    update_doc["data_vencimento"] = update_doc["data_vencimento"].isoformat()
+    
+    await db.despesas.update_one({"id": despesa_id}, {"$set": update_doc})
+    
+    updated_desp = await db.despesas.find_one({"id": despesa_id}, {"_id": 0})
+    if isinstance(updated_desp.get("data_despesa"), str):
+        updated_desp["data_despesa"] = datetime.fromisoformat(updated_desp["data_despesa"])
+    if isinstance(updated_desp.get("data_vencimento"), str):
+        updated_desp["data_vencimento"] = datetime.fromisoformat(updated_desp["data_vencimento"])
+    if isinstance(updated_desp.get("created_at"), str):
+        updated_desp["created_at"] = datetime.fromisoformat(updated_desp["created_at"])
+    
+    return Despesa(**updated_desp)
+
+
 @api_router.delete("/despesas/{despesa_id}")
 async def delete_despesa(despesa_id: str, current_user: User = Depends(get_current_user)):
     result = await db.despesas.delete_one({"id": despesa_id})
