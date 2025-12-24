@@ -68,7 +68,8 @@ export default function Produtos() {
         ...formData,
         preco_compra: parseFloat(formData.preco_compra),
         preco_venda: parseFloat(formData.preco_venda),
-        margem: parseFloat(formData.margem)
+        margem: parseFloat(formData.margem),
+        variacoes: formData.variacoes
       };
 
       if (editingProduto) {
@@ -105,7 +106,8 @@ export default function Produtos() {
       preco_compra: produto.preco_compra.toString(),
       preco_venda: produto.preco_venda.toString(),
       margem: produto.margem.toString(),
-      fornecedor: produto.fornecedor || ''
+      fornecedor: produto.fornecedor || '',
+      variacoes: produto.variacoes || []
     });
     setOpen(true);
   };
@@ -117,9 +119,31 @@ export default function Produtos() {
       preco_compra: '',
       preco_venda: '',
       margem: '40',
-      fornecedor: ''
+      fornecedor: '',
+      variacoes: []
     });
+    setNovaVariacao({ cor: '', capacidade: '', material: '' });
     setEditingProduto(null);
+  };
+
+  const adicionarVariacao = () => {
+    if (!novaVariacao.cor && !novaVariacao.capacidade && !novaVariacao.material) {
+      toast.error('Preencha ao menos um campo da variação');
+      return;
+    }
+    setFormData({
+      ...formData,
+      variacoes: [...formData.variacoes, { ...novaVariacao, id: Date.now().toString() }]
+    });
+    setNovaVariacao({ cor: '', capacidade: '', material: '' });
+    toast.success('Variação adicionada!');
+  };
+
+  const removerVariacao = (id) => {
+    setFormData({
+      ...formData,
+      variacoes: formData.variacoes.filter(v => v.id !== id)
+    });
   };
 
   const handleOpenChange = (isOpen) => {
