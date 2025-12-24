@@ -99,16 +99,22 @@ export default function Financeiro() {
       const payload = {
         ...formData,
         valor: parseFloat(formData.valor),
-        data_despesa: new Date(formData.data_despesa).toISOString(),
-        data_vencimento: new Date(formData.data_vencimento).toISOString()
+        data_despesa: new Date(formData.data_despesa + 'T12:00:00').toISOString(),
+        data_vencimento: new Date(formData.data_vencimento + 'T12:00:00').toISOString()
       };
-      await axios.post(`${API}/despesas`, payload, getAuthHeader());
-      toast.success('Despesa cadastrada com sucesso!');
+      
+      if (editingDespesa) {
+        await axios.put(`${API}/despesas/${editingDespesa.id}`, payload, getAuthHeader());
+        toast.success('Despesa atualizada com sucesso!');
+      } else {
+        await axios.post(`${API}/despesas`, payload, getAuthHeader());
+        toast.success('Despesa cadastrada com sucesso!');
+      }
       setOpen(false);
       resetForm();
       fetchData();
     } catch (error) {
-      toast.error('Erro ao cadastrar despesa');
+      toast.error('Erro ao salvar despesa');
     }
   };
 
@@ -140,6 +146,32 @@ export default function Financeiro() {
     }
   };
 
+  const handleEditDespesa = (despesa) => {
+    setEditingDespesa(despesa);
+    const dataDespesa = despesa.data_despesa ? new Date(despesa.data_despesa).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    const dataVencimento = despesa.data_vencimento ? new Date(despesa.data_vencimento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    setFormData({
+      tipo: despesa.tipo,
+      descricao: despesa.descricao,
+      valor: despesa.valor.toString(),
+      data_despesa: dataDespesa,
+      data_vencimento: dataVencimento,
+      status: despesa.status
+    });
+    setOpen(true);
+  };
+
+  const handleDeleteDespesa = async (despesaId) => {
+    if (!window.confirm('Tem certeza que deseja excluir esta despesa?')) return;
+    try {
+      await axios.delete(`${API}/despesas/${despesaId}`, getAuthHeader());
+      toast.success('Despesa excluída com sucesso!');
+      fetchData();
+    } catch (error) {
+      toast.error('Erro ao excluir despesa');
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       tipo: 'agua',
@@ -149,6 +181,14 @@ export default function Financeiro() {
       data_vencimento: new Date().toISOString().split('T')[0],
       status: 'pendente'
     });
+    setEditingDespesa(null);
+  };
+
+  const handleOpenChange = (isOpen) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      resetForm();
+    }
   };
 
   if (loading) {
