@@ -359,6 +359,17 @@ export default function Produtos() {
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          setViewingProduto(produto);
+                          setViewOpen(true);
+                        }}
+                        data-testid={`view-produto-${produto.id}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -367,6 +378,52 @@ export default function Produtos() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Visualização */}
+      <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detalhes do Produto</DialogTitle>
+            <DialogDescription>Informações completas do produto</DialogDescription>
+          </DialogHeader>
+          {viewingProduto && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="font-medium">Código:</span> {viewingProduto.codigo}</div>
+                <div><span className="font-medium">Fornecedor:</span> {viewingProduto.fornecedor || '-'}</div>
+                <div className="col-span-2"><span className="font-medium">Descrição:</span> {viewingProduto.descricao}</div>
+                <div><span className="font-medium">Preço Compra:</span> R$ {viewingProduto.preco_compra.toFixed(2)}</div>
+                <div><span className="font-medium">Margem:</span> {viewingProduto.margem}%</div>
+                <div className="col-span-2"><span className="font-medium">Preço Venda:</span> <span className="text-primary font-bold">R$ {viewingProduto.preco_venda.toFixed(2)}</span></div>
+              </div>
+              {viewingProduto.variacoes && viewingProduto.variacoes.length > 0 && (
+                <div className="border-t pt-3">
+                  <span className="font-medium text-sm">Variações:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {viewingProduto.variacoes.map((v, i) => (
+                      <Badge key={i} variant="outline">
+                        {[v.cor, v.capacidade, v.material].filter(Boolean).join(' / ')}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
+            <Button 
+              className="bg-secondary hover:bg-secondary/90"
+              onClick={() => {
+                setViewOpen(false);
+                handleEdit(viewingProduto);
+              }}
+            >
+              Editar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
