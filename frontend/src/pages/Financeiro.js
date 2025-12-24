@@ -166,6 +166,19 @@ export default function Financeiro() {
           <p className="text-muted-foreground mt-2">Controle financeiro e despesas</p>
         </div>
         <div className="flex gap-2">
+          {/* Botão de Notificação por Email */}
+          <Button 
+            variant="outline" 
+            onClick={enviarNotificacaoEmail}
+            className={despesasVencimento.length > 0 ? 'border-orange-500 text-orange-600' : ''}
+            data-testid="enviar-notificacao-button"
+          >
+            <Mail className="h-4 w-4 mr-2" />
+            Enviar Alerta por Email
+            {despesasVencimento.length > 0 && (
+              <Badge className="ml-2 bg-orange-500">{despesasVencimento.length}</Badge>
+            )}
+          </Button>
           <Dialog open={openMovimento} onOpenChange={setOpenMovimento}>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="add-movimento-button">
