@@ -726,6 +726,8 @@ async def get_orcamentos(current_user: User = Depends(get_current_user)):
     for orc in orcamentos:
         if isinstance(orc.get("data"), str):
             orc["data"] = datetime.fromisoformat(orc["data"])
+        if orc.get("data_cobrar_resposta") and isinstance(orc["data_cobrar_resposta"], str):
+            orc["data_cobrar_resposta"] = datetime.fromisoformat(orc["data_cobrar_resposta"])
         if isinstance(orc.get("created_at"), str):
             orc["created_at"] = datetime.fromisoformat(orc["created_at"])
         # Handle legacy data
@@ -735,6 +737,14 @@ async def get_orcamentos(current_user: User = Depends(get_current_user)):
             orc["desconto"] = 0.0
         if "valor_frete" not in orc:
             orc["valor_frete"] = 0.0
+        if "repassar_frete" not in orc:
+            orc["repassar_frete"] = True
+        if "outras_despesas" not in orc:
+            orc["outras_despesas"] = 0.0
+        if "repassar_outras_despesas" not in orc:
+            orc["repassar_outras_despesas"] = False
+        if "cliente_cobrado" not in orc:
+            orc["cliente_cobrado"] = False
     return orcamentos
 
 
