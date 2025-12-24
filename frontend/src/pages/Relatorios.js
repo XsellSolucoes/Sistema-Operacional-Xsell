@@ -171,6 +171,400 @@ export default function Relatorios() {
     }));
   };
 
+  // Generate PDF/Print report
+  const gerarRelatorioHTML = () => {
+    if (!relatorio) return '';
+    
+    const dataInicio = filtros.data_inicio ? new Date(filtros.data_inicio).toLocaleDateString('pt-BR') : '-';
+    const dataFim = filtros.data_fim ? new Date(filtros.data_fim).toLocaleDateString('pt-BR') : '-';
+    const dataGeracao = new Date().toLocaleString('pt-BR');
+    
+    // Build filters description
+    let filtrosAplicados = [];
+    if (filtros.segmento && filtros.segmento !== 'todos') {
+      filtrosAplicados.push(`Segmento: ${getSegmentoLabel(filtros.segmento)}`);
+    }
+    if (filtros.vendedor) {
+      filtrosAplicados.push(`Vendedor: ${filtros.vendedor}`);
+    }
+    if (filtros.cidade) {
+      filtrosAplicados.push(`Cidade: ${filtros.cidade}`);
+    }
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Relatório XSELL - ${dataGeracao}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            padding: 20px; 
+            color: #333;
+            line-height: 1.5;
+          }
+          .header { 
+            text-align: center; 
+            margin-bottom: 30px; 
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e3a5f;
+          }
+          .header h1 { 
+            color: #1e3a5f; 
+            font-size: 28px; 
+            margin-bottom: 5px;
+          }
+          .header .subtitle {
+            color: #666;
+            font-size: 14px;
+          }
+          .header .periodo {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #f97316;
+            font-weight: bold;
+          }
+          .filtros-aplicados {
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #666;
+          }
+          .kpis { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            margin-bottom: 30px;
+          }
+          .kpi-card { 
+            background: #f8fafc; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center;
+            border: 1px solid #e2e8f0;
+          }
+          .kpi-card.blue { border-left: 4px solid #3b82f6; }
+          .kpi-card.green { border-left: 4px solid #22c55e; }
+          .kpi-card.red { border-left: 4px solid #ef4444; }
+          .kpi-card.orange { border-left: 4px solid #f97316; }
+          .kpi-label { 
+            font-size: 12px; 
+            color: #666; 
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+          .kpi-value { 
+            font-size: 24px; 
+            font-weight: bold; 
+          }
+          .kpi-value.blue { color: #3b82f6; }
+          .kpi-value.green { color: #22c55e; }
+          .kpi-value.red { color: #ef4444; }
+          .kpi-value.orange { color: #f97316; }
+          .kpi-detail {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+          }
+          .section { 
+            margin-bottom: 25px; 
+          }
+          .section-title { 
+            font-size: 16px; 
+            font-weight: bold; 
+            color: #1e3a5f; 
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 13px;
+          }
+          th { 
+            background: #1e3a5f; 
+            color: white; 
+            padding: 12px 10px; 
+            text-align: left;
+            font-weight: 600;
+          }
+          th.right, td.right { text-align: right; }
+          th.center, td.center { text-align: center; }
+          td { 
+            padding: 10px; 
+            border-bottom: 1px solid #e2e8f0;
+          }
+          tr:nth-child(even) { background: #f8fafc; }
+          .resumo-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+          }
+          .resumo-item {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+          }
+          .resumo-item .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3a5f;
+          }
+          .resumo-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+          }
+          .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+          }
+          .badge-pedido { background: #dbeafe; color: #1e40af; }
+          .badge-licitacao { background: #fef3c7; color: #92400e; }
+          @media print {
+            body { padding: 10px; }
+            .kpis { grid-template-columns: repeat(4, 1fr); }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>XSELL SOLUÇÕES CORPORATIVAS</h1>
+          <div class="subtitle">Relatório Gerencial</div>
+          <div class="periodo">Período: ${dataInicio} a ${dataFim}</div>
+        </div>
+        
+        ${filtrosAplicados.length > 0 ? `
+          <div class="filtros-aplicados">
+            <strong>Filtros aplicados:</strong> ${filtrosAplicados.join(' | ')}
+          </div>
+        ` : ''}
+        
+        <div class="kpis">
+          <div class="kpi-card blue">
+            <div class="kpi-label">Faturamento Total</div>
+            <div class="kpi-value blue">R$ ${formatCurrency(relatorio.total_faturado)}</div>
+            <div class="kpi-detail">Pedidos: R$ ${formatCurrency(relatorio.total_faturado_pedidos)} | Licitações: R$ ${formatCurrency(relatorio.total_faturado_licitacoes)}</div>
+          </div>
+          <div class="kpi-card green">
+            <div class="kpi-label">Lucro Bruto</div>
+            <div class="kpi-value green">R$ ${formatCurrency(relatorio.lucro_total)}</div>
+            <div class="kpi-detail">Pedidos: R$ ${formatCurrency(relatorio.total_lucro_pedidos)} | Licitações: R$ ${formatCurrency(relatorio.total_lucro_licitacoes)}</div>
+          </div>
+          <div class="kpi-card red">
+            <div class="kpi-label">Total Despesas</div>
+            <div class="kpi-value red">R$ ${formatCurrency(relatorio.total_despesas)}</div>
+            <div class="kpi-detail">Despesas operacionais</div>
+          </div>
+          <div class="kpi-card orange">
+            <div class="kpi-label">Lucro Líquido</div>
+            <div class="kpi-value orange">R$ ${formatCurrency(relatorio.lucro_liquido)}</div>
+            <div class="kpi-detail">Margem: ${relatorio.total_faturado > 0 ? ((relatorio.lucro_liquido / relatorio.total_faturado) * 100).toFixed(1) : 0}%</div>
+          </div>
+        </div>
+        
+        <div class="resumo-grid">
+          <div class="resumo-item">
+            <div class="value">${relatorio.quantidade_pedidos}</div>
+            <div class="label">Pedidos</div>
+          </div>
+          <div class="resumo-item">
+            <div class="value">${relatorio.quantidade_licitacoes}</div>
+            <div class="label">Licitações</div>
+          </div>
+          <div class="resumo-item">
+            <div class="value">${relatorio.total_faturado > 0 ? ((relatorio.lucro_total / relatorio.total_faturado) * 100).toFixed(1) : 0}%</div>
+            <div class="label">Margem Bruta</div>
+          </div>
+          <div class="resumo-item">
+            <div class="value">${relatorio.total_faturado > 0 ? ((relatorio.lucro_liquido / relatorio.total_faturado) * 100).toFixed(1) : 0}%</div>
+            <div class="label">Margem Líquida</div>
+          </div>
+        </div>
+        
+        ${Object.keys(relatorio.por_segmento || {}).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Análise por Segmento</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Segmento</th>
+                  <th class="center">Quantidade</th>
+                  <th class="right">Faturamento</th>
+                  <th class="right">Lucro</th>
+                  <th class="right">% do Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(relatorio.por_segmento).map(([seg, dados]) => `
+                  <tr>
+                    <td>${getSegmentoLabel(seg)}</td>
+                    <td class="center">${dados.quantidade}</td>
+                    <td class="right">R$ ${formatCurrency(dados.faturamento)}</td>
+                    <td class="right" style="color: #22c55e; font-weight: bold;">R$ ${formatCurrency(dados.lucro)}</td>
+                    <td class="right">${relatorio.total_faturado > 0 ? ((dados.faturamento / relatorio.total_faturado) * 100).toFixed(1) : 0}%</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+        
+        ${Object.keys(relatorio.por_vendedor || {}).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Análise por Vendedor</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Vendedor</th>
+                  <th class="center">Qtd Pedidos</th>
+                  <th class="right">Faturamento</th>
+                  <th class="right">Lucro Gerado</th>
+                  <th class="right">Ticket Médio</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(relatorio.por_vendedor)
+                  .sort((a, b) => b[1].faturamento - a[1].faturamento)
+                  .map(([vend, dados]) => `
+                  <tr>
+                    <td>${vend}</td>
+                    <td class="center">${dados.quantidade}</td>
+                    <td class="right">R$ ${formatCurrency(dados.faturamento)}</td>
+                    <td class="right" style="color: #22c55e; font-weight: bold;">R$ ${formatCurrency(dados.lucro)}</td>
+                    <td class="right">R$ ${formatCurrency(dados.quantidade > 0 ? dados.faturamento / dados.quantidade : 0)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+        
+        ${Object.keys(relatorio.por_cidade || {}).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Análise por Cidade</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Cidade</th>
+                  <th class="center">Operações</th>
+                  <th class="right">Faturamento</th>
+                  <th class="right">Lucro</th>
+                  <th class="right">% do Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.entries(relatorio.por_cidade)
+                  .sort((a, b) => b[1].faturamento - a[1].faturamento)
+                  .map(([cidade, dados]) => `
+                  <tr>
+                    <td>${cidade}</td>
+                    <td class="center">${dados.quantidade}</td>
+                    <td class="right">R$ ${formatCurrency(dados.faturamento)}</td>
+                    <td class="right" style="color: #22c55e; font-weight: bold;">R$ ${formatCurrency(dados.lucro)}</td>
+                    <td class="right">${relatorio.total_faturado > 0 ? ((dados.faturamento / relatorio.total_faturado) * 100).toFixed(1) : 0}%</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+        
+        ${(relatorio.transacoes_recentes || []).length > 0 ? `
+          <div class="section">
+            <div class="section-title">Transações Recentes</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Tipo</th>
+                  <th>Número</th>
+                  <th>Cliente/Órgão</th>
+                  <th>Segmento</th>
+                  <th class="right">Valor</th>
+                  <th class="right">Lucro</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${relatorio.transacoes_recentes.map(trans => `
+                  <tr>
+                    <td>${formatDate(trans.data)}</td>
+                    <td><span class="badge ${trans.tipo === 'Pedido' ? 'badge-pedido' : 'badge-licitacao'}">${trans.tipo}</span></td>
+                    <td>${trans.numero}</td>
+                    <td>${trans.cliente}</td>
+                    <td>${getSegmentoLabel(trans.segmento)}</td>
+                    <td class="right">R$ ${formatCurrency(trans.valor)}</td>
+                    <td class="right" style="color: #22c55e; font-weight: bold;">R$ ${formatCurrency(trans.lucro)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+        
+        <div class="footer">
+          <p>Relatório gerado em ${dataGeracao} | XSELL Soluções Corporativas LTDA</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handlePrint = () => {
+    if (!relatorio) {
+      toast.error('Gere um relatório primeiro');
+      return;
+    }
+    
+    const html = gerarRelatorioHTML();
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+      toast.success('Preparando impressão...');
+    } else {
+      toast.error('Não foi possível abrir a janela de impressão. Verifique o bloqueador de pop-ups.');
+    }
+  };
+
+  const handleSavePDF = () => {
+    if (!relatorio) {
+      toast.error('Gere um relatório primeiro');
+      return;
+    }
+    
+    const html = gerarRelatorioHTML();
+    const pdfWindow = window.open('', '_blank');
+    if (pdfWindow) {
+      pdfWindow.document.write(html);
+      pdfWindow.document.close();
+      toast.success('PDF aberto em nova aba. Use Ctrl+P ou Cmd+P para salvar como PDF.');
+    } else {
+      toast.error('Não foi possível abrir a janela. Verifique o bloqueador de pop-ups.');
+    }
+  };
+
   return (
     <div className="space-y-6" data-testid="relatorios-page">
       {/* Header */}
