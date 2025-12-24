@@ -189,11 +189,10 @@ export default function Pedidos() {
       return;
     }
 
-    const produto = produtos.find(p => p.id === novoItem.produto_id);
+    const produto = produtos.find(p => p.id === novoItem.produto_id) || produtoEncontrado;
     const quantidade = parseFloat(novoItem.quantidade);
     const precoCompra = parseFloat(novoItem.preco_compra);
     const precoVenda = parseFloat(novoItem.preco_venda);
-    const despesas = parseFloat(novoItem.despesas);
     const valorPersonalizacao = parseFloat(novoItem.valor_personalizacao);
     
     // Cálculo do lucro por item
@@ -209,7 +208,7 @@ export default function Pedidos() {
       custoTotal += valorPersonalizacao;
     }
     
-    const lucroItem = (vendaTotal - custoTotal - despesas) * quantidade;
+    const lucroItem = (vendaTotal - custoTotal) * quantidade;
 
     const item = {
       produto_id: novoItem.produto_id,
@@ -218,15 +217,16 @@ export default function Pedidos() {
       quantidade,
       preco_compra: precoCompra,
       preco_venda: precoVenda,
-      despesas,
       lucro_item: lucroItem,
       personalizado: novoItem.personalizado,
       tipo_personalizacao: novoItem.tipo_personalizacao || null,
       valor_personalizacao: valorPersonalizacao,
-      repassar_personalizacao: novoItem.repassar_personalizacao
+      repassar_personalizacao: novoItem.repassar_personalizacao,
+      variacao: novoItem.variacao_selecionada || null
     };
 
     setItens([...itens, item]);
+    setProdutoEncontrado(null);
     setNovoItem({
       codigo_produto: '',
       produto_id: '',
@@ -234,12 +234,32 @@ export default function Pedidos() {
       quantidade: '1',
       preco_compra: '0',
       preco_venda: '0',
-      despesas: '0',
       personalizado: false,
       tipo_personalizacao: '',
       valor_personalizacao: '0',
-      repassar_personalizacao: false
+      repassar_personalizacao: false,
+      variacao_selecionada: ''
     });
+  };
+
+  // Funções para gerenciar despesas do pedido
+  const adicionarDespesa = () => {
+    if (!novaDespesa.descricao || !novaDespesa.valor) {
+      toast.error('Preencha a descrição e o valor da despesa');
+      return;
+    }
+    setDespesasPedido([...despesasPedido, {
+      id: Date.now().toString(),
+      descricao: novaDespesa.descricao,
+      valor: parseFloat(novaDespesa.valor),
+      repassar: novaDespesa.repassar
+    }]);
+    setNovaDespesa({ descricao: '', valor: '', repassar: false });
+    toast.success('Despesa adicionada!');
+  };
+
+  const removerDespesa = (id) => {
+    setDespesasPedido(despesasPedido.filter(d => d.id !== id));
   };
 
   const removerItem = (index) => {
