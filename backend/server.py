@@ -190,6 +190,18 @@ class OrcamentoCreate(BaseModel):
     observacoes: Optional[str] = "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
 
 
+class ProdutoLicitacao(BaseModel):
+    produto_id: Optional[str] = None
+    descricao: str
+    quantidade_empenhada: float
+    quantidade_fornecida: float = 0.0
+    quantidade_restante: float = 0.0
+    preco_compra: float
+    preco_venda: float
+    despesas_extras: float = 0.0
+    lucro_unitario: float = 0.0
+
+
 class Licitacao(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
@@ -201,12 +213,20 @@ class Licitacao(BaseModel):
     numero_empenho: str
     data_empenho: datetime
     numero_nota_empenho: str
+    numero_nota_fornecimento: Optional[str] = None
     produtos: List[Dict[str, Any]]
     previsao_fornecimento: Optional[datetime] = None
     fornecimento_efetivo: Optional[datetime] = None
     previsao_pagamento: Optional[datetime] = None
-    lucro_total: float
-    status: str = "pendente"
+    frete: float = 0.0
+    impostos: float = 0.0
+    outras_despesas: float = 0.0
+    descricao_outras_despesas: Optional[str] = None
+    valor_total_venda: float = 0.0
+    valor_total_compra: float = 0.0
+    despesas_totais: float = 0.0
+    lucro_total: float = 0.0
+    status_pagamento: str = "pendente"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -218,9 +238,15 @@ class LicitacaoCreate(BaseModel):
     numero_empenho: str
     data_empenho: datetime
     numero_nota_empenho: str
+    numero_nota_fornecimento: Optional[str] = None
     produtos: List[Dict[str, Any]]
     previsao_fornecimento: Optional[datetime] = None
+    fornecimento_efetivo: Optional[datetime] = None
     previsao_pagamento: Optional[datetime] = None
+    frete: float = 0.0
+    impostos: float = 0.0
+    outras_despesas: float = 0.0
+    descricao_outras_despesas: Optional[str] = None
 
 
 class Despesa(BaseModel):
