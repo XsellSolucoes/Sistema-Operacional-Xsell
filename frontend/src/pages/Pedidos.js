@@ -1103,41 +1103,28 @@ export default function Pedidos() {
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="nao" id="nao-personalizado" />
-                        <Label htmlFor="nao-personalizado" className="cursor-pointer">Não Personalizado</Label>
+                        <Label htmlFor="nao-personalizado" className="cursor-pointer">SEM PERSONALIZAÇÃO</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="sim" id="sim-personalizado" />
-                        <Label htmlFor="sim-personalizado" className="cursor-pointer">Personalizado</Label>
+                        <Label htmlFor="sim-personalizado" className="cursor-pointer">PERSONALIZADO</Label>
                       </div>
                     </RadioGroup>
 
                     {novoItem.personalizado && (
-                      <div className="grid grid-cols-3 gap-4 mt-3">
+                      <div className="mt-3">
                         <div className="space-y-2">
                           <Label>Tipo de Personalização</Label>
                           <Input
                             value={novoItem.tipo_personalizacao}
                             onChange={(e) => setNovoItem({...novoItem, tipo_personalizacao: e.target.value})}
-                            placeholder="Ex: Bordado, Serigrafia"
+                            placeholder="Ex: Gravação a Laser, Serigrafia, Bordado"
                             data-testid="tipo-personalizacao-input"
                           />
                         </div>
-                        <div className="space-y-2">
-                          <Label>Valor (R$)</Label>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={novoItem.valor_personalizacao}
-                            onChange={(e) => setNovoItem({...novoItem, valor_personalizacao: e.target.value})}
-                            data-testid="valor-personalizacao-input"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <label className="flex items-center space-x-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={novoItem.repassar_personalizacao}
-                              onChange={(e) => setNovoItem({...novoItem, repassar_personalizacao: e.target.checked})}
+                      </div>
+                    )}
+                  </div>
                               className="rounded"
                             />
                             <span className="text-sm">Repassar ao cliente</span>
