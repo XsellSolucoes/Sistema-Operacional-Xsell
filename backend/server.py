@@ -10,7 +10,15 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 import os
 import logging
+import asyncio
 from pathlib import Path
+
+# Try to import resend for email notifications
+try:
+    import resend
+    RESEND_AVAILABLE = True
+except ImportError:
+    RESEND_AVAILABLE = False
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -18,6 +26,14 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
+
+# Email configuration
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+NOTIFICATION_EMAIL = os.environ.get("NOTIFICATION_EMAIL", "pauloconsultordenegocios@gmail.com")
+
+if RESEND_AVAILABLE and RESEND_API_KEY and not RESEND_API_KEY.startswith("re_test"):
+    resend.api_key = RESEND_API_KEY
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
