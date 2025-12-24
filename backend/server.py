@@ -843,9 +843,24 @@ async def update_orcamento(orcamento_id: str, orc_data: OrcamentoCreate, current
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente not found")
     
-    # Calculate totals
-    valor_total = sum(item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0)) for item in orc_data.itens)
-    valor_final = valor_total + orc_data.valor_frete - orc_data.desconto
+    # Calculate totals including personalization
+    valor_itens = 0
+    for item in orc_data.itens:
+        item_total = item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0))
+        if item.get("personalizado"):
+            item_total += item.get("valor_personalizacao", 0) * item.get("quantidade", 1)
+        valor_itens += item_total
+    
+    # Calculate final value based on repasse options
+    valor_frete_cliente = orc_data.valor_frete if orc_data.repassar_frete else 0
+    valor_outras_cliente = orc_data.outras_despesas if orc_data.repassar_outras_despesas else 0
+    valor_total = valor_itens
+    valor_final = valor_total + valor_frete_cliente + valor_outras_cliente - orc_data.desconto
+    
+    # Calculate data_cobrar_resposta if dias_cobrar_resposta is set
+    data_cobrar = existing.get("data_cobrar_resposta")
+    if orc_data.dias_cobrar_resposta and orc_data.dias_cobrar_resposta != existing.get("dias_cobrar_resposta"):
+        data_cobrar = (datetime.now(timezone.utc) + timedelta(days=orc_data.dias_cobrar_resposta)).isoformat()
     
     update_doc = {
         "cliente_id": orc_data.cliente_id,
@@ -859,12 +874,18 @@ async def update_orcamento(orcamento_id: str, orc_data: OrcamentoCreate, current
         "valor_total": valor_total,
         "desconto": orc_data.desconto,
         "valor_frete": orc_data.valor_frete,
+        "repassar_frete": orc_data.repassar_frete,
+        "outras_despesas": orc_data.outras_despesas,
+        "descricao_outras_despesas": orc_data.descricao_outras_despesas,
+        "repassar_outras_despesas": orc_data.repassar_outras_despesas,
         "valor_final": valor_final,
         "validade_dias": orc_data.validade_dias,
         "forma_pagamento": orc_data.forma_pagamento,
         "prazo_entrega": orc_data.prazo_entrega,
         "frete_por_conta": orc_data.frete_por_conta,
-        "observacoes": orc_data.observacoes
+        "observacoes": orc_data.observacoes,
+        "dias_cobrar_resposta": orc_data.dias_cobrar_resposta,
+        "data_cobrar_resposta": data_cobrar
     }
     
     await db.orcamentos.update_one({"id": orcamento_id}, {"$set": update_doc})
@@ -872,10 +893,22 @@ async def update_orcamento(orcamento_id: str, orc_data: OrcamentoCreate, current
     orc = await db.orcamentos.find_one({"id": orcamento_id}, {"_id": 0})
     if isinstance(orc.get("data"), str):
         orc["data"] = datetime.fromisoformat(orc["data"])
+    if orc.get("data_cobrar_resposta") and isinstance(orc["data_cobrar_resposta"], str):
+        orc["data_cobrar_resposta"] = datetime.fromisoformat(orc["data_cobrar_resposta"])
     if isinstance(orc.get("created_at"), str):
         orc["created_at"] = datetime.fromisoformat(orc["created_at"])
     
     return Orcamento(**orc)
+
+
+@api_router.put("/orcamentos/{orcamento_id}/marcar-cobrado")
+async def marcar_cliente_cobrado(orcamento_id: str, cobrado: bool = True, current_user: User = Depends(get_current_user)):
+    orc = await db.orcamentos.find_one({"id": orcamento_id}, {"_id": 0})
+    if not orc:
+        raise HTTPException(status_code=404, detail="Orçamento not found")
+    
+    await db.orcamentos.update_one({"id": orcamento_id}, {"$set": {"cliente_cobrado": cobrado}})
+    return {"message": f"Cliente {'cobrado' if cobrado else 'não cobrado'}", "cliente_cobrado": cobrado}
 
 
 @api_router.post("/orcamentos/{orcamento_id}/convert")
