@@ -1,0 +1,129 @@
+{
+  "timestamp": "2025-12-24T11:08:36.558039",
+  "total_tests": 24,
+  "passed_tests": 24,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Setup: Create Test Cliente",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Setup: Create Test Produto",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Create Or\u00e7amento with Auto Numbering",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Automatic Numbering Format (ORC-2025-XXXX)",
+      "success": true,
+      "details": "Generated number: ORC-2025-0002, Expected format: ORC-2025-XXXX"
+    },
+    {
+      "test": "P1: Get Specific Or\u00e7amento",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Edit Existing Or\u00e7amento",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Convert Or\u00e7amento to Pedido",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Pedido Creation from Or\u00e7amento",
+      "success": true,
+      "details": "Created pedido: PED-2025-0002"
+    },
+    {
+      "test": "P1: Get All Or\u00e7amentos",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P1: Find Created Or\u00e7amento in List",
+      "success": true,
+      "details": "Found 2 or\u00e7amentos total"
+    },
+    {
+      "test": "P2: Create Expense Due Today",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Create Expense Due Tomorrow",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Get Expenses Near Expiration",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Alert Card Data (Expenses Near Due)",
+      "success": true,
+      "details": "Found 4 expenses near expiration"
+    },
+    {
+      "test": "P2: Get Notification Configuration",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Email Destination Configuration",
+      "success": true,
+      "details": "Email destino: pauloconsultordenegocios@gmail.com, Expected: pauloconsultordenegocios@gmail.com"
+    },
+    {
+      "test": "P2: Send Email Notification Endpoint",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P2: Email Processing Logic",
+      "success": true,
+      "details": "Message: API Key do Resend n\u00e3o configurada. Configure RESEND_API_KEY no arquivo .env, Expenses found: 4"
+    },
+    {
+      "test": "P3: Get Current User Level (/api/vendedores/me)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P3: User Level Check (test@xsell.com NOT president)",
+      "success": true,
+      "details": "is_presidente: False, vendedor: None"
+    },
+    {
+      "test": "P3: Non-President Create Vendedor (should fail 403)",
+      "success": true,
+      "details": "Status: 403"
+    },
+    {
+      "test": "P3: Get Vendedores List (should work)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "P3: Non-President Edit Vendedor (should fail 403)",
+      "success": true,
+      "details": "Status: 403"
+    }
+  ]
+}
