@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Wallet, TrendingUp, TrendingDown, Check, Bell, Mail, AlertTriangle } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Check, Bell, Mail, AlertTriangle, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -23,6 +23,7 @@ export default function Financeiro() {
   const [despesas, setDespesas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [editingDespesa, setEditingDespesa] = useState(null);
   const [openMovimento, setOpenMovimento] = useState(false);
   const [despesasVencimento, setDespesasVencimento] = useState([]);
   const [notificacaoConfig, setNotificacaoConfig] = useState({});
