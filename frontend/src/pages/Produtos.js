@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Pencil, Trash2, Eye, X } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -20,6 +21,8 @@ export default function Produtos() {
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewingProduto, setViewingProduto] = useState(null);
   const [editingProduto, setEditingProduto] = useState(null);
   const [formData, setFormData] = useState({
     codigo: '',
@@ -27,8 +30,10 @@ export default function Produtos() {
     preco_compra: '',
     preco_venda: '',
     margem: '40',
-    fornecedor: ''
+    fornecedor: '',
+    variacoes: []
   });
+  const [novaVariacao, setNovaVariacao] = useState({ cor: '', capacidade: '', material: '' });
 
   useEffect(() => {
     fetchProdutos();
