@@ -87,11 +87,14 @@ class Cliente(BaseModel):
     cidade: str
     estado: str
     cep: str
+    email: Optional[str] = None
+    inscricao_estadual: Optional[str] = None
+    telefone: Optional[str] = None
+    whatsapp: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ClienteCreate(BaseModel):
-    codigo: str
     cnpj: str
     nome: str
     razao_social: str
@@ -100,6 +103,10 @@ class ClienteCreate(BaseModel):
     cidade: str
     estado: str
     cep: str
+    email: Optional[str] = None
+    inscricao_estadual: Optional[str] = None
+    telefone: Optional[str] = None
+    whatsapp: Optional[str] = None
 
 
 class Produto(BaseModel):
