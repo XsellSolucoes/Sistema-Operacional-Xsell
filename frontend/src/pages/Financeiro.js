@@ -352,8 +352,10 @@ export default function Financeiro() {
                   </Select>
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-                  <Button type="submit" className="bg-secondary hover:bg-secondary/90" data-testid="save-despesa-button">Cadastrar</Button>
+                  <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
+                  <Button type="submit" className="bg-secondary hover:bg-secondary/90" data-testid="save-despesa-button">
+                    {editingDespesa ? 'Atualizar' : 'Cadastrar'}
+                  </Button>
                 </DialogFooter>
               </form>
             </DialogContent>
