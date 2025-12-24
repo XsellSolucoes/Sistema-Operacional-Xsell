@@ -177,16 +177,16 @@ class Pedido(BaseModel):
 
 class PedidoCreate(BaseModel):
     cliente_id: str
-    itens: List[ItemPedido]
+    itens: List[Dict[str, Any]]
     frete: float = 0.0
     repassar_frete: bool = False
     outras_despesas: float = 0.0
     descricao_outras_despesas: Optional[str] = None
     repassar_outras_despesas: bool = False
     prazo_entrega: str = ""
-    forma_pagamento: str
-    tipo_venda: str
-    vendedor: str
+    forma_pagamento: str = ""
+    tipo_venda: str = ""
+    vendedor: str = ""
 
 
 class ItemOrcamento(BaseModel):
