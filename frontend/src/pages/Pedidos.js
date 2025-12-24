@@ -1125,14 +1125,6 @@ export default function Pedidos() {
                       </div>
                     )}
                   </div>
-                              className="rounded"
-                            />
-                            <span className="text-sm">Repassar ao cliente</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-                  </div>
 
                   <Button type="button" onClick={adicionarItem} className="w-full">
                     <Plus className="h-4 w-4 mr-2" />
@@ -1165,9 +1157,25 @@ export default function Pedidos() {
                               {item.personalizado ? (
                                 <div className="text-xs">
                                   <div>{item.tipo_personalizacao}</div>
-                                  <div>R$ {item.valor_personalizacao.toFixed(2)}</div>
-                                  <Badge variant="secondary" className="mt-1">
-                                    {item.repassar_personalizacao ? 'Repassado' : 'Não repassado'}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-xs">Sem personalização</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium" style={{color: item.lucro_item >= 0 ? '#059669' : '#dc2626'}}>
+                              R$ {item.lucro_item.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon" onClick={() => removerItem(index)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
                                   </Badge>
                                 </div>
                               ) : (
