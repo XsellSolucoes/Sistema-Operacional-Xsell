@@ -774,9 +774,24 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente not found")
     
-    # Calculate totals
-    valor_total = sum(item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0)) for item in orc_data.itens)
-    valor_final = valor_total + orc_data.valor_frete - orc_data.desconto
+    # Calculate totals including personalization
+    valor_itens = 0
+    for item in orc_data.itens:
+        item_total = item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0))
+        if item.get("personalizado"):
+            item_total += item.get("valor_personalizacao", 0) * item.get("quantidade", 1)
+        valor_itens += item_total
+    
+    # Calculate final value based on repasse options
+    valor_frete_cliente = orc_data.valor_frete if orc_data.repassar_frete else 0
+    valor_outras_cliente = orc_data.outras_despesas if orc_data.repassar_outras_despesas else 0
+    valor_total = valor_itens
+    valor_final = valor_total + valor_frete_cliente + valor_outras_cliente - orc_data.desconto
+    
+    # Calculate data_cobrar_resposta if dias_cobrar_resposta is set
+    data_cobrar = None
+    if orc_data.dias_cobrar_resposta:
+        data_cobrar = (datetime.now(timezone.utc) + timedelta(days=orc_data.dias_cobrar_resposta)).isoformat()
     
     orc_doc = {
         "id": orc_id,
@@ -793,6 +808,10 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
         "valor_total": valor_total,
         "desconto": orc_data.desconto,
         "valor_frete": orc_data.valor_frete,
+        "repassar_frete": orc_data.repassar_frete,
+        "outras_despesas": orc_data.outras_despesas,
+        "descricao_outras_despesas": orc_data.descricao_outras_despesas,
+        "repassar_outras_despesas": orc_data.repassar_outras_despesas,
         "valor_final": valor_final,
         "validade_dias": orc_data.validade_dias,
         "forma_pagamento": orc_data.forma_pagamento,
@@ -800,11 +819,16 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
         "frete_por_conta": orc_data.frete_por_conta,
         "observacoes": orc_data.observacoes,
         "status": "aberto",
+        "dias_cobrar_resposta": orc_data.dias_cobrar_resposta,
+        "data_cobrar_resposta": data_cobrar,
+        "cliente_cobrado": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.orcamentos.insert_one(orc_doc)
     orc_doc["data"] = datetime.fromisoformat(orc_doc["data"])
+    if orc_doc.get("data_cobrar_resposta"):
+        orc_doc["data_cobrar_resposta"] = datetime.fromisoformat(orc_doc["data_cobrar_resposta"])
     orc_doc["created_at"] = datetime.fromisoformat(orc_doc["created_at"])
     return Orcamento(**orc_doc)
 
