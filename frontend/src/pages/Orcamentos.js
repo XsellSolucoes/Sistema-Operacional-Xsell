@@ -793,7 +793,7 @@ export default function Orcamentos() {
                       <Select value={formData.dias_cobrar_resposta} onValueChange={(v) => setFormData({...formData, dias_cobrar_resposta: v})}>
                         <SelectTrigger><SelectValue placeholder="Não definido" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Não definido</SelectItem>
+                          <SelectItem value="none">Não definido</SelectItem>
                           {DIAS_COBRAR.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
