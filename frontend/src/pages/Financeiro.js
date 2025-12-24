@@ -320,6 +320,63 @@ export default function Financeiro() {
         </div>
       </div>
 
+      {/* Alerta de Vencimentos */}
+      {despesasVencimento.length > 0 && (
+        <Card className="border-orange-300 bg-orange-50 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-orange-700">
+              <AlertTriangle className="h-5 w-5" />
+              Despesas Próximas ao Vencimento ({despesasVencimento.length})
+            </CardTitle>
+            <CardDescription className="text-orange-600">
+              As seguintes despesas vencem hoje ou amanhã
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Vencimento</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {despesasVencimento.map((d) => (
+                  <TableRow key={d.id}>
+                    <TableCell className="font-medium">{d.descricao}</TableCell>
+                    <TableCell>{d.tipo}</TableCell>
+                    <TableCell className="text-right text-red-600 font-bold">
+                      R$ {d.valor?.toFixed(2)}
+                    </TableCell>
+                    <TableCell>{new Date(d.data_vencimento).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>
+                      <Badge className={d.dias_para_vencer === 0 ? 'bg-red-600' : 'bg-orange-500'}>
+                        {d.dias_para_vencer === 0 ? 'VENCE HOJE!' : 'Vence amanhã'}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <div className="mt-4 flex justify-between items-center">
+              <p className="text-sm text-orange-700">
+                Email de destino: <strong>{notificacaoConfig.email_destino || 'Não configurado'}</strong>
+              </p>
+              <Button 
+                onClick={enviarNotificacaoEmail}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Enviar Alerta por Email
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3">
         <Card className="shadow-sm" data-testid="saldo-card">
           <CardHeader>
