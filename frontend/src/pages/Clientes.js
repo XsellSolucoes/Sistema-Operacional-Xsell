@@ -357,9 +357,13 @@ export default function Clientes() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="font-medium">Código:</span> {viewingCliente.codigo}</div>
                 <div><span className="font-medium">CNPJ:</span> {viewingCliente.cnpj}</div>
+                <div><span className="font-medium">Inscrição Estadual:</span> {viewingCliente.inscricao_estadual || '-'}</div>
                 <div className="col-span-2"><span className="font-medium">Nome:</span> {viewingCliente.nome}</div>
                 <div className="col-span-2"><span className="font-medium">Razão Social:</span> {viewingCliente.razao_social}</div>
                 <div className="col-span-2"><span className="font-medium">Nome Fantasia:</span> {viewingCliente.nome_fantasia}</div>
+                <div><span className="font-medium">E-mail:</span> {viewingCliente.email || '-'}</div>
+                <div><span className="font-medium">Telefone:</span> {viewingCliente.telefone || '-'}</div>
+                <div><span className="font-medium">WhatsApp:</span> {viewingCliente.whatsapp || '-'}</div>
                 <div className="col-span-2"><span className="font-medium">Endereço:</span> {viewingCliente.endereco}</div>
                 <div><span className="font-medium">Cidade:</span> {viewingCliente.cidade}</div>
                 <div><span className="font-medium">Estado:</span> {viewingCliente.estado}</div>
