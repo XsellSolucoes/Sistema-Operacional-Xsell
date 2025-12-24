@@ -161,8 +161,7 @@ class Pedido(BaseModel):
     frete: float = 0.0
     repassar_frete: bool = False
     outras_despesas: float = 0.0
-    descricao_outras_despesas: Optional[str] = None
-    repassar_outras_despesas: bool = False
+    despesas_detalhadas: Optional[List[Dict[str, Any]]] = None
     prazo_entrega: str = ""
     forma_pagamento: str = ""
     tipo_venda: str = ""
