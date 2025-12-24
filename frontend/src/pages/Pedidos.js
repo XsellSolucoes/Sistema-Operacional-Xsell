@@ -329,14 +329,17 @@ export default function Pedidos() {
     try {
       const vendedor = vendedores.find(v => v.id === formData.vendedor_id);
       
+      // Calcular total de despesas
+      const totalDespesas = despesasPedido.reduce((sum, d) => sum + d.valor, 0);
+      const despesasRepassadas = despesasPedido.filter(d => d.repassar).reduce((sum, d) => sum + d.valor, 0);
+      
       const payload = {
         cliente_id: formData.cliente_id,
         itens,
         frete: parseFloat(formData.frete),
         repassar_frete: formData.repassar_frete,
-        outras_despesas: parseFloat(formData.outras_despesas),
-        descricao_outras_despesas: formData.descricao_outras_despesas,
-        repassar_outras_despesas: formData.repassar_outras_despesas,
+        outras_despesas: totalDespesas,
+        despesas_detalhadas: despesasPedido,
         prazo_entrega: formData.prazo_entrega,
         forma_pagamento: formData.forma_pagamento,
         tipo_venda: formData.tipo_venda,
