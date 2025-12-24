@@ -797,9 +797,8 @@ async def create_orcamento(orc_data: OrcamentoCreate, current_user: User = Depen
     # Calculate totals including personalization
     valor_itens = 0
     for item in orc_data.itens:
+        # preco_total already includes personalization from frontend
         item_total = item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0))
-        if item.get("personalizado"):
-            item_total += item.get("valor_personalizacao", 0) * item.get("quantidade", 1)
         valor_itens += item_total
     
     # Calculate final value based on repasse options
@@ -866,9 +865,8 @@ async def update_orcamento(orcamento_id: str, orc_data: OrcamentoCreate, current
     # Calculate totals including personalization
     valor_itens = 0
     for item in orc_data.itens:
+        # preco_total already includes personalization from frontend
         item_total = item.get("preco_total", item.get("preco_unitario", 0) * item.get("quantidade", 0))
-        if item.get("personalizado"):
-            item_total += item.get("valor_personalizacao", 0) * item.get("quantidade", 1)
         valor_itens += item_total
     
     # Calculate final value based on repasse options
