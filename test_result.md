@@ -88,3 +88,44 @@
 - /app/frontend/src/pages/Orcamentos.js
 - /app/frontend/src/pages/Financeiro.js
 - /app/frontend/src/pages/Vendedores.js
+
+---
+
+## Testing Protocol - Orçamentos (Novas Funcionalidades) - Fase 2
+
+- Date: 2024-12-24
+- Module: Orçamentos - Novas Funcionalidades
+- Testing Type: Both backend and frontend
+
+## New Features to Test
+1. **Personalização de Itens:**
+   - Campo "Tipo de Personalização" (Gravação a Laser, Serigrafia, etc.)
+   - Valor da personalização por item
+   - Cálculo correto do subtotal com personalização
+
+2. **Repasse de Frete:**
+   - Campo para valor do frete
+   - Opção "Repassar frete ao cliente" (checkbox)
+   - Cálculo correto no total final
+
+3. **Outras Despesas:**
+   - Campo para valor de outras despesas
+   - Descrição das despesas
+   - Opção "Repassar despesas ao cliente" (checkbox)
+   - Cálculo correto no total final
+
+4. **Sistema de Cobrança de Resposta:**
+   - Seleção de dias para cobrar resposta (1, 2, 3, 5, 10 dias)
+   - Cálculo automático da data de cobrança
+   - Mudança de cor quando próximo da data
+   - Botão "Já Cobrei o Cliente" para marcar como cobrado
+
+5. **Cálculos de Totais:**
+   - Subtotal de itens (quantidade * preço unitário + personalização)
+   - Frete (se repassar_frete = true)
+   - Outras despesas (se repassar_outras_despesas = true)
+   - Desconto
+   - Total final correto
+
+## Incorporate User Feedback
+- User requested: personalização com tipo e valor, repasse de frete/despesas, sistema de lembrete para cobrar cliente
