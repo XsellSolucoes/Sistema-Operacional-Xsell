@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   BarChart3, TrendingUp, DollarSign, Users, MapPin, Package, 
   FileText, Calendar, Filter, RefreshCw, Download, PieChart,
-  ArrowUpRight, ArrowDownRight
+  ArrowUpRight, ArrowDownRight, Printer
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
