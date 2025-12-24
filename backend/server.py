@@ -158,6 +158,7 @@ class Pedido(BaseModel):
     cliente_nome: str
     itens: List[ItemPedido]
     frete: float = 0.0
+    repassar_frete: bool = False
     outras_despesas: float = 0.0
     descricao_outras_despesas: Optional[str] = None
     repassar_outras_despesas: bool = False
@@ -177,6 +178,7 @@ class PedidoCreate(BaseModel):
     cliente_id: str
     itens: List[ItemPedido]
     frete: float = 0.0
+    repassar_frete: bool = False
     outras_despesas: float = 0.0
     descricao_outras_despesas: Optional[str] = None
     repassar_outras_despesas: bool = False
