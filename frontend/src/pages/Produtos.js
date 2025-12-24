@@ -250,6 +250,54 @@ export default function Produtos() {
                   data-testid="produto-preco-venda-input"
                 />
               </div>
+              
+              {/* Variações do Produto */}
+              <div className="border-t pt-4">
+                <Label className="text-base font-semibold">Variações do Produto</Label>
+                <p className="text-sm text-muted-foreground mb-3">Adicione cores, capacidades ou materiais disponíveis</p>
+                <div className="grid grid-cols-4 gap-2 items-end">
+                  <div>
+                    <Label className="text-xs">Cor</Label>
+                    <Input
+                      value={novaVariacao.cor}
+                      onChange={(e) => setNovaVariacao({...novaVariacao, cor: e.target.value})}
+                      placeholder="Ex: Azul"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Capacidade</Label>
+                    <Input
+                      value={novaVariacao.capacidade}
+                      onChange={(e) => setNovaVariacao({...novaVariacao, capacidade: e.target.value})}
+                      placeholder="Ex: 500ml"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Material</Label>
+                    <Input
+                      value={novaVariacao.material}
+                      onChange={(e) => setNovaVariacao({...novaVariacao, material: e.target.value})}
+                      placeholder="Ex: Plástico"
+                    />
+                  </div>
+                  <Button type="button" onClick={adicionarVariacao} size="sm">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {formData.variacoes.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {formData.variacoes.map((v) => (
+                      <Badge key={v.id} variant="secondary" className="flex items-center gap-1 py-1">
+                        {[v.cor, v.capacidade, v.material].filter(Boolean).join(' / ')}
+                        <button type="button" onClick={() => removerVariacao(v.id)} className="ml-1 hover:text-destructive">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                   Cancelar
