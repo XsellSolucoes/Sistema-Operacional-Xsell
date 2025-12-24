@@ -270,7 +270,7 @@ export default function Financeiro() {
               </form>
             </DialogContent>
           </Dialog>
-          <Dialog open={open} onOpenChange={setOpen}>
+          <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
               <Button className="bg-secondary hover:bg-secondary/90" data-testid="add-despesa-button">
                 <Plus className="h-4 w-4 mr-2" />
