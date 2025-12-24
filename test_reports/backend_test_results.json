@@ -1,0 +1,119 @@
+{
+  "timestamp": "2025-12-24T09:42:00.431205",
+  "total_tests": 22,
+  "passed_tests": 21,
+  "failed_tests": 1,
+  "success_rate": 95.45454545454545,
+  "test_results": [
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Licita\u00e7\u00f5es (empty)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Automatic Calculations",
+      "success": true,
+      "details": "Venda: 3100.0, Compra: 2000.0, Despesas: 550.0, Lucro: 550.0"
+    },
+    {
+      "test": "Get Specific Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Update Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Update Status to Programado",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Cash Balance Before Payment",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Update Status to Pago",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Cash Balance After Payment",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cash Integration on Payment",
+      "success": true,
+      "details": "Before: 7020.0, After: 8220.0, Expected: 8220.0"
+    },
+    {
+      "test": "Get All Licita\u00e7\u00f5es",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Find Created Licita\u00e7\u00e3o in List",
+      "success": true,
+      "details": "Found 2 licita\u00e7\u00f5es total"
+    },
+    {
+      "test": "Delete Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Deletion (should fail)",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "test": "Create Invalid Licita\u00e7\u00e3o (empty fields)",
+      "success": true,
+      "details": "Status: 422"
+    },
+    {
+      "test": "Get Non-existent Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "test": "Update Non-existent Licita\u00e7\u00e3o",
+      "success": false,
+      "details": "Status: 422 (Expected: 404) - [{'type': 'missing', 'loc': ['body', 'cidade'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'estado'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'orgao_publico'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'numero_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'data_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'numero_nota_empenho'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}, {'type': 'missing', 'loc': ['body', 'produtos'], 'msg': 'Field required', 'input': {'numero_licitacao': 'TEST'}, 'url': 'https://errors.pydantic.dev/2.12/v/missing'}]"
+    },
+    {
+      "test": "Delete Non-existent Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "test": "Create Licita\u00e7\u00e3o with Zero Values",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Zero Values Calculations",
+      "success": true,
+      "details": "All totals should be 0: Venda=0.0, Compra=0.0, Despesas=0.0, Lucro=0.0"
+    },
+    {
+      "test": "Delete Zero Values Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    }
+  ]
+}
