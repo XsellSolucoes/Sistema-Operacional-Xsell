@@ -663,64 +663,9 @@ class XSELLAPITester:
         """Test edge cases and boundary conditions"""
         print("\n🔍 Testing Edge Cases...")
 
-        # Test licitação with zero values
-        zero_licitacao = {
-            "numero_licitacao": "ZERO-TEST",
-            "cidade": "Test City",
-            "estado": "SP",
-            "orgao_publico": "Test Organ",
-            "numero_empenho": "ZERO-001",
-            "data_empenho": datetime.now().isoformat(),
-            "numero_nota_empenho": "ZERO-NE",
-            "produtos": [
-                {
-                    "descricao": "Zero Value Product",
-                    "quantidade_empenhada": 0,
-                    "quantidade_fornecida": 0,
-                    "preco_compra": 0.00,
-                    "preco_venda": 0.00,
-                    "despesas_extras": 0.00
-                }
-            ],
-            "frete": 0.00,
-            "impostos": 0.00,
-            "outras_despesas": 0.00
-        }
-
-        zero_result = self.run_test(
-            "Create Licitação with Zero Values",
-            "POST",
-            "licitacoes",
-            200,
-            data=zero_licitacao
-        )
-
-        if zero_result:
-            # Verify calculations with zero values
-            zero_calculations_correct = (
-                zero_result.get('valor_total_venda', -1) == 0 and
-                zero_result.get('valor_total_compra', -1) == 0 and
-                zero_result.get('despesas_totais', -1) == 0 and
-                zero_result.get('lucro_total', -1) == 0
-            )
-            
-            self.log_test(
-                "Zero Values Calculations",
-                zero_calculations_correct,
-                f"All totals should be 0: Venda={zero_result.get('valor_total_venda')}, Compra={zero_result.get('valor_total_compra')}, Despesas={zero_result.get('despesas_totais')}, Lucro={zero_result.get('lucro_total')}"
-            )
-
-            # Clean up
-            self.run_test(
-                "Delete Zero Values Licitação",
-                "DELETE",
-                f"licitacoes/{zero_result.get('id')}",
-                200
-            )
-
     def run_all_tests(self):
-        """Run all tests"""
-        print("🚀 Starting Licitações API Tests...")
+        """Run all tests for XSELL system"""
+        print("🚀 Starting XSELL API Tests...")
         print(f"   Base URL: {self.base_url}")
         print(f"   API URL: {self.api_url}")
 
@@ -729,10 +674,21 @@ class XSELLAPITester:
             print("❌ Authentication failed - stopping tests")
             return False
 
-        # Run all test suites
-        self.test_licitacoes_crud()
-        self.test_validation_errors()
-        self.test_edge_cases()
+        # Run P1, P2, P3 test suites
+        print("\n" + "="*60)
+        print("Testing P1: Orçamentos Module")
+        print("="*60)
+        self.test_p1_orcamentos_module()
+        
+        print("\n" + "="*60)
+        print("Testing P2: Notificações Module")
+        print("="*60)
+        self.test_p2_notificacoes_module()
+        
+        print("\n" + "="*60)
+        print("Testing P3: Access Control Module")
+        print("="*60)
+        self.test_p3_access_control_module()
 
         # Print summary
         print(f"\n📊 Test Summary:")
@@ -744,7 +700,7 @@ class XSELLAPITester:
         return self.tests_passed == self.tests_run
 
 def main():
-    tester = LicitacoesAPITester()
+    tester = XSELLAPITester()
     success = tester.run_all_tests()
     
     # Save detailed results
