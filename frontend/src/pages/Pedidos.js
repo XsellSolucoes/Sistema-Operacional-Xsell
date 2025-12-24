@@ -398,27 +398,25 @@ export default function Pedidos() {
     const printWindow = window.open('', '_blank');
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     
-    // Calcular despesas repassadas ao cliente
-    const despesasRepassadas = [];
-    pedido.itens.forEach(item => {
+    // Calcular subtotal dos itens
+    let subtotalItens = pedido.itens.reduce((sum, item) => {
+      let precoItem = item.preco_venda;
       if (item.personalizado && item.repassar_personalizacao) {
-        despesasRepassadas.push(`${item.tipo_personalizacao} (${item.produto_descricao}): R$ ${(item.valor_personalizacao * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+        precoItem += (item.valor_personalizacao || 0);
       }
-    });
+      return sum + (precoItem * item.quantidade);
+    }, 0);
     
-    // Despesas detalhadas que foram repassadas
+    // Despesas detalhadas que foram repassadas ao cliente
     const despesasDetalhadas = pedido.despesas_detalhadas || [];
-    despesasDetalhadas.forEach(d => {
-      if (d.repassar) {
-        despesasRepassadas.push(`${d.descricao}: R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
-      }
-    });
+    const despesasRepassadas = despesasDetalhadas.filter(d => d.repassar);
+    const totalDespesasRepassadas = despesasRepassadas.reduce((sum, d) => sum + d.valor, 0);
     
-    // Calcular total para o cliente
-    let totalCliente = pedido.valor_total_venda;
-    if (pedido.repassar_frete) {
-      totalCliente += pedido.frete;
-    }
+    // Frete repassado
+    const freteRepassado = pedido.repassar_frete ? pedido.frete : 0;
+    
+    // Total final para o cliente
+    const totalCliente = subtotalItens + totalDespesasRepassadas + freteRepassado;
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -426,30 +424,49 @@ export default function Pedidos() {
         <head>
           <title>Pedido ${pedido.numero} - Via Cliente</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; }
-            .logo { max-width: 200px; margin-bottom: 10px; }
-            .info-section { margin-bottom: 20px; }
+            body { font-family: Arial, sans-serif; padding: 20px 40px; color: #333; font-size: 12px; }
+            .header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
+            .logo { width: 80px; height: auto; margin-right: 15px; }
+            .empresa-info { flex: 1; font-size: 12px; }
+            .empresa-info h2 { margin: 0 0 5px 0; font-size: 14px; color: #1e3a8a; }
+            .empresa-info p { margin: 2px 0; color: #666; }
+            .pedido-numero { text-align: right; }
+            .pedido-numero h1 { margin: 0; font-size: 16px; color: #1e3a8a; }
+            .pedido-numero p { margin: 5px 0 0 0; color: #666; }
+            .info-section { margin-bottom: 15px; }
             .info-label { font-weight: bold; color: #1e3a8a; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-            th { background-color: #1e3a8a; color: white; }
-            .totals { margin-top: 20px; text-align: right; }
-            .total-row { margin: 5px 0; font-size: 16px; }
-            .total-final { font-size: 20px; font-weight: bold; color: #f97316; margin-top: 10px; }
-            .despesas-box { background-color: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px; }
-            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 12px; color: #666; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #1e3a8a; color: white; font-size: 11px; }
+            .totais-section { margin-top: 20px; }
+            .totais-table { width: 350px; margin-left: auto; }
+            .totais-table td { padding: 6px 10px; border: none; }
+            .totais-table .label { text-align: right; font-weight: bold; color: #333; }
+            .totais-table .valor { text-align: right; }
+            .total-final { background-color: #1e3a8a; color: white; font-size: 14px; font-weight: bold; }
+            .despesas-section { margin: 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
+            .despesas-section h4 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 12px; }
+            .despesa-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted #ddd; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666; }
+            .pagamento-box { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 5px; font-size: 11px; }
+            .pagamento-box h4 { margin: 0 0 10px 0; color: #1e3a8a; }
           </style>
         </head>
         <body>
           <div class="header">
             <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
-            <h1>PEDIDO DE VENDA - VIA CLIENTE</h1>
-            <p style="font-size: 18px; color: #666;">Nº ${pedido.numero}</p>
+            <div class="empresa-info">
+              <h2>Xsell Soluções Corporativas</h2>
+              <p>CNPJ: 19.820.742/0001-91</p>
+              <p>comercial@xsellsolucoes.com.br</p>
+            </div>
+            <div class="pedido-numero">
+              <h1>PEDIDO ${pedido.numero}</h1>
+              <p>${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+            </div>
           </div>
 
           <div class="info-section">
-            <p><span class="info-label">Data:</span> ${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
             <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
             ${cliente ? `
               <p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>
@@ -459,75 +476,84 @@ export default function Pedidos() {
             ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
           </div>
 
-          <h3>Itens do Pedido</h3>
+          <h3 style="font-size: 13px; color: #1e3a8a; margin-bottom: 10px;">Itens do Pedido</h3>
           <table>
             <thead>
               <tr>
                 <th>Código</th>
                 <th>Descrição</th>
-                <th>Qtd</th>
-                <th>Valor Unit.</th>
-                <th>Total</th>
+                <th style="text-align: center;">Qtd</th>
+                <th style="text-align: right;">Valor Unit.</th>
+                <th style="text-align: right;">Total</th>
               </tr>
             </thead>
             <tbody>
               ${pedido.itens.map(item => {
                 let precoFinal = item.preco_venda;
                 let descricao = item.produto_descricao;
-                
-                if (item.personalizado && item.repassar_personalizacao) {
-                  precoFinal += item.valor_personalizacao;
-                  descricao += ` (${item.tipo_personalizacao})`;
-                }
+                if (item.variacao) descricao += ` (${item.variacao})`;
+                if (item.personalizado) descricao += ` - ${item.tipo_personalizacao}`;
                 
                 return `
                   <tr>
                     <td>${item.produto_codigo}</td>
                     <td>${descricao}</td>
-                    <td>${item.quantidade}</td>
-                    <td>R$ ${precoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                    <td>R$ ${(precoFinal * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align: center;">${item.quantidade}</td>
+                    <td style="text-align: right;">R$ ${precoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align: right;">R$ ${(precoFinal * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 `;
               }).join('')}
             </tbody>
           </table>
 
-          ${despesasRepassadas.length > 0 ? `
-            <div class="despesas-box">
-              <h4 style="margin-top: 0; color: #856404;">Despesas Adicionais Incluídas:</h4>
-              <ul style="margin: 10px 0; padding-left: 20px;">
-                ${despesasRepassadas.map(d => `<li>${d}</li>`).join('')}
-              </ul>
-            </div>
-          ` : ''}
-
-          <div class="totals">
-            <div class="total-row">
-              <span class="info-label">Subtotal:</span> 
-              R$ ${pedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </div>
-            ${pedido.frete > 0 && pedido.repassar_frete ? `
-              <div class="total-row">
-                <span class="info-label">Frete:</span> 
-                R$ ${pedido.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </div>
-            ` : ''}
-            <div class="total-final">
-              Total: R$ ${(pedido.valor_total_venda + (pedido.repassar_frete ? pedido.frete : 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </div>
+          <div class="totais-section">
+            <table class="totais-table">
+              <tr>
+                <td class="label">Subtotal Produtos:</td>
+                <td class="valor">R$ ${subtotalItens.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+              ${freteRepassado > 0 ? `
+                <tr>
+                  <td class="label">Frete:</td>
+                  <td class="valor">R$ ${freteRepassado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ` : ''}
+              ${despesasRepassadas.map(d => `
+                <tr>
+                  <td class="label">${d.descricao}:</td>
+                  <td class="valor">R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-final">
+                <td class="label">TOTAL A PAGAR:</td>
+                <td class="valor">R$ ${totalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            </table>
           </div>
 
-          <div style="margin-top: 40px;">
+          <div style="margin-top: 20px;">
             <p><span class="info-label">Forma de Pagamento:</span> ${pedido.forma_pagamento.toUpperCase()}</p>
           </div>
 
-          <div style="margin-top: 40px; padding: 20px; background-color: #f8fafc; border-radius: 8px;">
-            <h4 style="color: #1e3a8a; margin-bottom: 10px;">Dados para Pagamento</h4>
-            <p><strong>Banco do Brasil</strong></p>
-            <p>Agência: 1529-6 | Conta Corrente: 81517-9</p>
+          <div class="pagamento-box">
+            <h4>Dados para Pagamento</h4>
+            <p><strong>Banco do Brasil</strong> | Agência: 1529-6 | Conta Corrente: 81517-9</p>
             <p>Favorecido: XSELL SOLUÇÕES CORPORATIVAS LTDA</p>
-            <p>Pix: comercial@xsellsolucoes.com.br</p>
+            <p><strong>Pix:</strong> comercial@xsellsolucoes.com.br</p>
+          </div>
+
+          <div class="footer">
+            <p>Xsell Soluções Corporativas LTDA | CNPJ: 19.820.742/0001-91 | comercial@xsellsolucoes.com.br</p>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  };
           </div>
 
           <div class="footer">
