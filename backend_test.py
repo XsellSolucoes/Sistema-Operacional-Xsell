@@ -1,9 +1,9 @@
 import requests
 import sys
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta
 
-class XSELLAPITester:
+class LicitacoesAPITester:
     def __init__(self, base_url="https://enterprisehub-3.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
@@ -17,40 +17,35 @@ class XSELLAPITester:
         self.tests_run += 1
         if success:
             self.tests_passed += 1
+            print(f"✅ {name} - PASSED")
+        else:
+            print(f"❌ {name} - FAILED: {details}")
         
-        result = {
+        self.test_results.append({
             "test": name,
             "success": success,
-            "details": details,
-            "timestamp": datetime.now().isoformat()
-        }
-        self.test_results.append(result)
-        
-        status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{status} - {name}")
-        if details:
-            print(f"    Details: {details}")
+            "details": details
+        })
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}"
-        test_headers = {'Content-Type': 'application/json'}
-        
+        headers = {'Content-Type': 'application/json'}
         if self.token:
-            test_headers['Authorization'] = f'Bearer {self.token}'
-        
-        if headers:
-            test_headers.update(headers)
+            headers['Authorization'] = f'Bearer {self.token}'
 
+        print(f"\n🔍 Testing {name}...")
+        print(f"   URL: {method} {url}")
+        
         try:
             if method == 'GET':
-                response = requests.get(url, headers=test_headers, timeout=10)
+                response = requests.get(url, headers=headers, params=params)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=test_headers, timeout=10)
+                response = requests.post(url, json=data, headers=headers)
             elif method == 'PUT':
-                response = requests.put(url, json=data, headers=test_headers, timeout=10)
+                response = requests.put(url, json=data, headers=headers, params=params)
             elif method == 'DELETE':
-                response = requests.delete(url, headers=test_headers, timeout=10)
+                response = requests.delete(url, headers=headers)
 
             success = response.status_code == expected_status
             details = f"Status: {response.status_code}"
@@ -59,233 +54,372 @@ class XSELLAPITester:
                 details += f" (Expected: {expected_status})"
                 try:
                     error_data = response.json()
-                    details += f" - {error_data.get('detail', 'No error details')}"
+                    details += f" - {error_data.get('detail', 'Unknown error')}"
                 except:
-                    details += f" - Response: {response.text[:200]}"
+                    details += f" - {response.text[:100]}"
             
             self.log_test(name, success, details)
             
             if success:
                 try:
-                    return True, response.json()
+                    return response.json()
                 except:
-                    return True, {}
-            else:
-                return False, {}
+                    return {}
+            return None
 
         except Exception as e:
             self.log_test(name, False, f"Exception: {str(e)}")
-            return False, {}
+            return None
 
-    def test_health_check(self):
-        """Test API health"""
-        return self.run_test("API Health Check", "GET", "", 200)
-
-    def test_register_user(self):
-        """Test user registration"""
-        user_data = {
-            "email": f"test_{datetime.now().strftime('%H%M%S')}@test.com",
-            "password": "TestPass123!",
-            "name": "Test User"
-        }
-        success, response = self.run_test("User Registration", "POST", "auth/register", 200, user_data)
-        if success and 'access_token' in response:
-            self.token = response['access_token']
+    def test_login(self):
+        """Test login and get token"""
+        print("\n🔐 Testing Authentication...")
+        response_data = self.run_test(
+            "User Login",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "test@xsell.com", "password": "Test123!"}
+        )
+        
+        if response_data and 'access_token' in response_data:
+            self.token = response_data['access_token']
+            print(f"   Token obtained: {self.token[:20]}...")
             return True
         return False
 
-    def test_login_existing_user(self):
-        """Test login with existing credentials"""
-        login_data = {
-            "email": "admin@xsell.com",
-            "password": "admin123"
-        }
-        success, response = self.run_test("Login Existing User", "POST", "auth/login", 200, login_data)
-        if success and 'access_token' in response:
-            self.token = response['access_token']
-            return True
-        return False
+    def test_licitacoes_crud(self):
+        """Test complete CRUD operations for Licitações"""
+        print("\n📋 Testing Licitações CRUD Operations...")
+        
+        # Test GET empty list
+        licitacoes = self.run_test(
+            "Get Licitações (empty)",
+            "GET",
+            "licitacoes",
+            200
+        )
+        
+        if licitacoes is None:
+            return False
 
-    def test_get_current_user(self):
-        """Test get current user info"""
-        return self.run_test("Get Current User", "GET", "auth/me", 200)
-
-    def test_clientes_crud(self):
-        """Test clients CRUD operations"""
-        # Create client
-        client_data = {
-            "codigo": f"CLI{datetime.now().strftime('%H%M%S')}",
-            "cnpj": "12.345.678/0001-90",
-            "nome": "Test Client",
-            "razao_social": "Test Client LTDA",
-            "nome_fantasia": "Test Client",
-            "endereco": "Rua Test, 123",
+        # Test CREATE licitação
+        test_licitacao = {
+            "numero_licitacao": "PE-001/2024-TEST",
             "cidade": "São Paulo",
             "estado": "SP",
-            "cep": "01234-567"
+            "orgao_publico": "Prefeitura Municipal de São Paulo",
+            "numero_empenho": "EMP-2024-001",
+            "data_empenho": datetime.now().isoformat(),
+            "numero_nota_empenho": "NE-001/2024",
+            "numero_nota_fornecimento": "NF-001/2024",
+            "produtos": [
+                {
+                    "descricao": "Produto Teste 1",
+                    "quantidade_empenhada": 10,
+                    "quantidade_fornecida": 5,
+                    "preco_compra": 100.00,
+                    "preco_venda": 150.00,
+                    "despesas_extras": 10.00
+                },
+                {
+                    "descricao": "Produto Teste 2", 
+                    "quantidade_empenhada": 20,
+                    "quantidade_fornecida": 0,
+                    "preco_compra": 50.00,
+                    "preco_venda": 80.00,
+                    "despesas_extras": 5.00
+                }
+            ],
+            "previsao_fornecimento": (datetime.now() + timedelta(days=30)).isoformat(),
+            "fornecimento_efetivo": None,
+            "previsao_pagamento": (datetime.now() + timedelta(days=60)).isoformat(),
+            "frete": 100.00,
+            "impostos": 200.00,
+            "outras_despesas": 50.00,
+            "descricao_outras_despesas": "Taxas administrativas"
         }
-        
-        success, response = self.run_test("Create Client", "POST", "clientes", 200, client_data)
-        if not success:
-            return False
-        
-        client_id = response.get('id')
-        if not client_id:
-            self.log_test("Create Client - Get ID", False, "No client ID returned")
-            return False
-        
-        # Get clients
-        success, _ = self.run_test("Get Clients", "GET", "clientes", 200)
-        if not success:
-            return False
-        
-        # Update client
-        client_data['nome'] = "Updated Test Client"
-        success, _ = self.run_test("Update Client", "PUT", f"clientes/{client_id}", 200, client_data)
-        if not success:
-            return False
-        
-        # Delete client
-        success, _ = self.run_test("Delete Client", "DELETE", f"clientes/{client_id}", 200)
-        return success
 
-    def test_produtos_crud(self):
-        """Test products CRUD operations"""
-        # Create product
-        product_data = {
-            "codigo": f"PROD{datetime.now().strftime('%H%M%S')}",
-            "descricao": "Test Product",
-            "preco_compra": 100.00,
-            "margem": 40.0
+        created_licitacao = self.run_test(
+            "Create Licitação",
+            "POST",
+            "licitacoes",
+            200,
+            data=test_licitacao
+        )
+
+        if not created_licitacao:
+            return False
+
+        licitacao_id = created_licitacao.get('id')
+        print(f"   Created licitação ID: {licitacao_id}")
+
+        # Verify automatic calculations
+        expected_valor_venda = (10 * 150.00) + (20 * 80.00)  # 1500 + 1600 = 3100
+        expected_valor_compra = (10 * 100.00) + (20 * 50.00)  # 1000 + 1000 = 2000
+        expected_despesas_totais = (10 * 10.00) + (20 * 5.00) + 100.00 + 200.00 + 50.00  # 100 + 100 + 350 = 550
+        expected_lucro = expected_valor_venda - expected_valor_compra - expected_despesas_totais  # 3100 - 2000 - 550 = 550
+
+        calculations_correct = (
+            abs(created_licitacao.get('valor_total_venda', 0) - expected_valor_venda) < 0.01 and
+            abs(created_licitacao.get('valor_total_compra', 0) - expected_valor_compra) < 0.01 and
+            abs(created_licitacao.get('despesas_totais', 0) - expected_despesas_totais) < 0.01 and
+            abs(created_licitacao.get('lucro_total', 0) - expected_lucro) < 0.01
+        )
+
+        self.log_test(
+            "Automatic Calculations",
+            calculations_correct,
+            f"Venda: {created_licitacao.get('valor_total_venda')}, Compra: {created_licitacao.get('valor_total_compra')}, Despesas: {created_licitacao.get('despesas_totais')}, Lucro: {created_licitacao.get('lucro_total')}"
+        )
+
+        # Test GET specific licitação
+        retrieved_licitacao = self.run_test(
+            "Get Specific Licitação",
+            "GET",
+            f"licitacoes/{licitacao_id}",
+            200
+        )
+
+        # Test UPDATE licitação
+        updated_data = test_licitacao.copy()
+        updated_data["cidade"] = "Rio de Janeiro"
+        updated_data["estado"] = "RJ"
+        updated_data["produtos"][0]["quantidade_fornecida"] = 8  # Update supplied quantity
+
+        updated_licitacao = self.run_test(
+            "Update Licitação",
+            "PUT",
+            f"licitacoes/{licitacao_id}",
+            200,
+            data=updated_data
+        )
+
+        # Test status updates
+        status_updated = self.run_test(
+            "Update Status to Programado",
+            "PUT",
+            f"licitacoes/{licitacao_id}/status",
+            200,
+            params={"status": "programado"}
+        )
+
+        # Test cash integration when marking as paid
+        # First get current cash balance
+        caixa_before = self.run_test(
+            "Get Cash Balance Before Payment",
+            "GET",
+            "financeiro/caixa",
+            200
+        )
+
+        if caixa_before:
+            saldo_antes = caixa_before.get('saldo', 0)
+            
+            # Mark as paid
+            paid_status = self.run_test(
+                "Update Status to Pago",
+                "PUT",
+                f"licitacoes/{licitacao_id}/status",
+                200,
+                params={"status": "pago"}
+            )
+
+            # Check cash balance after payment
+            caixa_after = self.run_test(
+                "Get Cash Balance After Payment",
+                "GET",
+                "financeiro/caixa",
+                200
+            )
+
+            if caixa_after:
+                saldo_depois = caixa_after.get('saldo', 0)
+                # Calculate expected credit based on supplied quantities
+                expected_credit = (8 * 150.00) + (0 * 80.00)  # Only supplied quantities count
+                expected_saldo = saldo_antes + expected_credit
+                
+                cash_integration_correct = abs(saldo_depois - expected_saldo) < 0.01
+                self.log_test(
+                    "Cash Integration on Payment",
+                    cash_integration_correct,
+                    f"Before: {saldo_antes}, After: {saldo_depois}, Expected: {expected_saldo}"
+                )
+
+        # Test GET all licitações (should have our created one)
+        all_licitacoes = self.run_test(
+            "Get All Licitações",
+            "GET",
+            "licitacoes",
+            200
+        )
+
+        if all_licitacoes:
+            found_our_licitacao = any(lic.get('id') == licitacao_id for lic in all_licitacoes)
+            self.log_test(
+                "Find Created Licitação in List",
+                found_our_licitacao,
+                f"Found {len(all_licitacoes)} licitações total"
+            )
+
+        # Test DELETE licitação
+        deleted = self.run_test(
+            "Delete Licitação",
+            "DELETE",
+            f"licitacoes/{licitacao_id}",
+            200
+        )
+
+        # Verify deletion
+        deleted_check = self.run_test(
+            "Verify Deletion (should fail)",
+            "GET",
+            f"licitacoes/{licitacao_id}",
+            404
+        )
+
+        return True
+
+    def test_validation_errors(self):
+        """Test validation and error handling"""
+        print("\n⚠️  Testing Validation and Error Handling...")
+
+        # Test creating licitação without required fields
+        invalid_licitacao = {
+            "numero_licitacao": "",  # Empty required field
+            "produtos": []  # Empty products
         }
-        
-        success, response = self.run_test("Create Product", "POST", "produtos", 200, product_data)
-        if not success:
-            return False
-        
-        product_id = response.get('id')
-        if not product_id:
-            self.log_test("Create Product - Get ID", False, "No product ID returned")
-            return False
-        
-        # Verify automatic price calculation
-        expected_price = 100.00 * 1.40  # 40% margin
-        actual_price = response.get('preco_venda', 0)
-        if abs(actual_price - expected_price) > 0.01:
-            self.log_test("Product Price Calculation", False, f"Expected: {expected_price}, Got: {actual_price}")
-        else:
-            self.log_test("Product Price Calculation", True, f"Correct price: {actual_price}")
-        
-        # Get products
-        success, _ = self.run_test("Get Products", "GET", "produtos", 200)
-        if not success:
-            return False
-        
-        # Update product
-        product_data['descricao'] = "Updated Test Product"
-        success, _ = self.run_test("Update Product", "PUT", f"produtos/{product_id}", 200, product_data)
-        if not success:
-            return False
-        
-        # Delete product
-        success, _ = self.run_test("Delete Product", "DELETE", f"produtos/{product_id}", 200)
-        return success
 
-    def test_pedidos_operations(self):
-        """Test orders operations"""
-        # Get orders (should work even if empty)
-        return self.run_test("Get Orders", "GET", "pedidos", 200)
+        self.run_test(
+            "Create Invalid Licitação (empty fields)",
+            "POST",
+            "licitacoes",
+            422,  # Validation error
+            data=invalid_licitacao
+        )
 
-    def test_financeiro_operations(self):
-        """Test financial operations"""
-        # Get cash balance
-        success, _ = self.run_test("Get Cash Balance", "GET", "financeiro/caixa", 200)
-        if not success:
-            return False
-        
-        # Get expenses
-        success, _ = self.run_test("Get Expenses", "GET", "despesas", 200)
-        return success
+        # Test accessing non-existent licitação
+        self.run_test(
+            "Get Non-existent Licitação",
+            "GET",
+            "licitacoes/non-existent-id",
+            404
+        )
 
-    def test_licitacoes_operations(self):
-        """Test tenders operations"""
-        return self.run_test("Get Tenders", "GET", "licitacoes", 200)
+        # Test updating non-existent licitação
+        self.run_test(
+            "Update Non-existent Licitação",
+            "PUT",
+            "licitacoes/non-existent-id",
+            404,
+            data={"numero_licitacao": "TEST"}
+        )
 
-    def test_orcamentos_operations(self):
-        """Test budgets operations"""
-        return self.run_test("Get Budgets", "GET", "orcamentos", 200)
+        # Test deleting non-existent licitação
+        self.run_test(
+            "Delete Non-existent Licitação",
+            "DELETE",
+            "licitacoes/non-existent-id",
+            404
+        )
 
-    def test_relatorios_operations(self):
-        """Test reports operations"""
-        return self.run_test("Get General Report", "GET", "relatorios/geral", 200)
+    def test_edge_cases(self):
+        """Test edge cases and boundary conditions"""
+        print("\n🔍 Testing Edge Cases...")
+
+        # Test licitação with zero values
+        zero_licitacao = {
+            "numero_licitacao": "ZERO-TEST",
+            "cidade": "Test City",
+            "estado": "SP",
+            "orgao_publico": "Test Organ",
+            "numero_empenho": "ZERO-001",
+            "data_empenho": datetime.now().isoformat(),
+            "numero_nota_empenho": "ZERO-NE",
+            "produtos": [
+                {
+                    "descricao": "Zero Value Product",
+                    "quantidade_empenhada": 0,
+                    "quantidade_fornecida": 0,
+                    "preco_compra": 0.00,
+                    "preco_venda": 0.00,
+                    "despesas_extras": 0.00
+                }
+            ],
+            "frete": 0.00,
+            "impostos": 0.00,
+            "outras_despesas": 0.00
+        }
+
+        zero_result = self.run_test(
+            "Create Licitação with Zero Values",
+            "POST",
+            "licitacoes",
+            200,
+            data=zero_licitacao
+        )
+
+        if zero_result:
+            # Verify calculations with zero values
+            zero_calculations_correct = (
+                zero_result.get('valor_total_venda', -1) == 0 and
+                zero_result.get('valor_total_compra', -1) == 0 and
+                zero_result.get('despesas_totais', -1) == 0 and
+                zero_result.get('lucro_total', -1) == 0
+            )
+            
+            self.log_test(
+                "Zero Values Calculations",
+                zero_calculations_correct,
+                f"All totals should be 0: Venda={zero_result.get('valor_total_venda')}, Compra={zero_result.get('valor_total_compra')}, Despesas={zero_result.get('despesas_totais')}, Lucro={zero_result.get('lucro_total')}"
+            )
+
+            # Clean up
+            self.run_test(
+                "Delete Zero Values Licitação",
+                "DELETE",
+                f"licitacoes/{zero_result.get('id')}",
+                200
+            )
 
     def run_all_tests(self):
         """Run all tests"""
-        print("🚀 Starting XSELL API Tests...")
-        print(f"📍 Testing against: {self.base_url}")
-        print("=" * 50)
-        
-        # Test API health
-        if not self.test_health_check()[0]:
-            print("❌ API is not responding. Stopping tests.")
+        print("🚀 Starting Licitações API Tests...")
+        print(f"   Base URL: {self.base_url}")
+        print(f"   API URL: {self.api_url}")
+
+        # Test authentication first
+        if not self.test_login():
+            print("❌ Authentication failed - stopping tests")
             return False
-        
-        # Test authentication
-        print("\n🔐 Testing Authentication...")
-        if not self.test_login_existing_user():
-            print("❌ Login failed. Trying registration...")
-            if not self.test_register_user():
-                print("❌ Both login and registration failed. Stopping tests.")
-                return False
-        
-        # Test user info
-        self.test_get_current_user()
-        
-        # Test CRUD operations
-        print("\n👥 Testing Clients CRUD...")
-        self.test_clientes_crud()
-        
-        print("\n📦 Testing Products CRUD...")
-        self.test_produtos_crud()
-        
-        # Test other operations
-        print("\n🛒 Testing Orders...")
-        self.test_pedidos_operations()
-        
-        print("\n💰 Testing Financial...")
-        self.test_financeiro_operations()
-        
-        print("\n🏛️ Testing Tenders...")
-        self.test_licitacoes_operations()
-        
-        print("\n📋 Testing Budgets...")
-        self.test_orcamentos_operations()
-        
-        print("\n📊 Testing Reports...")
-        self.test_relatorios_operations()
-        
+
+        # Run all test suites
+        self.test_licitacoes_crud()
+        self.test_validation_errors()
+        self.test_edge_cases()
+
         # Print summary
-        print("\n" + "=" * 50)
-        print(f"📊 Test Summary: {self.tests_passed}/{self.tests_run} tests passed")
-        success_rate = (self.tests_passed / self.tests_run * 100) if self.tests_run > 0 else 0
-        print(f"📈 Success Rate: {success_rate:.1f}%")
-        
+        print(f"\n📊 Test Summary:")
+        print(f"   Tests Run: {self.tests_run}")
+        print(f"   Tests Passed: {self.tests_passed}")
+        print(f"   Tests Failed: {self.tests_run - self.tests_passed}")
+        print(f"   Success Rate: {(self.tests_passed/self.tests_run*100):.1f}%")
+
         return self.tests_passed == self.tests_run
 
 def main():
-    tester = XSELLAPITester()
+    tester = LicitacoesAPITester()
     success = tester.run_all_tests()
     
     # Save detailed results
-    with open('/app/backend_test_results.json', 'w') as f:
+    with open('/app/test_reports/backend_test_results.json', 'w') as f:
         json.dump({
-            'summary': {
-                'total_tests': tester.tests_run,
-                'passed_tests': tester.tests_passed,
-                'success_rate': (tester.tests_passed / tester.tests_run * 100) if tester.tests_run > 0 else 0,
-                'timestamp': datetime.now().isoformat()
-            },
-            'detailed_results': tester.test_results
+            'timestamp': datetime.now().isoformat(),
+            'total_tests': tester.tests_run,
+            'passed_tests': tester.tests_passed,
+            'failed_tests': tester.tests_run - tester.tests_passed,
+            'success_rate': (tester.tests_passed/tester.tests_run*100) if tester.tests_run > 0 else 0,
+            'test_results': tester.test_results
         }, f, indent=2)
     
     return 0 if success else 1
