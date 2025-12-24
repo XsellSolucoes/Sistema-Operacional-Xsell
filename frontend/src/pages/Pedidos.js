@@ -874,37 +874,78 @@ export default function Pedidos() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 p-4 bg-orange-50 rounded-md">
-                <div className="space-y-2">
-                  <Label>Outras Despesas (R$)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.outras_despesas}
-                    onChange={(e) => setFormData({...formData, outras_despesas: e.target.value})}
-                    data-testid="outras-despesas-input"
-                  />
+              {/* Área de Despesas do Pedido */}
+              <div className="p-4 bg-orange-50 rounded-md space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Despesas do Pedido</Label>
                 </div>
-                <div className="space-y-2">
-                  <Label>Descrição da Despesa</Label>
-                  <Input
-                    value={formData.descricao_outras_despesas}
-                    onChange={(e) => setFormData({...formData, descricao_outras_despesas: e.target.value})}
-                    placeholder="Ex: Taxas de importação"
-                    data-testid="descricao-despesas-input"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.repassar_outras_despesas}
-                      onChange={(e) => setFormData({...formData, repassar_outras_despesas: e.target.checked})}
-                      className="rounded"
+                
+                {/* Adicionar nova despesa */}
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-5 space-y-1">
+                    <Label className="text-xs">Descrição</Label>
+                    <Input
+                      value={novaDespesa.descricao}
+                      onChange={(e) => setNovaDespesa({...novaDespesa, descricao: e.target.value})}
+                      placeholder="Ex: Taxa de importação, Embalagem"
                     />
-                    <span className="text-sm font-medium">Repassar ao cliente</span>
-                  </label>
+                  </div>
+                  <div className="col-span-3 space-y-1">
+                    <Label className="text-xs">Valor (R$)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={novaDespesa.valor}
+                      onChange={(e) => setNovaDespesa({...novaDespesa, valor: e.target.value})}
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center pb-1">
+                    <label className="flex items-center space-x-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={novaDespesa.repassar}
+                        onChange={(e) => setNovaDespesa({...novaDespesa, repassar: e.target.checked})}
+                        className="rounded"
+                      />
+                      <span className="text-xs">Repassar</span>
+                    </label>
+                  </div>
+                  <div className="col-span-2">
+                    <Button type="button" onClick={adicionarDespesa} size="sm" className="w-full">
+                      <Plus className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Lista de despesas adicionadas */}
+                {despesasPedido.length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Despesas adicionadas:</Label>
+                    <div className="space-y-1">
+                      {despesasPedido.map((d) => (
+                        <div key={d.id} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
+                          <div className="flex items-center gap-3">
+                            <span className="font-medium">{d.descricao}</span>
+                            <span className="text-muted-foreground">R$ {d.valor.toFixed(2)}</span>
+                            {d.repassar ? (
+                              <Badge variant="default" className="text-xs">Repassar</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">Interno</Badge>
+                            )}
+                          </div>
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removerDespesa(d.id)}>
+                            <X className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-sm font-medium pt-2 border-t">
+                        <span>Total Despesas: R$ {despesasPedido.reduce((s, d) => s + d.valor, 0).toFixed(2)}</span>
+                        <span className="text-green-600">Repassado: R$ {despesasPedido.filter(d => d.repassar).reduce((s, d) => s + d.valor, 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="border-t pt-4">
@@ -935,6 +976,18 @@ export default function Pedidos() {
                       {novoItem.produto_nome ? (
                         <div className="p-2 bg-green-50 border border-green-200 rounded-md text-sm">
                           {novoItem.produto_nome}
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            className="ml-2 h-6 px-2"
+                            onClick={() => {
+                              setProdutoEncontrado(null);
+                              setNovoItem({...novoItem, produto_id: '', produto_nome: '', preco_compra: '0', preco_venda: '0', variacao_selecionada: ''});
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       ) : (
                         <Select value={novoItem.produto_id} onValueChange={handleProdutoChange}>
@@ -952,8 +1005,30 @@ export default function Pedidos() {
                       )}
                     </div>
                   </div>
+
+                  {/* Seleção de Variação do Produto */}
+                  {produtoEncontrado && produtoEncontrado.variacoes && produtoEncontrado.variacoes.length > 0 && (
+                    <div className="p-3 bg-purple-50 rounded-md">
+                      <Label className="text-sm font-medium">Selecione a Variação</Label>
+                      <Select 
+                        value={novoItem.variacao_selecionada} 
+                        onValueChange={(v) => setNovoItem({...novoItem, variacao_selecionada: v})}
+                      >
+                        <SelectTrigger className="mt-2">
+                          <SelectValue placeholder="Selecione uma variação" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {produtoEncontrado.variacoes.map((v, idx) => (
+                            <SelectItem key={idx} value={[v.cor, v.capacidade, v.material].filter(Boolean).join(' / ')}>
+                              {[v.cor, v.capacidade, v.material].filter(Boolean).join(' / ')}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   
-                  <div className="grid grid-cols-12 gap-4">
+                  <div className="grid grid-cols-6 gap-4">
                     <div className="col-span-2 space-y-2">
                       <Label>Qtd</Label>
                       <Input
@@ -979,15 +1054,6 @@ export default function Pedidos() {
                         step="0.01"
                         value={novoItem.preco_venda}
                         onChange={(e) => setNovoItem({...novoItem, preco_venda: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-span-2 space-y-2">
-                      <Label>Despesas</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={novoItem.despesas}
-                        onChange={(e) => setNovoItem({...novoItem, despesas: e.target.value})}
                       />
                     </div>
                   </div>
