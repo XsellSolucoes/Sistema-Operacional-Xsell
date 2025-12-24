@@ -471,7 +471,7 @@ export default function Financeiro() {
                         {despesa.status.toUpperCase()}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right space-x-1">
                       {despesa.status === 'pendente' && (
                         <Button
                           variant="ghost"
@@ -480,9 +480,25 @@ export default function Financeiro() {
                           data-testid={`marcar-pago-${despesa.id}`}
                         >
                           <Check className="h-4 w-4 mr-2" />
-                          Marcar Pago
+                          Pago
                         </Button>
                       )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditDespesa(despesa)}
+                        data-testid={`edit-despesa-${despesa.id}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteDespesa(despesa.id)}
+                        data-testid={`delete-despesa-${despesa.id}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
