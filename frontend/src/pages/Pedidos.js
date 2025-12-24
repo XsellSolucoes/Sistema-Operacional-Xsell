@@ -398,7 +398,7 @@ export default function Pedidos() {
     const printWindow = window.open('', '_blank');
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     
-    // Calcular despesas repassadas
+    // Calcular despesas repassadas ao cliente
     const despesasRepassadas = [];
     pedido.itens.forEach(item => {
       if (item.personalizado && item.repassar_personalizacao) {
@@ -406,8 +406,18 @@ export default function Pedidos() {
       }
     });
     
-    if (pedido.repassar_outras_despesas && pedido.outras_despesas > 0) {
-      despesasRepassadas.push(`${pedido.descricao_outras_despesas || 'Outras despesas'}: R$ ${pedido.outras_despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+    // Despesas detalhadas que foram repassadas
+    const despesasDetalhadas = pedido.despesas_detalhadas || [];
+    despesasDetalhadas.forEach(d => {
+      if (d.repassar) {
+        despesasRepassadas.push(`${d.descricao}: R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+      }
+    });
+    
+    // Calcular total para o cliente
+    let totalCliente = pedido.valor_total_venda;
+    if (pedido.repassar_frete) {
+      totalCliente += pedido.frete;
     }
     
     printWindow.document.write(`
