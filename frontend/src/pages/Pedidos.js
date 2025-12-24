@@ -554,19 +554,6 @@ export default function Pedidos() {
     printWindow.focus();
     setTimeout(() => printWindow.print(), 500);
   };
-          </div>
-
-          <div class="footer">
-            <p>XSELL Soluções Corporativas LTDA | comercial@xsellsolucoes.com.br</p>
-          </div>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 250);
-  };
 
   const handlePrintInterno = (pedido) => {
     const printWindow = window.open('', '_blank');
