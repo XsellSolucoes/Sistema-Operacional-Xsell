@@ -746,6 +746,8 @@ async def get_orcamento(orcamento_id: str, current_user: User = Depends(get_curr
     
     if isinstance(orcamento.get("data"), str):
         orcamento["data"] = datetime.fromisoformat(orcamento["data"])
+    if orcamento.get("data_cobrar_resposta") and isinstance(orcamento["data_cobrar_resposta"], str):
+        orcamento["data_cobrar_resposta"] = datetime.fromisoformat(orcamento["data_cobrar_resposta"])
     if isinstance(orcamento.get("created_at"), str):
         orcamento["created_at"] = datetime.fromisoformat(orcamento["created_at"])
     
@@ -756,6 +758,14 @@ async def get_orcamento(orcamento_id: str, current_user: User = Depends(get_curr
         orcamento["desconto"] = 0.0
     if "valor_frete" not in orcamento:
         orcamento["valor_frete"] = 0.0
+    if "repassar_frete" not in orcamento:
+        orcamento["repassar_frete"] = True
+    if "outras_despesas" not in orcamento:
+        orcamento["outras_despesas"] = 0.0
+    if "repassar_outras_despesas" not in orcamento:
+        orcamento["repassar_outras_despesas"] = False
+    if "cliente_cobrado" not in orcamento:
+        orcamento["cliente_cobrado"] = False
     
     return Orcamento(**orcamento)
 
