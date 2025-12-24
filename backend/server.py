@@ -684,12 +684,15 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
     if not cliente:
         raise HTTPException(status_code=404, detail="Cliente not found")
     
-    custo_total = sum(item.preco_compra * item.quantidade for item in pedido_data.itens)
+    # Usar dicionários diretamente
+    itens = pedido_data.itens
+    
+    custo_total = sum(item.get("preco_compra", 0) * item.get("quantidade", 0) for item in itens)
     
     # Calcular valor de venda incluindo personalização repassada ao cliente
     valor_total_venda = sum(
-        (item.preco_venda + (item.valor_personalizacao if item.repassar_personalizacao else 0)) * item.quantidade 
-        for item in pedido_data.itens
+        (item.get("preco_venda", 0) + (item.get("valor_personalizacao", 0) if item.get("repassar_personalizacao", False) else 0)) * item.get("quantidade", 0) 
+        for item in itens
     )
     
     # Adicionar frete ao valor de venda se repassar
@@ -702,10 +705,10 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
     
     # Calcular despesas totais (incluindo personalizações não repassadas)
     despesas_totais = (
-        sum(item.despesas * item.quantidade for item in pedido_data.itens) + 
+        sum(item.get("despesas", 0) * item.get("quantidade", 0) for item in itens) + 
         pedido_data.frete + 
         pedido_data.outras_despesas +
-        sum((item.valor_personalizacao if not item.repassar_personalizacao else 0) * item.quantidade for item in pedido_data.itens)
+        sum((item.get("valor_personalizacao", 0) if not item.get("repassar_personalizacao", False) else 0) * item.get("quantidade", 0) for item in itens)
     )
     
     lucro_total = valor_total_venda - custo_total - despesas_totais
@@ -716,7 +719,7 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         "data": datetime.now(timezone.utc).isoformat(),
         "cliente_id": pedido_data.cliente_id,
         "cliente_nome": cliente["nome"],
-        "itens": [item.model_dump() for item in pedido_data.itens],
+        "itens": itens,
         "frete": pedido_data.frete,
         "repassar_frete": pedido_data.repassar_frete,
         "outras_despesas": pedido_data.outras_despesas,
