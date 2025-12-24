@@ -661,7 +661,7 @@ export default function Relatorios() {
             <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">Nenhum relatório gerado</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Selecione os filtros desejados e clique em "Gerar Relatório" para visualizar os dados.
+              Selecione os filtros desejados e clique em &quot;Gerar Relatório&quot; para visualizar os dados.
             </p>
             <Button onClick={fetchRelatorio} className="bg-secondary hover:bg-secondary/90">
               <BarChart3 className="h-4 w-4 mr-2" />
