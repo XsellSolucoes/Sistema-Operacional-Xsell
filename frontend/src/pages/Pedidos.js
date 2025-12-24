@@ -708,6 +708,10 @@ export default function Pedidos() {
               Margem: ${pedido.valor_total_venda > 0 ? ((pedido.lucro_total / pedido.valor_total_venda) * 100).toFixed(2) : 0}%
             </div>
           </div>
+
+          <div class="footer">
+            <p>Xsell Soluções Corporativas LTDA | CNPJ: 19.820.742/0001-91 | USO INTERNO</p>
+          </div>
         </body>
       </html>
     `);
