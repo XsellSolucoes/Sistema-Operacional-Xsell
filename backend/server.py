@@ -234,8 +234,13 @@ class OrcamentoCreate(BaseModel):
     prazo_entrega: str
     frete_por_conta: str = "destinatario"
     valor_frete: float = 0.0
+    repassar_frete: bool = True
+    outras_despesas: float = 0.0
+    descricao_outras_despesas: Optional[str] = None
+    repassar_outras_despesas: bool = False
     desconto: float = 0.0
     observacoes: Optional[str] = "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
+    dias_cobrar_resposta: Optional[int] = None
 
 
 class ProdutoLicitacao(BaseModel):
