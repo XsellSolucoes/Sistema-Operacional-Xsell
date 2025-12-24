@@ -833,18 +833,102 @@ async def create_licitacao(lic_data: LicitacaoCreate, current_user: User = Depen
     return Licitacao(**lic_doc)
 
 
+@api_router.get("/licitacoes/{licitacao_id}", response_model=Licitacao)
+async def get_licitacao(licitacao_id: str, current_user: User = Depends(get_current_user)):
+    lic = await db.licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licitação not found")
+    
+    # Convert datetime strings
+    if isinstance(lic.get("data_empenho"), str):
+        lic["data_empenho"] = datetime.fromisoformat(lic["data_empenho"])
+    if lic.get("previsao_fornecimento") and isinstance(lic["previsao_fornecimento"], str):
+        lic["previsao_fornecimento"] = datetime.fromisoformat(lic["previsao_fornecimento"])
+    if lic.get("fornecimento_efetivo") and isinstance(lic["fornecimento_efetivo"], str):
+        lic["fornecimento_efetivo"] = datetime.fromisoformat(lic["fornecimento_efetivo"])
+    if lic.get("previsao_pagamento") and isinstance(lic["previsao_pagamento"], str):
+        lic["previsao_pagamento"] = datetime.fromisoformat(lic["previsao_pagamento"])
+    if isinstance(lic.get("created_at"), str):
+        lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+    
+    return Licitacao(**lic)
+
+
+@api_router.put("/licitacoes/{licitacao_id}", response_model=Licitacao)
+async def update_licitacao(licitacao_id: str, lic_data: LicitacaoCreate, current_user: User = Depends(get_current_user)):
+    existing = await db.licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação not found")
+    
+    # Calcular quantidades restantes para cada produto
+    produtos_processados = []
+    for p in lic_data.produtos:
+        qtd_empenhada = p.get("quantidade_empenhada", 0)
+        qtd_fornecida = p.get("quantidade_fornecida", 0)
+        qtd_restante = qtd_empenhada - qtd_fornecida
+        lucro_unitario = p.get("preco_venda", 0) - p.get("preco_compra", 0) - p.get("despesas_extras", 0)
+        
+        produtos_processados.append({
+            **p,
+            "quantidade_restante": qtd_restante,
+            "lucro_unitario": lucro_unitario
+        })
+    
+    # Calcular totais
+    valor_total_venda = sum(p.get("preco_venda", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    valor_total_compra = sum(p.get("preco_compra", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    despesas_produtos = sum(p.get("despesas_extras", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    despesas_totais = despesas_produtos + lic_data.frete + lic_data.impostos + lic_data.outras_despesas
+    lucro_total = valor_total_venda - valor_total_compra - despesas_totais
+    
+    update_doc = lic_data.model_dump()
+    update_doc["produtos"] = produtos_processados
+    update_doc["valor_total_venda"] = valor_total_venda
+    update_doc["valor_total_compra"] = valor_total_compra
+    update_doc["despesas_totais"] = despesas_totais
+    update_doc["lucro_total"] = lucro_total
+    update_doc["data_empenho"] = update_doc["data_empenho"].isoformat()
+    if update_doc.get("previsao_fornecimento"):
+        update_doc["previsao_fornecimento"] = update_doc["previsao_fornecimento"].isoformat()
+    if update_doc.get("fornecimento_efetivo"):
+        update_doc["fornecimento_efetivo"] = update_doc["fornecimento_efetivo"].isoformat()
+    if update_doc.get("previsao_pagamento"):
+        update_doc["previsao_pagamento"] = update_doc["previsao_pagamento"].isoformat()
+    
+    await db.licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": update_doc}
+    )
+    
+    lic = await db.licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if isinstance(lic.get("data_empenho"), str):
+        lic["data_empenho"] = datetime.fromisoformat(lic["data_empenho"])
+    if lic.get("previsao_fornecimento") and isinstance(lic["previsao_fornecimento"], str):
+        lic["previsao_fornecimento"] = datetime.fromisoformat(lic["previsao_fornecimento"])
+    if lic.get("fornecimento_efetivo") and isinstance(lic["fornecimento_efetivo"], str):
+        lic["fornecimento_efetivo"] = datetime.fromisoformat(lic["fornecimento_efetivo"])
+    if lic.get("previsao_pagamento") and isinstance(lic["previsao_pagamento"], str):
+        lic["previsao_pagamento"] = datetime.fromisoformat(lic["previsao_pagamento"])
+    if isinstance(lic.get("created_at"), str):
+        lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+    
+    return Licitacao(**lic)
+
+
 @api_router.put("/licitacoes/{licitacao_id}/status")
 async def update_licitacao_status(licitacao_id: str, status: str, current_user: User = Depends(get_current_user)):
     lic = await db.licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
     if not lic:
         raise HTTPException(status_code=404, detail="Licitação not found")
     
-    await db.licitacoes.update_one({"id": licitacao_id}, {"$set": {"status": status}})
+    await db.licitacoes.update_one({"id": licitacao_id}, {"$set": {"status_pagamento": status}})
     
-    if status == "pago" and lic.get("status") != "pago":
+    # Se marcado como pago, creditar no caixa
+    if status == "pago" and lic.get("status_pagamento") != "pago":
         caixa = await db.caixa.find_one({}, {"_id": 0})
         if caixa:
-            valor_licitacao = sum(p["preco_venda"] * p["quantidade_fornecida"] for p in lic["produtos"])
+            # Usar valor total de venda baseado na quantidade fornecida
+            valor_licitacao = sum(p.get("preco_venda", 0) * p.get("quantidade_fornecida", 0) for p in lic["produtos"])
             novo_saldo = caixa["saldo"] + valor_licitacao
             await db.caixa.update_one(
                 {"id": caixa["id"]},
