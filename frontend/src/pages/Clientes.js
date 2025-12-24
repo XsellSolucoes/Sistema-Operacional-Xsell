@@ -152,23 +152,13 @@ export default function Clientes() {
             <DialogHeader>
               <DialogTitle>{editingCliente ? 'Editar Cliente' : 'Novo Cliente'}</DialogTitle>
               <DialogDescription>
-                Preencha os dados do cliente
+                {editingCliente ? `Editando cliente ${editingCliente.codigo}` : 'Preencha os dados do cliente. O código será gerado automaticamente.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="codigo">Código</Label>
-                  <Input
-                    id="codigo"
-                    value={formData.codigo}
-                    onChange={(e) => setFormData({...formData, codigo: e.target.value})}
-                    required
-                    data-testid="cliente-codigo-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Label htmlFor="cnpj">CNPJ *</Label>
                   <Input
                     id="cnpj"
                     value={formData.cnpj}
@@ -177,9 +167,17 @@ export default function Clientes() {
                     data-testid="cliente-cnpj-input"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
+                  <Input
+                    id="inscricao_estadual"
+                    value={formData.inscricao_estadual}
+                    onChange={(e) => setFormData({...formData, inscricao_estadual: e.target.value})}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nome">Nome</Label>
+                <Label htmlFor="nome">Nome *</Label>
                 <Input
                   id="nome"
                   value={formData.nome}
@@ -189,7 +187,7 @@ export default function Clientes() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="razao_social">Razão Social</Label>
+                <Label htmlFor="razao_social">Razão Social *</Label>
                 <Input
                   id="razao_social"
                   value={formData.razao_social}
@@ -198,7 +196,7 @@ export default function Clientes() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nome_fantasia">Nome Fantasia</Label>
+                <Label htmlFor="nome_fantasia">Nome Fantasia *</Label>
                 <Input
                   id="nome_fantasia"
                   value={formData.nome_fantasia}
@@ -206,8 +204,37 @@ export default function Clientes() {
                   required
                 />
               </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Telefone</Label>
+                  <Input
+                    id="telefone"
+                    value={formData.telefone}
+                    onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                    placeholder="(00) 0000-0000"
+                  />
+                </div>
+              </div>
               <div className="space-y-2">
-                <Label htmlFor="endereco">Endereço</Label>
+                <Label htmlFor="whatsapp">WhatsApp</Label>
+                <Input
+                  id="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                  placeholder="(00) 00000-0000"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="endereco">Endereço *</Label>
                 <Input
                   id="endereco"
                   value={formData.endereco}
@@ -217,7 +244,7 @@ export default function Clientes() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cidade">Cidade</Label>
+                  <Label htmlFor="cidade">Cidade *</Label>
                   <Input
                     id="cidade"
                     value={formData.cidade}
@@ -226,7 +253,7 @@ export default function Clientes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="estado">Estado</Label>
+                  <Label htmlFor="estado">Estado *</Label>
                   <Input
                     id="estado"
                     value={formData.estado}
@@ -235,7 +262,7 @@ export default function Clientes() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="cep">CEP</Label>
+                  <Label htmlFor="cep">CEP *</Label>
                   <Input
                     id="cep"
                     value={formData.cep}
