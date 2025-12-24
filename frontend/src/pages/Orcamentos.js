@@ -271,7 +271,7 @@ export default function Orcamentos() {
         descricao_outras_despesas: formData.descricao_outras_despesas || null,
         repassar_outras_despesas: formData.repassar_outras_despesas,
         desconto: parseFloat(formData.desconto) || 0,
-        dias_cobrar_resposta: formData.dias_cobrar_resposta ? parseInt(formData.dias_cobrar_resposta) : null,
+        dias_cobrar_resposta: formData.dias_cobrar_resposta && formData.dias_cobrar_resposta !== 'none' ? parseInt(formData.dias_cobrar_resposta) : null,
         observacoes: formData.observacoes
       };
 
