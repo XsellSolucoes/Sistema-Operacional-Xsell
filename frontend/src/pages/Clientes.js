@@ -85,7 +85,6 @@ export default function Clientes() {
   const handleEdit = (cliente) => {
     setEditingCliente(cliente);
     setFormData({
-      codigo: cliente.codigo,
       cnpj: cliente.cnpj,
       nome: cliente.nome,
       razao_social: cliente.razao_social,
@@ -93,14 +92,17 @@ export default function Clientes() {
       endereco: cliente.endereco,
       cidade: cliente.cidade,
       estado: cliente.estado,
-      cep: cliente.cep
+      cep: cliente.cep,
+      email: cliente.email || '',
+      inscricao_estadual: cliente.inscricao_estadual || '',
+      telefone: cliente.telefone || '',
+      whatsapp: cliente.whatsapp || ''
     });
     setOpen(true);
   };
 
   const resetForm = () => {
     setFormData({
-      codigo: '',
       cnpj: '',
       nome: '',
       razao_social: '',
@@ -108,7 +110,11 @@ export default function Clientes() {
       endereco: '',
       cidade: '',
       estado: '',
-      cep: ''
+      cep: '',
+      email: '',
+      inscricao_estadual: '',
+      telefone: '',
+      whatsapp: ''
     });
     setEditingCliente(null);
   };
