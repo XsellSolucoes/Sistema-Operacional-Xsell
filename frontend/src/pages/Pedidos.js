@@ -623,6 +623,7 @@ export default function Pedidos() {
       tipo_venda: 'consumidor_final',
       vendedor_id: '',
       frete: '0',
+      repassar_frete: false,
       outras_despesas: '0',
       descricao_outras_despesas: '',
       repassar_outras_despesas: false,
