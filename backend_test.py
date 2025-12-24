@@ -89,8 +89,8 @@ class XSELLAPITester:
         return False
 
     def test_p1_orcamentos_module(self):
-        """Test P1: Complete Orçamentos (Budget) module functionality"""
-        print("\n💰 Testing P1: Orçamentos Module...")
+        """Test P1: Complete Orçamentos (Budget) module functionality with new features"""
+        print("\n💰 Testing P1: Orçamentos Module with New Features...")
         
         # First, ensure we have test data (cliente and produto)
         cliente_id = self.setup_test_cliente()
@@ -100,27 +100,33 @@ class XSELLAPITester:
             print("❌ Failed to setup test data for orçamentos")
             return False
         
-        # Test 1: Create new orçamento with automatic numbering
+        # Test 1: Create new orçamento with all new fields including personalization
         test_orcamento = {
             "cliente_id": cliente_id,
             "vendedor": "João Silva",
             "itens": [
                 {
                     "produto_codigo": "PROD-001",
-                    "descricao": "Produto Teste Orçamento",
+                    "descricao": "Produto com Personalização",
                     "quantidade": 2,
                     "unidade": "UN",
                     "preco_unitario": 150.00,
-                    "preco_total": 300.00,
+                    "preco_total": 320.00,  # 2 * (150 + 10) = 320
+                    "personalizado": True,
+                    "tipo_personalizacao": "Gravação a Laser",
+                    "valor_personalizacao": 10.00,
                     "imagem_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
                 },
                 {
                     "produto_codigo": "PROD-002", 
-                    "descricao": "Segundo Produto",
+                    "descricao": "Produto Sem Personalização",
                     "quantidade": 1,
                     "unidade": "UN",
                     "preco_unitario": 200.00,
-                    "preco_total": 200.00
+                    "preco_total": 200.00,
+                    "personalizado": False,
+                    "tipo_personalizacao": "",
+                    "valor_personalizacao": 0.00
                 }
             ],
             "validade_dias": 15,
@@ -128,12 +134,17 @@ class XSELLAPITester:
             "prazo_entrega": "10 dias úteis",
             "frete_por_conta": "destinatario",
             "valor_frete": 50.00,
+            "repassar_frete": True,
+            "outras_despesas": 30.00,
+            "descricao_outras_despesas": "Taxa de embalagem especial",
+            "repassar_outras_despesas": True,
             "desconto": 25.00,
+            "dias_cobrar_resposta": 5,
             "observacoes": "Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo."
         }
 
         created_orcamento = self.run_test(
-            "P1: Create Orçamento with Auto Numbering",
+            "P1: Create Orçamento with Personalization & New Fields",
             "POST",
             "orcamentos",
             200,
@@ -157,28 +168,98 @@ class XSELLAPITester:
             f"Generated number: {orcamento_numero}, Expected format: {expected_format}XXXX"
         )
 
-        # Test 2: Get specific orçamento
+        # Test 2: Verify automatic calculations with new fields
+        expected_subtotal = 520.00  # 320 + 200
+        expected_frete_cliente = 50.00  # repassar_frete = True
+        expected_outras_cliente = 30.00  # repassar_outras_despesas = True
+        expected_valor_final = expected_subtotal + expected_frete_cliente + expected_outras_cliente - 25.00  # 575.00
+        
+        calculations_correct = (
+            abs(created_orcamento.get('valor_total', 0) - expected_subtotal) < 0.01 and
+            abs(created_orcamento.get('valor_final', 0) - expected_valor_final) < 0.01
+        )
+        
+        self.log_test(
+            "P1: Automatic Calculations with Frete/Despesas Repasse",
+            calculations_correct,
+            f"Subtotal: {created_orcamento.get('valor_total')}, Final: {created_orcamento.get('valor_final')}, Expected Final: {expected_valor_final}"
+        )
+
+        # Test 3: Verify data_cobrar_resposta was set correctly
+        data_cobrar = created_orcamento.get('data_cobrar_resposta')
+        cobrar_dias_correct = bool(data_cobrar) and created_orcamento.get('dias_cobrar_resposta') == 5
+        
+        self.log_test(
+            "P1: Days to Charge Response Configuration",
+            cobrar_dias_correct,
+            f"dias_cobrar_resposta: {created_orcamento.get('dias_cobrar_resposta')}, data_cobrar_resposta: {data_cobrar}"
+        )
+
+        # Test 4: Get specific orçamento and verify all fields
         retrieved_orcamento = self.run_test(
-            "P1: Get Specific Orçamento",
+            "P1: Get Specific Orçamento with New Fields",
             "GET",
             f"orcamentos/{orcamento_id}",
             200
         )
 
-        # Test 3: Update existing orçamento
+        if retrieved_orcamento:
+            # Verify personalization fields are preserved
+            first_item = retrieved_orcamento.get('itens', [{}])[0]
+            personalization_preserved = (
+                first_item.get('personalizado') == True and
+                first_item.get('tipo_personalizacao') == "Gravação a Laser" and
+                first_item.get('valor_personalizacao') == 10.00
+            )
+            
+            self.log_test(
+                "P1: Personalization Fields Preserved",
+                personalization_preserved,
+                f"personalizado: {first_item.get('personalizado')}, tipo: {first_item.get('tipo_personalizacao')}, valor: {first_item.get('valor_personalizacao')}"
+            )
+
+        # Test 5: Test "Já Cobrei o Cliente" functionality
+        cobrado_result = self.run_test(
+            "P1: Mark Cliente as Cobrado",
+            "PUT",
+            f"orcamentos/{orcamento_id}/marcar-cobrado?cobrado=true",
+            200
+        )
+
+        if cobrado_result:
+            cobrado_status = cobrado_result.get('cliente_cobrado')
+            self.log_test(
+                "P1: Cliente Cobrado Status Update",
+                cobrado_status == True,
+                f"cliente_cobrado: {cobrado_status}"
+            )
+
+        # Test 6: Update orçamento with different repasse options
         updated_data = test_orcamento.copy()
-        updated_data["vendedor"] = "Maria Santos"
-        updated_data["desconto"] = 50.00
+        updated_data["repassar_frete"] = False  # Don't pass freight to client
+        updated_data["repassar_outras_despesas"] = False  # Don't pass other expenses to client
+        updated_data["dias_cobrar_resposta"] = 10  # Change to 10 days
 
         updated_orcamento = self.run_test(
-            "P1: Edit Existing Orçamento",
+            "P1: Edit Orçamento with Different Repasse Options",
             "PUT",
             f"orcamentos/{orcamento_id}",
             200,
             data=updated_data
         )
 
-        # Test 4: Convert orçamento to pedido
+        if updated_orcamento:
+            # With repasse = False, valor_final should be lower
+            expected_final_no_repasse = expected_subtotal - 25.00  # Only subtotal - discount = 495.00
+            final_value_correct = abs(updated_orcamento.get('valor_final', 0) - expected_final_no_repasse) < 0.01
+            
+            self.log_test(
+                "P1: Calculations with Repasse = False",
+                final_value_correct,
+                f"Final value: {updated_orcamento.get('valor_final')}, Expected: {expected_final_no_repasse}"
+            )
+
+        # Test 7: Convert orçamento to pedido
         conversion_result = self.run_test(
             "P1: Convert Orçamento to Pedido",
             "POST",
@@ -194,9 +275,9 @@ class XSELLAPITester:
                 f"Created pedido: {pedido_numero}"
             )
 
-        # Test 5: Get all orçamentos
+        # Test 8: Get all orçamentos and verify status cards data
         all_orcamentos = self.run_test(
-            "P1: Get All Orçamentos",
+            "P1: Get All Orçamentos for Status Cards",
             "GET",
             "orcamentos",
             200
@@ -204,10 +285,34 @@ class XSELLAPITester:
 
         if all_orcamentos:
             found_orcamento = any(orc.get('id') == orcamento_id for orc in all_orcamentos)
+            converted_count = len([orc for orc in all_orcamentos if orc.get('status') == 'convertido'])
+            abertos_count = len([orc for orc in all_orcamentos if orc.get('status') == 'aberto'])
+            
             self.log_test(
                 "P1: Find Created Orçamento in List",
                 found_orcamento,
-                f"Found {len(all_orcamentos)} orçamentos total"
+                f"Found {len(all_orcamentos)} orçamentos total, {abertos_count} abertos, {converted_count} convertidos"
+            )
+
+        # Test 9: Create another orçamento to test cobrança indicators
+        test_orcamento_urgente = test_orcamento.copy()
+        test_orcamento_urgente["dias_cobrar_resposta"] = 1  # Due tomorrow
+        
+        urgente_orcamento = self.run_test(
+            "P1: Create Orçamento with 1-day Response Time",
+            "POST",
+            "orcamentos",
+            200,
+            data=test_orcamento_urgente
+        )
+
+        if urgente_orcamento:
+            urgente_id = urgente_orcamento.get('id')
+            # This should appear in pending cobrança list
+            self.log_test(
+                "P1: Urgent Orçamento Created for Cobrança Testing",
+                bool(urgente_id),
+                f"Created urgent orçamento: {urgente_orcamento.get('numero')}"
             )
 
         return True
