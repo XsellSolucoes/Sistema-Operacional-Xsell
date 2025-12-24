@@ -20,26 +20,26 @@ const getAuthHeader = () => ({
 
 const CATEGORIAS = [
   { value: 'todos', label: 'Todos os Fornecedores' },
-  { value: 'materiais_construcao', label: 'Materiais de Construção' },
-  { value: 'tintas_pintura', label: 'Tintas e Pintura' },
-  { value: 'material_eletrico', label: 'Material Elétrico' },
-  { value: 'eletrodomesticos', label: 'Eletrodomésticos' },
-  { value: 'audio_video', label: 'Áudio, Vídeo e Eletrônicos' },
-  { value: 'pecas_acessorios', label: 'Peças e Acessórios Eletrônicos' },
-  { value: 'moveis', label: 'Móveis' },
-  { value: 'cama_mesa_banho', label: 'Cama, Mesa e Banho' },
-  { value: 'utilidades_domesticas', label: 'Utilidades Domésticas' },
-  { value: 'papelaria', label: 'Papelaria' },
-  { value: 'livros', label: 'Livros' },
-  { value: 'brinquedos', label: 'Brinquedos' },
   { value: 'artigos_esportivos', label: 'Artigos Esportivos' },
-  { value: 'artigos_viagem', label: 'Artigos de Viagem' },
-  { value: 'roupas_acessorios', label: 'Roupas e Acessórios' },
-  { value: 'cosmeticos_perfumaria', label: 'Cosméticos e Perfumaria' },
-  { value: 'higiene_pessoal', label: 'Higiene Pessoal' },
   { value: 'artigos_medicos', label: 'Artigos Médicos e Ortopédicos' },
+  { value: 'artigos_viagem', label: 'Artigos de Viagem' },
+  { value: 'audio_video', label: 'Áudio, Vídeo e Eletrônicos' },
+  { value: 'brinquedos', label: 'Brinquedos' },
+  { value: 'cama_mesa_banho', label: 'Cama, Mesa e Banho' },
+  { value: 'cosmeticos_perfumaria', label: 'Cosméticos e Perfumaria' },
+  { value: 'eletrodomesticos', label: 'Eletrodomésticos' },
+  { value: 'higiene_pessoal', label: 'Higiene Pessoal' },
+  { value: 'livros', label: 'Livros' },
+  { value: 'material_eletrico', label: 'Material Elétrico' },
+  { value: 'materiais_construcao', label: 'Materiais de Construção' },
+  { value: 'moveis', label: 'Móveis' },
+  { value: 'outros', label: 'Outros' },
+  { value: 'papelaria', label: 'Papelaria' },
+  { value: 'pecas_acessorios', label: 'Peças e Acessórios Eletrônicos' },
   { value: 'produtos_saneantes', label: 'Produtos Saneantes' },
-  { value: 'outros', label: 'Outros' }
+  { value: 'roupas_acessorios', label: 'Roupas e Acessórios' },
+  { value: 'tintas_pintura', label: 'Tintas e Pintura' },
+  { value: 'utilidades_domesticas', label: 'Utilidades Domésticas' }
 ];
 
 export default function Fornecedores() {
