@@ -1173,6 +1173,198 @@ async def delete_despesa(despesa_id: str, current_user: User = Depends(get_curre
     return {"message": "Despesa deleted"}
 
 
+# ==================== NOTIFICAÇÕES ====================
+
+@api_router.get("/notificacoes/despesas-vencimento")
+async def get_despesas_proximas_vencimento(current_user: User = Depends(get_current_user)):
+    """Get despesas that are due within 1 day"""
+    hoje = datetime.now(timezone.utc)
+    amanha = hoje + timedelta(days=1)
+    
+    despesas = await db.despesas.find({"status": "pendente"}, {"_id": 0}).to_list(1000)
+    
+    despesas_proximas = []
+    for d in despesas:
+        data_venc = d.get("data_vencimento")
+        if isinstance(data_venc, str):
+            data_venc = datetime.fromisoformat(data_venc.replace('Z', '+00:00'))
+        
+        if data_venc:
+            # Check if vencimento is today or tomorrow
+            dias_para_vencer = (data_venc.date() - hoje.date()).days
+            if dias_para_vencer <= 1 and dias_para_vencer >= 0:
+                despesas_proximas.append({
+                    "id": d["id"],
+                    "descricao": d["descricao"],
+                    "tipo": d["tipo"],
+                    "valor": d["valor"],
+                    "data_vencimento": data_venc.isoformat(),
+                    "dias_para_vencer": dias_para_vencer
+                })
+    
+    return {
+        "quantidade": len(despesas_proximas),
+        "despesas": despesas_proximas
+    }
+
+
+@api_router.post("/notificacoes/enviar-email-vencimentos")
+async def enviar_notificacao_vencimentos(current_user: User = Depends(get_current_user)):
+    """Send email notification for expenses due within 1 day"""
+    
+    # Get despesas próximas ao vencimento
+    hoje = datetime.now(timezone.utc)
+    amanha = hoje + timedelta(days=1)
+    
+    despesas = await db.despesas.find({"status": "pendente"}, {"_id": 0}).to_list(1000)
+    
+    despesas_proximas = []
+    for d in despesas:
+        data_venc = d.get("data_vencimento")
+        if isinstance(data_venc, str):
+            data_venc = datetime.fromisoformat(data_venc.replace('Z', '+00:00'))
+        
+        if data_venc:
+            dias_para_vencer = (data_venc.date() - hoje.date()).days
+            if dias_para_vencer <= 1 and dias_para_vencer >= 0:
+                despesas_proximas.append({
+                    "descricao": d["descricao"],
+                    "tipo": d["tipo"],
+                    "valor": d["valor"],
+                    "data_vencimento": data_venc.strftime("%d/%m/%Y"),
+                    "dias_para_vencer": dias_para_vencer
+                })
+    
+    if not despesas_proximas:
+        return {"message": "Nenhuma despesa próxima ao vencimento", "enviado": False}
+    
+    # Build email HTML
+    total_valor = sum(d["valor"] for d in despesas_proximas)
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .header {{ background: #1e3a5f; color: white; padding: 20px; text-align: center; }}
+            .content {{ padding: 20px; }}
+            .alert {{ background: #fef3c7; border-left: 4px solid #f97316; padding: 15px; margin: 20px 0; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th {{ background: #1e3a5f; color: white; padding: 12px; text-align: left; }}
+            td {{ padding: 10px; border-bottom: 1px solid #e5e7eb; }}
+            .total {{ font-size: 18px; font-weight: bold; color: #dc2626; }}
+            .footer {{ background: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #6b7280; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>⚠️ XSELL - Alerta de Vencimentos</h1>
+        </div>
+        <div class="content">
+            <div class="alert">
+                <strong>Atenção!</strong> Você tem <strong>{len(despesas_proximas)} despesa(s)</strong> próxima(s) ao vencimento.
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Tipo</th>
+                        <th>Valor</th>
+                        <th>Vencimento</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+    """
+    
+    for d in despesas_proximas:
+        status_text = "VENCE HOJE!" if d["dias_para_vencer"] == 0 else "Vence amanhã"
+        status_color = "#dc2626" if d["dias_para_vencer"] == 0 else "#f97316"
+        html_content += f"""
+                    <tr>
+                        <td>{d["descricao"]}</td>
+                        <td>{d["tipo"]}</td>
+                        <td>R$ {d["valor"]:.2f}</td>
+                        <td>{d["data_vencimento"]}</td>
+                        <td style="color: {status_color}; font-weight: bold;">{status_text}</td>
+                    </tr>
+        """
+    
+    html_content += f"""
+                </tbody>
+            </table>
+            
+            <p class="total">Total a pagar: R$ {total_valor:.2f}</p>
+            
+            <p>Acesse o sistema XSELL para mais detalhes e gerenciar suas despesas.</p>
+        </div>
+        <div class="footer">
+            <p>Este é um email automático do sistema XSELL Soluções Corporativas.</p>
+            <p>Gerado em: {datetime.now().strftime("%d/%m/%Y às %H:%M")}</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Check if Resend is properly configured
+    if not RESEND_AVAILABLE:
+        return {
+            "message": "Biblioteca Resend não instalada. Execute: pip install resend",
+            "enviado": False,
+            "despesas_encontradas": len(despesas_proximas),
+            "email_destino": NOTIFICATION_EMAIL
+        }
+    
+    if not RESEND_API_KEY or RESEND_API_KEY.startswith("re_test"):
+        return {
+            "message": "API Key do Resend não configurada. Configure RESEND_API_KEY no arquivo .env",
+            "enviado": False,
+            "despesas_encontradas": len(despesas_proximas),
+            "email_destino": NOTIFICATION_EMAIL,
+            "preview_html": html_content[:500] + "..."
+        }
+    
+    # Send email using Resend
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [NOTIFICATION_EMAIL],
+            "subject": f"⚠️ XSELL - {len(despesas_proximas)} Despesa(s) Próxima(s) ao Vencimento",
+            "html": html_content
+        }
+        
+        email_result = await asyncio.to_thread(resend.Emails.send, params)
+        
+        return {
+            "message": f"Email enviado com sucesso para {NOTIFICATION_EMAIL}",
+            "enviado": True,
+            "email_id": email_result.get("id"),
+            "despesas_notificadas": len(despesas_proximas),
+            "total_valor": total_valor
+        }
+    except Exception as e:
+        logging.error(f"Erro ao enviar email: {str(e)}")
+        return {
+            "message": f"Erro ao enviar email: {str(e)}",
+            "enviado": False,
+            "despesas_encontradas": len(despesas_proximas)
+        }
+
+
+@api_router.get("/notificacoes/config")
+async def get_notificacao_config(current_user: User = Depends(get_current_user)):
+    """Get notification configuration status"""
+    return {
+        "resend_disponivel": RESEND_AVAILABLE,
+        "resend_configurado": bool(RESEND_API_KEY) and not RESEND_API_KEY.startswith("re_test"),
+        "email_remetente": SENDER_EMAIL,
+        "email_destino": NOTIFICATION_EMAIL
+    }
+
+
 @api_router.get("/financeiro/caixa", response_model=Caixa)
 async def get_caixa(current_user: User = Depends(get_current_user)):
     caixa = await db.caixa.find_one({}, {"_id": 0})
