@@ -673,6 +673,21 @@ export default function Pedidos() {
       status: 'pendente'
     });
     setItens([]);
+    setDespesasPedido([]);
+    setProdutoEncontrado(null);
+    setNovoItem({
+      codigo_produto: '',
+      produto_id: '',
+      produto_nome: '',
+      quantidade: '1',
+      preco_compra: '0',
+      preco_venda: '0',
+      personalizado: false,
+      tipo_personalizacao: '',
+      valor_personalizacao: '0',
+      repassar_personalizacao: false,
+      variacao_selecionada: ''
+    });
     setEditingPedido(null);
   };
 
