@@ -666,6 +666,10 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         for item in pedido_data.itens
     )
     
+    # Adicionar frete ao valor de venda se repassar
+    if pedido_data.repassar_frete:
+        valor_total_venda += pedido_data.frete
+    
     # Adicionar outras despesas ao valor de venda se repassar
     if pedido_data.repassar_outras_despesas:
         valor_total_venda += pedido_data.outras_despesas
@@ -688,6 +692,7 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         "cliente_nome": cliente["nome"],
         "itens": [item.model_dump() for item in pedido_data.itens],
         "frete": pedido_data.frete,
+        "repassar_frete": pedido_data.repassar_frete,
         "outras_despesas": pedido_data.outras_despesas,
         "descricao_outras_despesas": pedido_data.descricao_outras_despesas,
         "repassar_outras_despesas": pedido_data.repassar_outras_despesas,
