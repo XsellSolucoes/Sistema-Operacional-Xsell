@@ -24,7 +24,6 @@ export default function Clientes() {
   const [viewingCliente, setViewingCliente] = useState(null);
   const [editingCliente, setEditingCliente] = useState(null);
   const [formData, setFormData] = useState({
-    codigo: '',
     cnpj: '',
     nome: '',
     razao_social: '',
@@ -32,7 +31,11 @@ export default function Clientes() {
     endereco: '',
     cidade: '',
     estado: '',
-    cep: ''
+    cep: '',
+    email: '',
+    inscricao_estadual: '',
+    telefone: '',
+    whatsapp: ''
   });
 
   useEffect(() => {
