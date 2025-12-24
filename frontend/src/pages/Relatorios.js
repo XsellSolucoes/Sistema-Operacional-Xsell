@@ -573,12 +573,34 @@ export default function Relatorios() {
           <h1 className="text-4xl font-heading font-bold tracking-tight text-primary">Relatórios</h1>
           <p className="text-muted-foreground mt-2">Análise completa de dados e indicadores do sistema</p>
         </div>
-        {filtrosAtivos && (
-          <Badge variant="secondary" className="text-sm">
-            <Filter className="h-3 w-3 mr-1" />
-            Filtros ativos
-          </Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {filtrosAtivos && (
+            <Badge variant="secondary" className="text-sm">
+              <Filter className="h-3 w-3 mr-1" />
+              Filtros ativos
+            </Badge>
+          )}
+          {relatorio && (
+            <>
+              <Button 
+                variant="outline" 
+                onClick={handlePrint}
+                data-testid="imprimir-button"
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Imprimir
+              </Button>
+              <Button 
+                className="bg-secondary hover:bg-secondary/90"
+                onClick={handleSavePDF}
+                data-testid="salvar-pdf-button"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Salvar PDF
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filtros */}
