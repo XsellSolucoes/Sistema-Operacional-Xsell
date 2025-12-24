@@ -781,18 +781,40 @@ async def create_licitacao(lic_data: LicitacaoCreate, current_user: User = Depen
     import uuid
     lic_id = str(uuid.uuid4())
     
-    lucro_total = sum(
-        (p["preco_venda"] - p["preco_compra"] - p.get("despesas_extras", 0)) * p["quantidade_empenhada"]
-        for p in lic_data.produtos
-    )
+    # Calcular quantidades restantes para cada produto
+    produtos_processados = []
+    for p in lic_data.produtos:
+        qtd_empenhada = p.get("quantidade_empenhada", 0)
+        qtd_fornecida = p.get("quantidade_fornecida", 0)
+        qtd_restante = qtd_empenhada - qtd_fornecida
+        lucro_unitario = p.get("preco_venda", 0) - p.get("preco_compra", 0) - p.get("despesas_extras", 0)
+        
+        produtos_processados.append({
+            **p,
+            "quantidade_restante": qtd_restante,
+            "lucro_unitario": lucro_unitario
+        })
+    
+    # Calcular totais
+    valor_total_venda = sum(p.get("preco_venda", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    valor_total_compra = sum(p.get("preco_compra", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    despesas_produtos = sum(p.get("despesas_extras", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    despesas_totais = despesas_produtos + lic_data.frete + lic_data.impostos + lic_data.outras_despesas
+    lucro_total = valor_total_venda - valor_total_compra - despesas_totais
     
     lic_doc = lic_data.model_dump()
     lic_doc["id"] = lic_id
+    lic_doc["produtos"] = produtos_processados
+    lic_doc["valor_total_venda"] = valor_total_venda
+    lic_doc["valor_total_compra"] = valor_total_compra
+    lic_doc["despesas_totais"] = despesas_totais
     lic_doc["lucro_total"] = lucro_total
-    lic_doc["status"] = "pendente"
+    lic_doc["status_pagamento"] = "pendente"
     lic_doc["data_empenho"] = lic_doc["data_empenho"].isoformat()
     if lic_doc.get("previsao_fornecimento"):
         lic_doc["previsao_fornecimento"] = lic_doc["previsao_fornecimento"].isoformat()
+    if lic_doc.get("fornecimento_efetivo"):
+        lic_doc["fornecimento_efetivo"] = lic_doc["fornecimento_efetivo"].isoformat()
     if lic_doc.get("previsao_pagamento"):
         lic_doc["previsao_pagamento"] = lic_doc["previsao_pagamento"].isoformat()
     lic_doc["created_at"] = datetime.now(timezone.utc).isoformat()
@@ -802,6 +824,8 @@ async def create_licitacao(lic_data: LicitacaoCreate, current_user: User = Depen
     lic_doc["data_empenho"] = datetime.fromisoformat(lic_doc["data_empenho"])
     if lic_doc.get("previsao_fornecimento"):
         lic_doc["previsao_fornecimento"] = datetime.fromisoformat(lic_doc["previsao_fornecimento"])
+    if lic_doc.get("fornecimento_efetivo"):
+        lic_doc["fornecimento_efetivo"] = datetime.fromisoformat(lic_doc["fornecimento_efetivo"])
     if lic_doc.get("previsao_pagamento"):
         lic_doc["previsao_pagamento"] = datetime.fromisoformat(lic_doc["previsao_pagamento"])
     lic_doc["created_at"] = datetime.fromisoformat(lic_doc["created_at"])
