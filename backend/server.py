@@ -630,6 +630,19 @@ async def get_pedidos(current_user: User = Depends(get_current_user)):
             pedido["data"] = datetime.fromisoformat(pedido["data"])
         if isinstance(pedido.get("created_at"), str):
             pedido["created_at"] = datetime.fromisoformat(pedido["created_at"])
+        # Normalizar campos que podem estar faltando em pedidos antigos
+        if "despesas_totais" not in pedido:
+            pedido["despesas_totais"] = pedido.get("frete", 0) + pedido.get("outras_despesas", 0)
+        if "vendedor" not in pedido or pedido["vendedor"] is None:
+            pedido["vendedor"] = ""
+        if "repassar_frete" not in pedido:
+            pedido["repassar_frete"] = False
+        # Normalizar itens
+        for item in pedido.get("itens", []):
+            if "lucro_item" not in item:
+                item["lucro_item"] = 0.0
+            if "despesas" not in item:
+                item["despesas"] = 0.0
     return pedidos
 
 
@@ -643,6 +656,18 @@ async def get_pedido(pedido_id: str, current_user: User = Depends(get_current_us
         pedido["data"] = datetime.fromisoformat(pedido["data"])
     if isinstance(pedido.get("created_at"), str):
         pedido["created_at"] = datetime.fromisoformat(pedido["created_at"])
+    # Normalizar campos
+    if "despesas_totais" not in pedido:
+        pedido["despesas_totais"] = pedido.get("frete", 0) + pedido.get("outras_despesas", 0)
+    if "vendedor" not in pedido or pedido["vendedor"] is None:
+        pedido["vendedor"] = ""
+    if "repassar_frete" not in pedido:
+        pedido["repassar_frete"] = False
+    for item in pedido.get("itens", []):
+        if "lucro_item" not in item:
+            item["lucro_item"] = 0.0
+        if "despesas" not in item:
+            item["despesas"] = 0.0
     
     return Pedido(**pedido)
 
