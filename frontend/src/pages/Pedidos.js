@@ -566,33 +566,45 @@ export default function Pedidos() {
         <head>
           <title>Pedido ${pedido.numero} - Via Interna</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 40px; color: #333; }
-            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #dc2626; padding-bottom: 20px; }
-            .logo { max-width: 200px; margin-bottom: 10px; }
-            .via-interna { background-color: #dc2626; color: white; padding: 10px; border-radius: 5px; display: inline-block; }
-            .info-section { margin-bottom: 20px; }
+            body { font-family: Arial, sans-serif; padding: 20px 40px; color: #333; font-size: 12px; }
+            .header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #dc2626; padding-bottom: 15px; }
+            .logo { width: 80px; height: auto; margin-right: 15px; }
+            .empresa-info { flex: 1; font-size: 12px; }
+            .empresa-info h2 { margin: 0 0 5px 0; font-size: 14px; color: #dc2626; }
+            .empresa-info p { margin: 2px 0; color: #666; }
+            .pedido-numero { text-align: right; }
+            .pedido-numero h1 { margin: 0; font-size: 16px; color: #dc2626; }
+            .via-interna { background-color: #dc2626; color: white; padding: 5px 10px; border-radius: 3px; font-size: 10px; display: inline-block; margin-top: 5px; }
+            .info-section { margin-bottom: 15px; }
             .info-label { font-weight: bold; color: #dc2626; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-            th { background-color: #dc2626; color: white; }
-            .totals { margin-top: 20px; text-align: right; background-color: #f3f4f6; padding: 15px; border-radius: 5px; }
-            .total-row { margin: 5px 0; font-size: 14px; }
-            .lucro-final { font-size: 20px; font-weight: bold; color: #059669; margin-top: 10px; }
-            .warning-box { background-color: #fee2e2; border: 2px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 5px; }
-            .despesa-repassada { color: #059669; }
-            .despesa-interna { color: #dc2626; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }
+            th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+            th { background-color: #dc2626; color: white; font-size: 10px; }
+            .totals { margin-top: 15px; text-align: right; background-color: #f3f4f6; padding: 10px; border-radius: 5px; }
+            .total-row { margin: 3px 0; font-size: 12px; }
+            .lucro-final { font-size: 16px; font-weight: bold; color: #059669; margin-top: 8px; }
+            .warning-box { background-color: #fee2e2; border: 2px solid #dc2626; padding: 10px; margin: 15px 0; border-radius: 5px; }
+            .despesa-repassada { color: #059669; font-weight: bold; }
+            .despesa-interna { color: #dc2626; font-weight: bold; }
+            .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #666; }
           </style>
         </head>
         <body>
           <div class="header">
             <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
-            <h1>PEDIDO - VIA INTERNA</h1>
-            <p class="via-interna">USO INTERNO - NÃO ENVIAR AO CLIENTE</p>
-            <p style="font-size: 18px; color: #666;">Nº ${pedido.numero}</p>
+            <div class="empresa-info">
+              <h2>Xsell Soluções Corporativas</h2>
+              <p>CNPJ: 19.820.742/0001-91</p>
+              <p>comercial@xsellsolucoes.com.br</p>
+            </div>
+            <div class="pedido-numero">
+              <h1>PEDIDO ${pedido.numero}</h1>
+              <p>${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+              <span class="via-interna">⚠️ USO INTERNO</span>
+            </div>
           </div>
 
           <div class="info-section">
-            <p><span class="info-label">Data:</span> ${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
             <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
             ${cliente ? `<p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>` : ''}
             <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
@@ -600,7 +612,7 @@ export default function Pedidos() {
             <p><span class="info-label">Status:</span> ${pedido.status}</p>
           </div>
 
-          <h3>Detalhamento Completo dos Itens</h3>
+          <h3 style="font-size: 13px; color: #dc2626; margin-bottom: 10px;">Detalhamento Completo dos Itens</h3>
           <table>
             <thead>
               <tr>
