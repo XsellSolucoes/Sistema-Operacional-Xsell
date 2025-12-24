@@ -153,31 +153,39 @@ export default function Vendedores() {
         <div>
           <h1 className="text-4xl font-heading font-bold tracking-tight text-primary">Vendedores</h1>
           <p className="text-muted-foreground mt-2">Gerencie os vendedores e níveis de acesso</p>
+          {currentVendedor && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Seu nível: <Badge variant={isPresidente ? 'default' : 'secondary'} className={isPresidente ? 'bg-green-600' : ''}>
+                {currentVendedor.nivel_acesso?.toUpperCase()}
+              </Badge>
+            </p>
+          )}
         </div>
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-          <DialogTrigger asChild>
-            <Button className="bg-secondary hover:bg-secondary/90" data-testid="add-vendedor-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Vendedor
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingVendedor ? 'Editar Vendedor' : 'Novo Vendedor'}</DialogTitle>
-              <DialogDescription>
-                Preencha os dados do vendedor e defina o nível de acesso
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="nome">Nome Completo *</Label>
-                <Input
-                  id="nome"
-                  value={formData.nome}
-                  onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                  required
-                  data-testid="vendedor-nome-input"
-                />
+        {isPresidente ? (
+          <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogTrigger asChild>
+              <Button className="bg-secondary hover:bg-secondary/90" data-testid="add-vendedor-button">
+                <Plus className="h-4 w-4 mr-2" />
+                Novo Vendedor
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingVendedor ? 'Editar Vendedor' : 'Novo Vendedor'}</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados do vendedor e defina o nível de acesso
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="nome">Nome Completo *</Label>
+                  <Input
+                    id="nome"
+                    value={formData.nome}
+                    onChange={(e) => setFormData({...formData, nome: e.target.value})}
+                    required
+                    data-testid="vendedor-nome-input"
+                  />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email *</Label>
