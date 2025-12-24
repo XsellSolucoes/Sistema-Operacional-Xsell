@@ -697,15 +697,15 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
     if pedido_data.repassar_frete:
         valor_total_venda += pedido_data.frete
     
-    # Adicionar outras despesas ao valor de venda se repassar
-    if pedido_data.repassar_outras_despesas:
-        valor_total_venda += pedido_data.outras_despesas
+    # Calcular despesas repassadas (adicionam ao valor de venda)
+    despesas_detalhadas = pedido_data.despesas_detalhadas or []
+    despesas_repassadas = sum(d.get("valor", 0) for d in despesas_detalhadas if d.get("repassar", False))
+    valor_total_venda += despesas_repassadas
     
-    # Calcular despesas totais (incluindo personalizações não repassadas)
+    # Calcular despesas totais (frete + todas as despesas detalhadas)
     despesas_totais = (
-        sum(item.get("despesas", 0) * item.get("quantidade", 0) for item in itens) + 
         pedido_data.frete + 
-        pedido_data.outras_despesas +
+        sum(d.get("valor", 0) for d in despesas_detalhadas) +
         sum((item.get("valor_personalizacao", 0) if not item.get("repassar_personalizacao", False) else 0) * item.get("quantidade", 0) for item in itens)
     )
     
@@ -721,8 +721,7 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         "frete": pedido_data.frete,
         "repassar_frete": pedido_data.repassar_frete,
         "outras_despesas": pedido_data.outras_despesas,
-        "descricao_outras_despesas": pedido_data.descricao_outras_despesas,
-        "repassar_outras_despesas": pedido_data.repassar_outras_despesas,
+        "despesas_detalhadas": despesas_detalhadas,
         "prazo_entrega": pedido_data.prazo_entrega,
         "forma_pagamento": pedido_data.forma_pagamento,
         "tipo_venda": pedido_data.tipo_venda,
