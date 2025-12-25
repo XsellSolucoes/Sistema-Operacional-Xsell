@@ -821,6 +821,7 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
         "despesas_detalhadas": despesas_detalhadas,
         "prazo_entrega": pedido_data.prazo_entrega,
         "forma_pagamento": pedido_data.forma_pagamento,
+        "dados_pagamento_id": pedido_data.dados_pagamento_id,
         "tipo_venda": pedido_data.tipo_venda,
         "vendedor": pedido_data.vendedor,
         "custo_total": custo_total,
@@ -832,9 +833,77 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
     }
     
     await db.pedidos.insert_one(pedido_doc)
+    
+    # Atualizar histórico do cliente
+    historico_entry = {
+        "pedido_id": pedido_id,
+        "numero": numero,
+        "data": datetime.now(timezone.utc).isoformat(),
+        "valor": valor_total_venda,
+        "vendedor": pedido_data.vendedor
+    }
+    await db.clientes.update_one(
+        {"id": pedido_data.cliente_id},
+        {"$push": {"historico": historico_entry}}
+    )
+    
     pedido_doc["data"] = datetime.fromisoformat(pedido_doc["data"])
     pedido_doc["created_at"] = datetime.fromisoformat(pedido_doc["created_at"])
     return Pedido(**pedido_doc)
+
+
+@api_router.put("/pedidos/{pedido_id}", response_model=Pedido)
+async def update_pedido(pedido_id: str, pedido_data: PedidoCreate, current_user: User = Depends(get_current_user)):
+    pedido = await db.pedidos.find_one({"id": pedido_id}, {"_id": 0})
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido not found")
+    
+    cliente = await db.clientes.find_one({"id": pedido_data.cliente_id}, {"_id": 0})
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    
+    itens = pedido_data.itens
+    custo_total = sum(item.get("preco_compra", 0) * item.get("quantidade", 0) for item in itens)
+    valor_total_venda = sum(item.get("preco_venda", 0) * item.get("quantidade", 0) for item in itens)
+    
+    if pedido_data.repassar_frete:
+        valor_total_venda += pedido_data.frete
+    
+    despesas_detalhadas = pedido_data.despesas_detalhadas or []
+    despesas_repassadas = sum(d.get("valor", 0) for d in despesas_detalhadas if d.get("repassar", False))
+    valor_total_venda += despesas_repassadas
+    
+    despesas_totais = pedido_data.frete + sum(d.get("valor", 0) for d in despesas_detalhadas)
+    lucro_total = valor_total_venda - custo_total - despesas_totais
+    
+    update_doc = {
+        "cliente_id": pedido_data.cliente_id,
+        "cliente_nome": cliente["nome"],
+        "itens": itens,
+        "frete": pedido_data.frete,
+        "repassar_frete": pedido_data.repassar_frete,
+        "outras_despesas": pedido_data.outras_despesas,
+        "despesas_detalhadas": despesas_detalhadas,
+        "prazo_entrega": pedido_data.prazo_entrega,
+        "forma_pagamento": pedido_data.forma_pagamento,
+        "dados_pagamento_id": pedido_data.dados_pagamento_id,
+        "tipo_venda": pedido_data.tipo_venda,
+        "vendedor": pedido_data.vendedor,
+        "custo_total": custo_total,
+        "valor_total_venda": valor_total_venda,
+        "despesas_totais": despesas_totais,
+        "lucro_total": lucro_total
+    }
+    
+    await db.pedidos.update_one({"id": pedido_id}, {"$set": update_doc})
+    
+    updated_pedido = await db.pedidos.find_one({"id": pedido_id}, {"_id": 0})
+    if isinstance(updated_pedido.get("data"), str):
+        updated_pedido["data"] = datetime.fromisoformat(updated_pedido["data"])
+    if isinstance(updated_pedido.get("created_at"), str):
+        updated_pedido["created_at"] = datetime.fromisoformat(updated_pedido["created_at"])
+    
+    return Pedido(**updated_pedido)
 
 
 @api_router.put("/pedidos/{pedido_id}/status")
