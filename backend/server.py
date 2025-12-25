@@ -79,25 +79,72 @@ class Cliente(BaseModel):
     
     id: str
     codigo: str
-    cnpj: str
+    tipo_pessoa: str = "juridica"  # fisica ou juridica
+    cpf_cnpj: str = ""
     nome: str
-    razao_social: str
-    nome_fantasia: str
-    endereco: str
-    cidade: str
-    estado: str
-    cep: str
+    razao_social: Optional[str] = None
+    nome_fantasia: Optional[str] = None
+    nome_contato: Optional[str] = None
+    rua: Optional[str] = None
+    numero: Optional[str] = None
+    complemento: Optional[str] = None
+    bairro: Optional[str] = None
+    cidade: Optional[str] = None
+    estado: Optional[str] = None
+    cep: Optional[str] = None
     email: Optional[str] = None
-    inscricao_estadual: Optional[str] = None
     telefone: Optional[str] = None
     whatsapp: Optional[str] = None
+    historico: Optional[List[Dict[str, Any]]] = None
+    ocorrencias: Optional[List[Dict[str, Any]]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ClienteCreate(BaseModel):
-    cnpj: str
+    tipo_pessoa: str = "juridica"
+    cpf_cnpj: str = ""
     nome: str
-    razao_social: str
+    razao_social: Optional[str] = None
+    nome_fantasia: Optional[str] = None
+    nome_contato: Optional[str] = None
+    rua: Optional[str] = None
+    numero: Optional[str] = None
+    complemento: Optional[str] = None
+    bairro: Optional[str] = None
+    cidade: Optional[str] = None
+    estado: Optional[str] = None
+    cep: Optional[str] = None
+    email: Optional[str] = None
+    telefone: Optional[str] = None
+    whatsapp: Optional[str] = None
+
+
+# Dados de Pagamento
+class DadosPagamento(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    
+    id: str
+    banco: str
+    tipo_conta: str
+    agencia: str
+    numero_conta: str
+    titular: str
+    cpf_cnpj_titular: Optional[str] = None
+    pix: Optional[str] = None
+    observacoes: Optional[str] = None
+    ativo: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class DadosPagamentoCreate(BaseModel):
+    banco: str
+    tipo_conta: str
+    agencia: str
+    numero_conta: str
+    titular: str
+    cpf_cnpj_titular: Optional[str] = None
+    pix: Optional[str] = None
+    observacoes: Optional[str] = None
     nome_fantasia: str
     endereco: str
     cidade: str
