@@ -599,6 +599,63 @@ async def delete_cliente(cliente_id: str, current_user: User = Depends(get_curre
     return {"message": "Cliente deleted"}
 
 
+@api_router.post("/clientes/{cliente_id}/ocorrencias")
+async def add_ocorrencia(cliente_id: str, ocorrencia: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    cliente = await db.clientes.find_one({"id": cliente_id}, {"_id": 0})
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente not found")
+    
+    ocorrencia["id"] = str(uuid.uuid4())
+    ocorrencia["data"] = datetime.now(timezone.utc).isoformat()
+    ocorrencia["usuario"] = current_user.email
+    
+    await db.clientes.update_one(
+        {"id": cliente_id},
+        {"$push": {"ocorrencias": ocorrencia}}
+    )
+    return {"message": "Ocorrência adicionada"}
+
+
+# Dados de Pagamento
+@api_router.get("/dados-pagamento", response_model=List[DadosPagamento])
+async def get_dados_pagamento(current_user: User = Depends(get_current_user)):
+    dados = await db.dados_pagamento.find({}, {"_id": 0}).to_list(100)
+    return dados
+
+
+@api_router.post("/dados-pagamento", response_model=DadosPagamento)
+async def create_dados_pagamento(dados: DadosPagamentoCreate, current_user: User = Depends(get_current_user)):
+    dados_id = str(uuid.uuid4())
+    dados_doc = dados.model_dump()
+    dados_doc["id"] = dados_id
+    dados_doc["ativo"] = True
+    dados_doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.dados_pagamento.insert_one(dados_doc)
+    return DadosPagamento(**dados_doc)
+
+
+@api_router.put("/dados-pagamento/{dados_id}", response_model=DadosPagamento)
+async def update_dados_pagamento(dados_id: str, dados: DadosPagamentoCreate, current_user: User = Depends(get_current_user)):
+    result = await db.dados_pagamento.update_one(
+        {"id": dados_id},
+        {"$set": dados.model_dump()}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Dados de pagamento not found")
+    
+    dados_doc = await db.dados_pagamento.find_one({"id": dados_id}, {"_id": 0})
+    return DadosPagamento(**dados_doc)
+
+
+@api_router.delete("/dados-pagamento/{dados_id}")
+async def delete_dados_pagamento(dados_id: str, current_user: User = Depends(get_current_user)):
+    result = await db.dados_pagamento.delete_one({"id": dados_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Dados de pagamento not found")
+    return {"message": "Dados de pagamento deleted"}
+
+
 @api_router.get("/produtos", response_model=List[Produto])
 async def get_produtos(current_user: User = Depends(get_current_user)):
     produtos = await db.produtos.find({}, {"_id": 0}).to_list(1000)
