@@ -145,15 +145,6 @@ class DadosPagamentoCreate(BaseModel):
     cpf_cnpj_titular: Optional[str] = None
     pix: Optional[str] = None
     observacoes: Optional[str] = None
-    nome_fantasia: str
-    endereco: str
-    cidade: str
-    estado: str
-    cep: str
-    email: Optional[str] = None
-    inscricao_estadual: Optional[str] = None
-    telefone: Optional[str] = None
-    whatsapp: Optional[str] = None
 
 
 class Produto(BaseModel):
