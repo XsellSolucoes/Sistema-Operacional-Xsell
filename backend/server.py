@@ -202,6 +202,7 @@ class Pedido(BaseModel):
     despesas_detalhadas: Optional[List[Dict[str, Any]]] = None
     prazo_entrega: str = ""
     forma_pagamento: str = ""
+    dados_pagamento_id: Optional[str] = None
     tipo_venda: str = ""
     vendedor: Optional[str] = None
     custo_total: float = 0.0
@@ -221,6 +222,7 @@ class PedidoCreate(BaseModel):
     despesas_detalhadas: Optional[List[Dict[str, Any]]] = None
     prazo_entrega: str = ""
     forma_pagamento: str = ""
+    dados_pagamento_id: Optional[str] = None
     tipo_venda: str = ""
     vendedor: str = ""
 
