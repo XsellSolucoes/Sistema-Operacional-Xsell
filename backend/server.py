@@ -3076,10 +3076,7 @@ async def get_agenda_filtros(current_user: User = Depends(get_current_user)):
 
 
 # Upload de arquivos para Agenda de Licitações
-import os
-import shutil
-UPLOAD_DIR = "/app/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+# UPLOAD_DIR já definido no início do arquivo
 
 @api_router.post("/agenda-licitacoes/{licitacao_id}/upload")
 async def upload_anexo_agenda(
