@@ -115,6 +115,7 @@ class ClienteCreate(BaseModel):
     estado: Optional[str] = None
     cep: Optional[str] = None
     email: Optional[str] = None
+    inscricao_estadual: Optional[str] = None
     telefone: Optional[str] = None
     whatsapp: Optional[str] = None
 
