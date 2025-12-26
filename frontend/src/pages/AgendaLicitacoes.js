@@ -937,13 +937,63 @@ export default function AgendaLicitacoes() {
                   <div className="space-y-4 p-2">
                     <div className="flex justify-between items-center">
                       <h4 className="font-semibold">Documentos Anexados</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Upload de anexos será implementado em breve
+                    </div>
+
+                    {/* Upload de arquivo */}
+                    <div className="p-4 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                      <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Arraste um arquivo ou clique para selecionar
                       </p>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Formatos aceitos: PDF, DOC, DOCX, JPG, PNG
+                      </p>
+                      <input
+                        type="file"
+                        id="file-upload"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          
+                          const formData = new FormData();
+                          formData.append('file', file);
+                          
+                          try {
+                            await axios.post(
+                              `${API}/agenda-licitacoes/${selectedLicitacao.id}/upload`,
+                              formData,
+                              {
+                                headers: {
+                                  'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                  'Content-Type': 'multipart/form-data'
+                                }
+                              }
+                            );
+                            toast.success('Arquivo enviado com sucesso!');
+                            // Recarregar licitação
+                            const response = await axios.get(`${API}/agenda-licitacoes/${selectedLicitacao.id}`, getAuthHeader());
+                            setSelectedLicitacao(response.data);
+                            fetchLicitacoes();
+                          } catch (error) {
+                            toast.error(error.response?.data?.detail || 'Erro ao enviar arquivo');
+                          }
+                          e.target.value = '';
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => document.getElementById('file-upload')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Selecionar Arquivo
+                      </Button>
                     </div>
 
                     {(selectedLicitacao.anexos || []).length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
+                      <div className="text-center py-4 text-muted-foreground">
                         <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
                         <p>Nenhum anexo cadastrado</p>
                       </div>
@@ -952,18 +1002,45 @@ export default function AgendaLicitacoes() {
                         {selectedLicitacao.anexos.map((anexo, idx) => (
                           <div key={anexo.id || idx} className="flex items-center justify-between p-3 border rounded-lg">
                             <div className="flex items-center gap-2">
-                              <FileText className="h-5 w-5 text-red-500" />
+                              <FileText className={`h-5 w-5 ${anexo.tipo?.includes('pdf') ? 'text-red-500' : 'text-blue-500'}`} />
                               <div>
                                 <p className="font-medium">{anexo.nome}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {formatDate(anexo.uploaded_at)}
+                                  {formatDate(anexo.uploaded_at)} • {((anexo.tamanho || 0) / 1024).toFixed(1)} KB
                                 </p>
                               </div>
                             </div>
-                            <Button variant="outline" size="sm">
-                              <Download className="h-4 w-4 mr-1" />
-                              Baixar
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  window.open(`${API}/agenda-licitacoes/${selectedLicitacao.id}/anexos/${anexo.id}/download`, '_blank');
+                                }}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Baixar
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={async () => {
+                                  if (!window.confirm('Excluir este anexo?')) return;
+                                  try {
+                                    await axios.delete(`${API}/agenda-licitacoes/${selectedLicitacao.id}/anexos/${anexo.id}`, getAuthHeader());
+                                    toast.success('Anexo excluído!');
+                                    const response = await axios.get(`${API}/agenda-licitacoes/${selectedLicitacao.id}`, getAuthHeader());
+                                    setSelectedLicitacao(response.data);
+                                    fetchLicitacoes();
+                                  } catch (error) {
+                                    toast.error('Erro ao excluir anexo');
+                                  }
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>
