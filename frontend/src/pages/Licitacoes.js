@@ -127,8 +127,10 @@ export default function Licitacoes() {
       numero_nota_empenho: '',
       data_fornecimento: new Date().toISOString().split('T')[0],
       numero_nota_fiscal: '',
-      itens: []
+      itens: [],
+      despesasGerais: []
     });
+    setNovaDespesa({ descricao: '', valor: '' });
   };
 
   // Adicionar produto ao contrato
