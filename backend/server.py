@@ -1283,13 +1283,51 @@ async def get_licitacoes(current_user: User = Depends(get_current_user)):
             lic["previsao_pagamento"] = datetime.fromisoformat(lic["previsao_pagamento"])
         if isinstance(lic.get("created_at"), str):
             lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+        
         # Handle legacy data without new fields
         if "status_pagamento" not in lic:
             lic["status_pagamento"] = lic.get("status", "pendente")
+        
+        # Calcular quantidades totais
+        qtd_contratada = 0
+        qtd_fornecida = 0
+        for p in lic.get("produtos", []):
+            qtd_contratada += p.get("quantidade_contratada", p.get("quantidade_empenhada", 0))
+            qtd_fornecida += p.get("quantidade_fornecida", 0)
+        
+        lic["quantidade_total_contratada"] = qtd_contratada
+        lic["quantidade_total_fornecida"] = qtd_fornecida
+        lic["quantidade_total_restante"] = qtd_contratada - qtd_fornecida
+        lic["percentual_executado"] = (qtd_fornecida / qtd_contratada * 100) if qtd_contratada > 0 else 0
+        
+        # Verificar alertas
+        alertas = []
+        if lic.get("contrato"):
+            contrato = lic["contrato"]
+            if isinstance(contrato.get("data_fim"), str):
+                data_fim = datetime.fromisoformat(contrato["data_fim"])
+            else:
+                data_fim = contrato.get("data_fim")
+            
+            if data_fim:
+                dias_restantes = (data_fim - datetime.now(timezone.utc)).days
+                if dias_restantes < 0:
+                    alertas.append("⚠️ Contrato VENCIDO")
+                elif dias_restantes <= 30:
+                    alertas.append(f"⚠️ Contrato vence em {dias_restantes} dias")
+        
+        if qtd_contratada > 0 and qtd_fornecida >= qtd_contratada:
+            alertas.append("✅ Contrato totalmente executado")
+        elif qtd_contratada > 0 and (qtd_fornecida / qtd_contratada) >= 0.9:
+            alertas.append(f"⚠️ {((qtd_fornecida / qtd_contratada) * 100):.1f}% do contrato executado")
+        
+        lic["alertas"] = alertas
+        
+        # Handle legacy fields
         if "valor_total_venda" not in lic:
-            lic["valor_total_venda"] = sum(p.get("preco_venda", 0) * p.get("quantidade_empenhada", 0) for p in lic.get("produtos", []))
+            lic["valor_total_venda"] = sum(p.get("preco_venda", 0) * p.get("quantidade_contratada", p.get("quantidade_empenhada", 0)) for p in lic.get("produtos", []))
         if "valor_total_compra" not in lic:
-            lic["valor_total_compra"] = sum(p.get("preco_compra", 0) * p.get("quantidade_empenhada", 0) for p in lic.get("produtos", []))
+            lic["valor_total_compra"] = sum(p.get("preco_compra", 0) * p.get("quantidade_contratada", p.get("quantidade_empenhada", 0)) for p in lic.get("produtos", []))
         if "despesas_totais" not in lic:
             lic["despesas_totais"] = lic.get("frete", 0) + lic.get("impostos", 0) + lic.get("outras_despesas", 0)
         if "frete" not in lic:
@@ -1298,59 +1336,100 @@ async def get_licitacoes(current_user: User = Depends(get_current_user)):
             lic["impostos"] = 0.0
         if "outras_despesas" not in lic:
             lic["outras_despesas"] = 0.0
+        if "fornecimentos" not in lic:
+            lic["fornecimentos"] = []
     return licitacoes
 
 
 @api_router.post("/licitacoes", response_model=Licitacao)
 async def create_licitacao(lic_data: LicitacaoCreate, current_user: User = Depends(get_current_user)):
-    import uuid
     lic_id = str(uuid.uuid4())
     
-    # Calcular quantidades restantes para cada produto
+    # Criar objeto do contrato
+    contrato = {
+        "numero_contrato": lic_data.numero_contrato,
+        "data_inicio": lic_data.data_inicio_contrato.isoformat(),
+        "data_fim": lic_data.data_fim_contrato.isoformat(),
+        "status": "vigente"
+    }
+    
+    # Processar produtos com IDs únicos e calcular valores
     produtos_processados = []
+    quantidade_total_contratada = 0
     for p in lic_data.produtos:
-        qtd_empenhada = p.get("quantidade_empenhada", 0)
+        prod_id = str(uuid.uuid4())
+        qtd_contratada = p.get("quantidade_contratada", p.get("quantidade_empenhada", 0))
         qtd_fornecida = p.get("quantidade_fornecida", 0)
-        qtd_restante = qtd_empenhada - qtd_fornecida
-        lucro_unitario = p.get("preco_venda", 0) - p.get("preco_compra", 0) - p.get("despesas_extras", 0)
+        qtd_restante = qtd_contratada - qtd_fornecida
+        preco_venda = p.get("preco_venda", 0)
+        preco_compra = p.get("preco_compra", 0)
+        despesas_extras = p.get("despesas_extras", 0)
+        lucro_unitario = preco_venda - preco_compra - despesas_extras
+        valor_total = preco_venda * qtd_contratada
+        
+        quantidade_total_contratada += qtd_contratada
         
         produtos_processados.append({
-            **p,
+            "id": prod_id,
+            "produto_id": p.get("produto_id"),
+            "descricao": p.get("descricao", ""),
+            "quantidade_contratada": qtd_contratada,
+            "quantidade_fornecida": qtd_fornecida,
             "quantidade_restante": qtd_restante,
+            "preco_compra": preco_compra,
+            "preco_venda": preco_venda,
+            "valor_total": valor_total,
+            "despesas_extras": despesas_extras,
             "lucro_unitario": lucro_unitario
         })
     
     # Calcular totais
-    valor_total_venda = sum(p.get("preco_venda", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
-    valor_total_compra = sum(p.get("preco_compra", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
-    despesas_produtos = sum(p.get("despesas_extras", 0) * p.get("quantidade_empenhada", 0) for p in lic_data.produtos)
+    valor_total_venda = sum(p["valor_total"] for p in produtos_processados)
+    valor_total_compra = sum(p["preco_compra"] * p["quantidade_contratada"] for p in produtos_processados)
+    despesas_produtos = sum(p["despesas_extras"] * p["quantidade_contratada"] for p in produtos_processados)
     despesas_totais = despesas_produtos + lic_data.frete + lic_data.impostos + lic_data.outras_despesas
     lucro_total = valor_total_venda - valor_total_compra - despesas_totais
     
-    lic_doc = lic_data.model_dump()
-    lic_doc["id"] = lic_id
-    lic_doc["produtos"] = produtos_processados
-    lic_doc["valor_total_venda"] = valor_total_venda
-    lic_doc["valor_total_compra"] = valor_total_compra
-    lic_doc["despesas_totais"] = despesas_totais
-    lic_doc["lucro_total"] = lucro_total
-    lic_doc["status_pagamento"] = "pendente"
-    lic_doc["data_empenho"] = lic_doc["data_empenho"].isoformat()
-    if lic_doc.get("previsao_fornecimento"):
-        lic_doc["previsao_fornecimento"] = lic_doc["previsao_fornecimento"].isoformat()
-    if lic_doc.get("fornecimento_efetivo"):
-        lic_doc["fornecimento_efetivo"] = lic_doc["fornecimento_efetivo"].isoformat()
-    if lic_doc.get("previsao_pagamento"):
-        lic_doc["previsao_pagamento"] = lic_doc["previsao_pagamento"].isoformat()
-    lic_doc["created_at"] = datetime.now(timezone.utc).isoformat()
+    # Atualizar valor do contrato
+    contrato["valor_total_contrato"] = valor_total_venda
+    
+    lic_doc = {
+        "id": lic_id,
+        "contrato": contrato,
+        "numero_licitacao": lic_data.numero_licitacao,
+        "cidade": lic_data.cidade,
+        "estado": lic_data.estado,
+        "orgao_publico": lic_data.orgao_publico,
+        "numero_empenho": lic_data.numero_empenho,
+        "data_empenho": lic_data.data_empenho.isoformat(),
+        "numero_nota_empenho": lic_data.numero_nota_empenho,
+        "produtos": produtos_processados,
+        "fornecimentos": [],
+        "previsao_fornecimento": lic_data.previsao_fornecimento.isoformat() if lic_data.previsao_fornecimento else None,
+        "previsao_pagamento": lic_data.previsao_pagamento.isoformat() if lic_data.previsao_pagamento else None,
+        "frete": lic_data.frete,
+        "impostos": lic_data.impostos,
+        "outras_despesas": lic_data.outras_despesas,
+        "descricao_outras_despesas": lic_data.descricao_outras_despesas,
+        "valor_total_venda": valor_total_venda,
+        "valor_total_compra": valor_total_compra,
+        "despesas_totais": despesas_totais,
+        "lucro_total": lucro_total,
+        "quantidade_total_contratada": quantidade_total_contratada,
+        "quantidade_total_fornecida": 0,
+        "quantidade_total_restante": quantidade_total_contratada,
+        "percentual_executado": 0,
+        "status_pagamento": "pendente",
+        "alertas": [],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
     
     await db.licitacoes.insert_one(lic_doc)
     
+    # Convert back for response
     lic_doc["data_empenho"] = datetime.fromisoformat(lic_doc["data_empenho"])
     if lic_doc.get("previsao_fornecimento"):
         lic_doc["previsao_fornecimento"] = datetime.fromisoformat(lic_doc["previsao_fornecimento"])
-    if lic_doc.get("fornecimento_efetivo"):
-        lic_doc["fornecimento_efetivo"] = datetime.fromisoformat(lic_doc["fornecimento_efetivo"])
     if lic_doc.get("previsao_pagamento"):
         lic_doc["previsao_pagamento"] = datetime.fromisoformat(lic_doc["previsao_pagamento"])
     lic_doc["created_at"] = datetime.fromisoformat(lic_doc["created_at"])
