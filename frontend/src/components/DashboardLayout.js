@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   ShoppingCart, Users, Package, BarChart3, Wallet, 
-  FileText, Receipt, Menu, X, LogOut, Truck, UserCog, CreditCard 
+  FileText, Receipt, Menu, X, LogOut, Truck, UserCog, CreditCard, CalendarClock 
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,6 +18,7 @@ const menuItems = [
   { path: '/financeiro', label: 'Financeiro', icon: Wallet },
   { path: '/dados-pagamento', label: 'Dados de Pagamento', icon: CreditCard },
   { path: '/licitacoes', label: 'Licitações', icon: FileText },
+  { path: '/agenda-licitacoes', label: 'Agenda de Licitações', icon: CalendarClock },
   { path: '/orcamentos', label: 'Orçamentos', icon: Receipt },
 ];
 
