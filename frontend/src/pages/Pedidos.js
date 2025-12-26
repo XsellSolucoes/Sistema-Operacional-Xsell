@@ -574,8 +574,18 @@ export default function Pedidos() {
 
   const handlePrintInterno = (pedido) => {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Não foi possível abrir a janela de impressão. Verifique se o bloqueador de pop-ups está desativado.');
+      return;
+    }
+    
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     const despesasDetalhadas = pedido.despesas_detalhadas || [];
+    const frete = pedido.frete || 0;
+    const despesasTotais = pedido.despesas_totais || 0;
+    const custoTotal = pedido.custo_total || 0;
+    const valorTotalVenda = pedido.valor_total_venda || 0;
+    const lucroTotal = pedido.lucro_total || 0;
     
     printWindow.document.write(`
       <!DOCTYPE html>
