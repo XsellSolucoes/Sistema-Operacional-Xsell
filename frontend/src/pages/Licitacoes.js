@@ -79,8 +79,12 @@ export default function Licitacoes() {
     numero_nota_empenho: '',
     data_fornecimento: new Date().toISOString().split('T')[0],
     numero_nota_fiscal: '',
-    itens: [] // [{produto_id, quantidade}]
+    itens: [], // [{produto_id, quantidade, despesas: [{descricao, valor}]}]
+    despesasGerais: [] // Despesas gerais do fornecimento
   });
+
+  // Estado para nova despesa
+  const [novaDespesa, setNovaDespesa] = useState({ descricao: '', valor: '' });
 
   useEffect(() => {
     fetchContratos();
