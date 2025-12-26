@@ -602,6 +602,14 @@ export default function Financeiro() {
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleVisualizarDespesa(despesa)}
+                        title="Visualizar"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
                       {despesa.status === 'pendente' && (
                         <Button
                           variant="ghost"
