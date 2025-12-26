@@ -857,8 +857,12 @@ export default function Relatorios() {
           </div>
 
           {/* Detailed Tabs */}
-          <Tabs defaultValue="segmentos" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue="pedidos" className="space-y-4">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="pedidos" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Todos Pedidos
+              </TabsTrigger>
               <TabsTrigger value="segmentos" className="flex items-center gap-2">
                 <PieChart className="h-4 w-4" />
                 Por Segmento
@@ -871,11 +875,88 @@ export default function Relatorios() {
                 <MapPin className="h-4 w-4" />
                 Por Cidade
               </TabsTrigger>
-              <TabsTrigger value="transacoes" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Transações Recentes
+              <TabsTrigger value="status" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Por Status
               </TabsTrigger>
             </TabsList>
+
+            {/* Todos os Pedidos Detalhados */}
+            <TabsContent value="pedidos">
+              <Card className="shadow-sm">
+                <CardHeader>
+                  <CardTitle className="font-heading">Lista Completa de Pedidos</CardTitle>
+                  <CardDescription>Todos os pedidos do período selecionado com dados fiéis ao sistema</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(relatorio.pedidos_detalhados || []).length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">Nenhum pedido encontrado para os filtros selecionados</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Nº Pedido</TableHead>
+                            <TableHead>Cliente</TableHead>
+                            <TableHead>Cidade</TableHead>
+                            <TableHead>Vendedor</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Tipo Venda</TableHead>
+                            <TableHead>Pagamento</TableHead>
+                            <TableHead className="text-center">Itens</TableHead>
+                            <TableHead className="text-right">Venda</TableHead>
+                            <TableHead className="text-right">Custo</TableHead>
+                            <TableHead className="text-right">Lucro</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {relatorio.pedidos_detalhados.map((pedido, index) => (
+                            <TableRow key={index}>
+                              <TableCell className="whitespace-nowrap">{formatDate(pedido.data)}</TableCell>
+                              <TableCell className="font-mono text-sm font-medium">{pedido.numero}</TableCell>
+                              <TableCell className="max-w-[150px] truncate" title={pedido.cliente_nome}>{pedido.cliente_nome}</TableCell>
+                              <TableCell>{pedido.cliente_cidade || '-'}</TableCell>
+                              <TableCell>{pedido.vendedor}</TableCell>
+                              <TableCell>
+                                <Badge variant={
+                                  pedido.status === 'concluido' ? 'default' :
+                                  pedido.status === 'em_producao' ? 'secondary' :
+                                  pedido.status === 'cancelado' ? 'destructive' : 'outline'
+                                }>
+                                  {pedido.status === 'concluido' ? 'Concluído' :
+                                   pedido.status === 'em_producao' ? 'Em Produção' :
+                                   pedido.status === 'cancelado' ? 'Cancelado' :
+                                   pedido.status === 'pendente' ? 'Pendente' : pedido.status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">{getSegmentoLabel(pedido.tipo_venda)}</Badge>
+                              </TableCell>
+                              <TableCell className="uppercase text-xs">{pedido.forma_pagamento || '-'}</TableCell>
+                              <TableCell className="text-center">{pedido.qtd_itens}</TableCell>
+                              <TableCell className="text-right font-medium">R$ {formatCurrency(pedido.valor_venda)}</TableCell>
+                              <TableCell className="text-right text-muted-foreground">R$ {formatCurrency(pedido.custo_total)}</TableCell>
+                              <TableCell className={`text-right font-bold ${pedido.lucro >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                R$ {formatCurrency(pedido.lucro)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                      <div className="mt-4 p-4 bg-slate-50 rounded-lg flex justify-between items-center text-sm">
+                        <span className="font-medium">Total: {relatorio.pedidos_detalhados.length} pedidos</span>
+                        <div className="flex gap-6">
+                          <span>Venda: <strong className="text-blue-600">R$ {formatCurrency(relatorio.total_faturado_pedidos)}</strong></span>
+                          <span>Custo: <strong className="text-muted-foreground">R$ {formatCurrency(relatorio.total_custo_pedidos || 0)}</strong></span>
+                          <span>Lucro: <strong className="text-green-600">R$ {formatCurrency(relatorio.total_lucro_pedidos)}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Por Segmento */}
             <TabsContent value="segmentos">
