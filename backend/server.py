@@ -1585,13 +1585,21 @@ async def update_licitacao_status(licitacao_id: str, status: str, current_user: 
     return {"message": "Status updated"}
 
 
+class DespesaFornecimento(BaseModel):
+    """Modelo para despesa de um fornecimento"""
+    descricao: str
+    valor: float
+
+
 class FornecimentoCreate(BaseModel):
     """Modelo para criar um fornecimento"""
     produto_contrato_id: str
     quantidade: float
     data_fornecimento: datetime
     numero_nota_fornecimento: Optional[str] = None
+    numero_nota_empenho: Optional[str] = None
     observacao: Optional[str] = None
+    despesas: List[Dict[str, Any]] = []
 
 
 @api_router.post("/licitacoes/{licitacao_id}/fornecimentos")
