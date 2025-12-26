@@ -1332,8 +1332,22 @@ async def get_licitacoes(current_user: User = Depends(get_current_user)):
             lic["valor_total_venda"] = sum(p.get("preco_venda", 0) * p.get("quantidade_contratada", p.get("quantidade_empenhada", 0)) for p in lic.get("produtos", []))
         if "valor_total_compra" not in lic:
             lic["valor_total_compra"] = sum(p.get("preco_compra", 0) * p.get("quantidade_contratada", p.get("quantidade_empenhada", 0)) for p in lic.get("produtos", []))
-        if "despesas_totais" not in lic:
-            lic["despesas_totais"] = lic.get("frete", 0) + lic.get("impostos", 0) + lic.get("outras_despesas", 0)
+        
+        # Calcular despesas totais (despesas fixas + despesas dos fornecimentos)
+        despesas_fixas = lic.get("frete", 0) + lic.get("impostos", 0) + lic.get("outras_despesas", 0)
+        despesas_fornecimentos = sum(f.get("total_despesas", 0) for f in lic.get("fornecimentos", []))
+        lic["despesas_totais"] = despesas_fixas + despesas_fornecimentos
+        
+        # Calcular lucro total (considerando apenas o fornecido)
+        total_venda_fornecido = 0
+        total_compra_fornecido = 0
+        for p in lic.get("produtos", []):
+            qtd_forn = p.get("quantidade_fornecida", 0)
+            total_venda_fornecido += qtd_forn * p.get("preco_venda", 0)
+            total_compra_fornecido += qtd_forn * p.get("preco_compra", 0)
+        
+        lic["lucro_total"] = total_venda_fornecido - total_compra_fornecido - despesas_fornecimentos
+        
         if "frete" not in lic:
             lic["frete"] = 0.0
         if "impostos" not in lic:
