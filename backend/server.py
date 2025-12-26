@@ -1310,6 +1310,10 @@ async def get_licitacoes(current_user: User = Depends(get_current_user)):
                 data_fim = contrato.get("data_fim")
             
             if data_fim:
+                # Ensure both datetimes have the same timezone awareness
+                if data_fim.tzinfo is None:
+                    data_fim = data_fim.replace(tzinfo=timezone.utc)
+                
                 dias_restantes = (data_fim - datetime.now(timezone.utc)).days
                 if dias_restantes < 0:
                     alertas.append("⚠️ Contrato VENCIDO")
