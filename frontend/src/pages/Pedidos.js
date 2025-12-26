@@ -969,13 +969,13 @@ export default function Pedidos() {
                   <Label>Dados de Pagamento</Label>
                   <Select 
                     value={formData.dados_pagamento_id} 
-                    onValueChange={(v) => setFormData({...formData, dados_pagamento_id: v})}
+                    onValueChange={(v) => setFormData({...formData, dados_pagamento_id: v === 'none' ? '' : v})}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione conta bancária" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma</SelectItem>
+                      <SelectItem value="none">Nenhuma</SelectItem>
                       {dadosPagamento.map(dp => (
                         <SelectItem key={dp.id} value={dp.id}>
                           <div className="flex items-center gap-2">
