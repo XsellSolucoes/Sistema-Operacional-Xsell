@@ -290,12 +290,13 @@ export default function Licitacoes() {
   // Excluir contrato
   const handleExcluirContrato = async (contratoId) => {
     const contrato = contratos.find(c => c.id === contratoId);
-    if (contrato && (contrato.fornecimentos || []).length > 0) {
-      toast.error('Não é possível excluir contrato com fornecimentos vinculados');
-      return;
-    }
-
-    if (!window.confirm('Tem certeza que deseja excluir este contrato?')) return;
+    const temFornecimentos = contrato && (contrato.fornecimentos || []).length > 0;
+    
+    const mensagemConfirmacao = temFornecimentos 
+      ? 'Este contrato possui fornecimentos vinculados. Tem certeza que deseja excluir?'
+      : 'Tem certeza que deseja excluir este contrato?';
+    
+    if (!window.confirm(mensagemConfirmacao)) return;
 
     try {
       await axios.delete(`${API}/licitacoes/${contratoId}`, getAuthHeader());
