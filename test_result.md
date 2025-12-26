@@ -4,6 +4,29 @@
 - Date: 2024-12-26
 - Testing Type: Both backend and frontend
 
+## Latest Fix - Download de Boletos no Módulo Financeiro
+
+### Problema Reportado
+O usuário relatou que o download do boleto anexado a uma despesa no módulo Financeiro não estava funcionando (erro 403 Forbidden).
+
+### Causa Raiz Identificada
+1. A variável `UPLOAD_DIR` estava definida na linha 3077 do `server.py`, mas os endpoints de boleto (upload/download) na linha 1821 usavam essa variável ANTES dela ser definida.
+2. O frontend usava `window.open()` para o download, que abre uma nova aba sem o token de autenticação nos headers HTTP, causando erro 403.
+
+### Correções Aplicadas
+1. **Backend (`server.py`)**: Movida a definição de `UPLOAD_DIR` para o início do arquivo (após as importações)
+2. **Frontend (`Financeiro.js`)**: Criada função `handleDownloadBoleto` que usa axios com token de autenticação para baixar o arquivo como blob e criar link de download
+
+### Arquivos Modificados
+- `/app/backend/server.py` - Reorganização da variável UPLOAD_DIR
+- `/app/frontend/src/pages/Financeiro.js` - Nova função de download com autenticação
+
+## Tests To Run
+- Backend: Testar endpoint GET /api/despesas/{id}/boleto/download com autenticação
+- Frontend: Verificar se o download do boleto funciona ao clicar nos botões de download na tabela e no modal de visualização
+
+---
+
 ## Changes Made This Session
 
 ### NOVA ÁREA: Agenda de Licitações
