@@ -620,12 +620,31 @@ export default function Pedidos() {
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     const despesasDetalhadas = pedido.despesas_detalhadas || [];
     const frete = pedido.frete || 0;
-    const despesasTotais = pedido.despesas_totais || 0;
-    const custoTotal = pedido.custo_total || 0;
-    const valorTotalVenda = pedido.valor_total_venda || 0;
-    const lucroTotal = pedido.lucro_total || 0;
     
-    printWindow.document.write(`
+    // Calcular despesas internas (não repassadas)
+    const despesasInternas = despesasDetalhadas.filter(d => !d.repassar).reduce((sum, d) => sum + d.valor, 0);
+    const freteInterno = !pedido.repassar_frete ? frete : 0;
+    const totalDespesasInternas = despesasInternas + freteInterno;
+    
+    // Custo total dos itens
+    const custoItens = pedido.itens.reduce((sum, item) => sum + (item.preco_compra * item.quantidade), 0);
+    
+    // Custo total REAL = custo dos itens + despesas internas (não repassadas)
+    const custoTotalReal = custoItens + totalDespesasInternas;
+    
+    // Valor total de venda
+    const valorTotalVenda = pedido.valor_total_venda || pedido.itens.reduce((sum, item) => sum + (item.preco_venda * item.quantidade), 0);
+    
+    // Lucro real = valor de venda - custo total real
+    const lucroReal = valorTotalVenda - custoTotalReal;
+    
+    // Dados do cliente
+    const clienteCnpj = cliente?.cpf_cnpj || cliente?.cnpj || '';
+    const clienteEndereco = cliente ? 
+      `${cliente.rua || cliente.endereco || ''}${cliente.numero ? `, ${cliente.numero}` : ''}` : '';
+    const clienteCidade = cliente ? `${cliente.cidade || ''}/${cliente.estado || ''}` : '';
+    
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
         <head>
@@ -640,6 +659,8 @@ export default function Pedidos() {
             .pedido-numero { text-align: right; }
             .pedido-numero h1 { margin: 0; font-size: 16px; color: #dc2626; }
             .via-interna { background-color: #dc2626; color: white; padding: 5px 10px; border-radius: 3px; font-size: 10px; display: inline-block; margin-top: 5px; }
+            .cliente-box { background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 5px; padding: 10px; margin-bottom: 15px; }
+            .cliente-box h4 { margin: 0 0 8px 0; color: #dc2626; font-size: 11px; }
             .info-section { margin-bottom: 15px; }
             .info-label { font-weight: bold; color: #dc2626; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 11px; }
@@ -652,6 +673,7 @@ export default function Pedidos() {
             .despesa-repassada { color: #059669; font-weight: bold; }
             .despesa-interna { color: #dc2626; font-weight: bold; }
             .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #666; }
+            @media print { body { padding: 10px 20px; } }
           </style>
         </head>
         <body>
@@ -669,9 +691,15 @@ export default function Pedidos() {
             </div>
           </div>
 
+          <div class="cliente-box">
+            <h4>DADOS DO CLIENTE</h4>
+            <p><strong>Cliente:</strong> ${pedido.cliente_nome}</p>
+            ${clienteCnpj ? `<p><strong>${cliente?.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ'}:</strong> ${clienteCnpj}</p>` : ''}
+            ${clienteEndereco ? `<p><strong>Endereço:</strong> ${clienteEndereco} - ${clienteCidade}</p>` : ''}
+            ${cliente?.telefone ? `<p><strong>Telefone:</strong> ${cliente.telefone}</p>` : ''}
+          </div>
+
           <div class="info-section">
-            <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
-            ${cliente ? `<p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>` : ''}
             <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
             ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
             <p><span class="info-label">Status:</span> ${pedido.status}</p>
@@ -686,6 +714,93 @@ export default function Pedidos() {
                 <th>Qtd</th>
                 <th>P. Compra</th>
                 <th>P. Venda</th>
+                <th>Custo Total</th>
+                <th>Venda Total</th>
+                <th>Lucro Item</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.itens.map(item => `
+                <tr>
+                  <td>${item.produto_codigo} - ${item.produto_descricao}</td>
+                  <td>${item.variacao || '-'}</td>
+                  <td style="text-align: center;">${item.quantidade}</td>
+                  <td style="text-align: right;">R$ ${item.preco_compra.toFixed(2)}</td>
+                  <td style="text-align: right;">R$ ${item.preco_venda.toFixed(2)}</td>
+                  <td style="text-align: right;">R$ ${(item.preco_compra * item.quantidade).toFixed(2)}</td>
+                  <td style="text-align: right;">R$ ${(item.preco_venda * item.quantidade).toFixed(2)}</td>
+                  <td style="text-align: right; color: ${item.lucro_item >= 0 ? '#059669' : '#dc2626'};">R$ ${item.lucro_item.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="warning-box">
+            <h4 style="margin-top: 0; color: #dc2626;">⚠️ Despesas do Pedido:</h4>
+            <table style="width: 100%; margin: 10px 0;">
+              <thead>
+                <tr style="background-color: #fecaca;">
+                  <th style="text-align: left;">Descrição</th>
+                  <th style="text-align: right;">Valor</th>
+                  <th style="text-align: center;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Frete</td>
+                  <td style="text-align: right;">R$ ${frete.toFixed(2)}</td>
+                  <td style="text-align: center;">${pedido.repassar_frete ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
+                </tr>
+                ${despesasDetalhadas.map(d => `
+                  <tr>
+                    <td>${d.descricao || ''}</td>
+                    <td style="text-align: right;">R$ ${(d.valor || 0).toFixed(2)}</td>
+                    <td style="text-align: center;">${d.repassar ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            <p style="font-weight: bold; color: #dc2626; margin-top: 10px;">
+              ⚠️ Despesas INTERNAS (impactam o custo): R$ ${totalDespesasInternas.toFixed(2)}
+            </p>
+          </div>
+
+          <div class="totals">
+            <div class="total-row">
+              <span class="info-label">Custo dos Itens:</span> 
+              R$ ${custoItens.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row" style="color: #dc2626;">
+              <span class="info-label">+ Despesas Internas:</span> 
+              R$ ${totalDespesasInternas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row" style="font-weight: bold; border-top: 1px solid #ddd; padding-top: 5px;">
+              <span class="info-label">= CUSTO TOTAL:</span> 
+              R$ ${custoTotalReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row" style="margin-top: 10px;">
+              <span class="info-label">Valor de Venda:</span> 
+              R$ ${valorTotalVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="lucro-final">
+              LUCRO REAL: R$ ${lucroReal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </div>
+            <div class="total-row" style="color: #6b7280;">
+              Margem: ${valorTotalVenda > 0 ? ((lucroReal / valorTotalVenda) * 100).toFixed(2) : 0}%
+            </div>
+          </div>
+
+          <div class="footer">
+            <p>⚠️ DOCUMENTO INTERNO - NÃO ENTREGAR AO CLIENTE ⚠️</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+  };
                 <th>Personalização</th>
                 <th>Lucro Unit.</th>
                 <th>Lucro Total</th>
