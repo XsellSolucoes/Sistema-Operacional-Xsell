@@ -696,19 +696,19 @@ export default function Pedidos() {
               <tbody>
                 <tr>
                   <td>Frete</td>
-                  <td style="text-align: right;">R$ ${pedido.frete.toFixed(2)}</td>
+                  <td style="text-align: right;">R$ ${frete.toFixed(2)}</td>
                   <td style="text-align: center;">${pedido.repassar_frete ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
                 </tr>
                 ${despesasDetalhadas.map(d => `
                   <tr>
-                    <td>${d.descricao}</td>
-                    <td style="text-align: right;">R$ ${d.valor.toFixed(2)}</td>
+                    <td>${d.descricao || ''}</td>
+                    <td style="text-align: right;">R$ ${(d.valor || 0).toFixed(2)}</td>
                     <td style="text-align: center;">${d.repassar ? '<span class="despesa-repassada">Repassado</span>' : '<span class="despesa-interna">Interno</span>'}</td>
                   </tr>
                 `).join('')}
                 <tr style="font-weight: bold; background-color: #fecaca;">
                   <td>TOTAL DESPESAS</td>
-                  <td style="text-align: right;">R$ ${pedido.despesas_totais.toFixed(2)}</td>
+                  <td style="text-align: right;">R$ ${despesasTotais.toFixed(2)}</td>
                   <td style="text-align: center;">-</td>
                 </tr>
               </tbody>
@@ -718,21 +718,21 @@ export default function Pedidos() {
           <div class="totals">
             <div class="total-row">
               <span class="info-label">Custo Total:</span> 
-              R$ ${pedido.custo_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ ${custoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <div class="total-row">
               <span class="info-label">Valor de Venda:</span> 
-              R$ ${pedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ ${valorTotalVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <div class="total-row">
               <span class="info-label">Despesas Totais:</span> 
-              R$ ${pedido.despesas_totais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ ${despesasTotais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <div class="lucro-final">
-              Lucro Total: R$ ${pedido.lucro_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              Lucro Total: R$ ${lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
             </div>
             <div class="total-row" style="color: #6b7280;">
-              Margem: ${pedido.valor_total_venda > 0 ? ((pedido.lucro_total / pedido.valor_total_venda) * 100).toFixed(2) : 0}%
+              Margem: ${valorTotalVenda > 0 ? ((lucroTotal / valorTotalVenda) * 100).toFixed(2) : 0}%
             </div>
           </div>
 
