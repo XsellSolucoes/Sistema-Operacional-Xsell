@@ -866,22 +866,81 @@ export default function Orcamentos() {
                       </div>
                     </div>
                     
-                    {/* Outras Despesas */}
-                    <div className="p-3 bg-white rounded-lg border space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <Label className="text-xs">Outras Despesas (R$)</Label>
-                          <Input type="number" min="0" step="0.01" value={formData.outras_despesas} onChange={(e) => setFormData({...formData, outras_despesas: e.target.value})} />
+                    {/* Outras Despesas - Sistema de Múltiplas Despesas */}
+                    <div className="p-3 bg-orange-50 rounded-lg border border-orange-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold text-orange-800">Outras Despesas</Label>
+                        {despesasOrcamento.length > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            Total: R$ {despesasOrcamento.reduce((s, d) => s + d.valor, 0).toFixed(2)}
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {/* Adicionar nova despesa */}
+                      <div className="grid grid-cols-12 gap-2 items-end">
+                        <div className="col-span-5 space-y-1">
+                          <Label className="text-xs">Descrição</Label>
+                          <Input
+                            value={novaDespesa.descricao}
+                            onChange={(e) => setNovaDespesa({...novaDespesa, descricao: e.target.value})}
+                            placeholder="Ex: Embalagem, Taxa"
+                            className="h-8 text-sm"
+                          />
                         </div>
-                        <div className="flex items-end pb-2">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" checked={formData.repassar_outras_despesas} onChange={(e) => setFormData({...formData, repassar_outras_despesas: e.target.checked})} className="rounded" />
-                            <span className="text-sm">Repassar ao cliente</span>
+                        <div className="col-span-3 space-y-1">
+                          <Label className="text-xs">Valor (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={novaDespesa.valor}
+                            onChange={(e) => setNovaDespesa({...novaDespesa, valor: e.target.value})}
+                            className="h-8 text-sm"
+                          />
+                        </div>
+                        <div className="col-span-2 flex items-center pb-1">
+                          <label className="flex items-center space-x-1 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={novaDespesa.repassar}
+                              onChange={(e) => setNovaDespesa({...novaDespesa, repassar: e.target.checked})}
+                              className="rounded"
+                            />
+                            <span className="text-xs">Repassar</span>
                           </label>
                         </div>
+                        <div className="col-span-2">
+                          <Button type="button" onClick={adicionarDespesa} size="sm" className="w-full h-8">
+                            <Plus className="h-3 w-3 mr-1" />
+                            Add
+                          </Button>
+                        </div>
                       </div>
-                      {parseFloat(formData.outras_despesas) > 0 && (
-                        <Input value={formData.descricao_outras_despesas} onChange={(e) => setFormData({...formData, descricao_outras_despesas: e.target.value})} placeholder="Descrição das despesas" />
+
+                      {/* Lista de despesas adicionadas */}
+                      {despesasOrcamento.length > 0 && (
+                        <div className="space-y-1">
+                          {despesasOrcamento.map((d) => (
+                            <div key={d.id} className="flex items-center justify-between p-2 bg-white rounded border text-sm">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{d.descricao}</span>
+                                <span className="text-muted-foreground">R$ {d.valor.toFixed(2)}</span>
+                                {d.repassar ? (
+                                  <Badge variant="default" className="text-xs">Repassar</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">Interno</Badge>
+                                )}
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removerDespesa(d.id)}>
+                                <X className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </div>
+                          ))}
+                          <div className="flex justify-between text-xs font-medium pt-1 border-t">
+                            <span>Total: R$ {despesasOrcamento.reduce((s, d) => s + d.valor, 0).toFixed(2)}</span>
+                            <span className="text-green-600">Repassado: R$ {despesasOrcamento.filter(d => d.repassar).reduce((s, d) => s + d.valor, 0).toFixed(2)}</span>
+                          </div>
+                        </div>
                       )}
                     </div>
                     
@@ -895,9 +954,9 @@ export default function Orcamentos() {
                       <span>TOTAL CLIENTE:</span>
                       <span>R$ {totais.valorFinal.toFixed(2)}</span>
                     </div>
-                    {(totais.valorFrete > 0 && !formData.repassar_frete) || (totais.outrasDespesas > 0 && !formData.repassar_outras_despesas) ? (
+                    {(totais.valorFrete > 0 && !formData.repassar_frete) || totais.despesasInternas > 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        * Despesas não repassadas: R$ {((formData.repassar_frete ? 0 : totais.valorFrete) + (formData.repassar_outras_despesas ? 0 : totais.outrasDespesas)).toFixed(2)}
+                        * Despesas não repassadas: R$ {((formData.repassar_frete ? 0 : totais.valorFrete) + totais.despesasInternas).toFixed(2)}
                       </p>
                     ) : null}
                   </CardContent>
