@@ -355,9 +355,36 @@ export default function Licitacoes() {
       return acc + (parseFloat(item.quantidade) * item.preco_compra);
     }, 0);
 
-    const lucro = totalVenda - totalCompra;
+    const totalDespesas = fornecimentoForm.despesasGerais.reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
 
-    return { totalVenda, totalCompra, lucro };
+    const lucro = totalVenda - totalCompra - totalDespesas;
+
+    return { totalVenda, totalCompra, totalDespesas, lucro };
+  };
+
+  // Adicionar despesa ao fornecimento
+  const adicionarDespesa = () => {
+    if (!novaDespesa.descricao || !novaDespesa.valor) {
+      toast.error('Preencha a descrição e valor da despesa');
+      return;
+    }
+    setFornecimentoForm(prev => ({
+      ...prev,
+      despesasGerais: [...prev.despesasGerais, { 
+        id: Date.now().toString(),
+        descricao: novaDespesa.descricao, 
+        valor: parseFloat(novaDespesa.valor) || 0 
+      }]
+    }));
+    setNovaDespesa({ descricao: '', valor: '' });
+  };
+
+  // Remover despesa
+  const removerDespesa = (despesaId) => {
+    setFornecimentoForm(prev => ({
+      ...prev,
+      despesasGerais: prev.despesasGerais.filter(d => d.id !== despesaId)
+    }));
   };
 
   // Registrar fornecimento
