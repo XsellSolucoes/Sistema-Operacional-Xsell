@@ -1450,19 +1450,43 @@ export default function Pedidos() {
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes do Pedido</DialogTitle>
-            <DialogDescription>Informações completas do pedido</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <span>Pedido {viewingPedido?.numero}</span>
+              {viewingPedido && getStatusBadge(viewingPedido.status)}
+            </DialogTitle>
+            <DialogDescription>Visualização completa do pedido - use os botões abaixo para ações</DialogDescription>
           </DialogHeader>
           {viewingPedido && (
             <div className="space-y-4">
+              {/* Dados do Cliente */}
+              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-2">Dados do Cliente</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="font-medium text-blue-800">Nome:</span> {viewingPedido.cliente_nome}</div>
+                  {(() => {
+                    const cliente = clientes.find(c => c.id === viewingPedido.cliente_id);
+                    if (!cliente) return null;
+                    return (
+                      <>
+                        <div><span className="font-medium text-blue-800">{cliente.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ'}:</span> {cliente.cpf_cnpj || cliente.cnpj || '-'}</div>
+                        {cliente.inscricao_estadual && <div><span className="font-medium text-blue-800">IE:</span> {cliente.inscricao_estadual}</div>}
+                        <div><span className="font-medium text-blue-800">Endereço:</span> {cliente.rua || cliente.endereco || '-'}{cliente.numero ? `, ${cliente.numero}` : ''}</div>
+                        <div><span className="font-medium text-blue-800">Cidade:</span> {cliente.cidade || '-'}/{cliente.estado || '-'}</div>
+                        {cliente.telefone && <div><span className="font-medium text-blue-800">Telefone:</span> {cliente.telefone}</div>}
+                        {cliente.email && <div><span className="font-medium text-blue-800">E-mail:</span> {cliente.email}</div>}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Dados do Pedido */}
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="font-medium">Número:</span> {viewingPedido.numero}</div>
                 <div><span className="font-medium">Data:</span> {new Date(viewingPedido.data).toLocaleDateString('pt-BR')}</div>
-                <div><span className="font-medium">Cliente:</span> {viewingPedido.cliente_nome}</div>
                 <div><span className="font-medium">Vendedor:</span> {viewingPedido.vendedor}</div>
-                <div><span className="font-medium">Pagamento:</span> {viewingPedido.forma_pagamento}</div>
-                <div><span className="font-medium">Tipo:</span> {viewingPedido.tipo_venda}</div>
-                <div><span className="font-medium">Status:</span> {getStatusBadge(viewingPedido.status)}</div>
+                <div><span className="font-medium">Forma de Pagamento:</span> {viewingPedido.forma_pagamento?.toUpperCase()}</div>
+                <div><span className="font-medium">Tipo de Venda:</span> {viewingPedido.tipo_venda === 'consumidor_final' ? 'Consumidor Final' : 'Revenda'}</div>
+                {viewingPedido.prazo_entrega && <div><span className="font-medium">Prazo de Entrega:</span> {viewingPedido.prazo_entrega}</div>}
               </div>
 
               <div>
@@ -1486,7 +1510,7 @@ export default function Pedidos() {
                       
                       return (
                         <TableRow key={idx}>
-                          <TableCell>{item.produto_codigo} - {item.produto_descricao}</TableCell>
+                          <TableCell>{item.produto_codigo} - {item.produto_descricao}{item.variacao ? ` (${item.variacao})` : ''}</TableCell>
                           <TableCell className="text-right">{item.quantidade}</TableCell>
                           <TableCell className="text-right">
                             R$ {precoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1511,17 +1535,41 @@ export default function Pedidos() {
                 </Table>
               </div>
 
-              <div className="space-y-2 text-right border-t pt-4">
-                <div><span className="font-medium">Subtotal:</span> R$ {viewingPedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                <div><span className="font-medium">Frete:</span> R$ {viewingPedido.frete.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                {viewingPedido.outras_despesas > 0 && (
-                  <div>
-                    <span className="font-medium">Outras Despesas:</span> R$ {viewingPedido.outras_despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    {viewingPedido.repassar_outras_despesas && <Badge variant="secondary" className="ml-2">Repassado</Badge>}
+              {/* Despesas */}
+              {(viewingPedido.despesas_detalhadas?.length > 0 || viewingPedido.frete > 0) && (
+                <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <h4 className="font-semibold text-orange-800 mb-2">Despesas</h4>
+                  <div className="space-y-1 text-sm">
+                    {viewingPedido.frete > 0 && (
+                      <div className="flex justify-between">
+                        <span>Frete</span>
+                        <span className="flex items-center gap-2">
+                          R$ {viewingPedido.frete.toFixed(2)}
+                          <Badge variant={viewingPedido.repassar_frete ? 'default' : 'destructive'} className="text-xs">
+                            {viewingPedido.repassar_frete ? 'Repassado' : 'Interno'}
+                          </Badge>
+                        </span>
+                      </div>
+                    )}
+                    {viewingPedido.despesas_detalhadas?.map((d, idx) => (
+                      <div key={idx} className="flex justify-between">
+                        <span>{d.descricao}</span>
+                        <span className="flex items-center gap-2">
+                          R$ {d.valor.toFixed(2)}
+                          <Badge variant={d.repassar ? 'default' : 'destructive'} className="text-xs">
+                            {d.repassar ? 'Repassado' : 'Interno'}
+                          </Badge>
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
+
+              <div className="space-y-2 text-right border-t pt-4">
+                <div><span className="font-medium">Valor de Venda:</span> R$ {viewingPedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
                 <div className="text-lg font-bold text-secondary">
-                  Total: R$ {(viewingPedido.valor_total_venda + viewingPedido.frete).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  Total Cliente: R$ {(viewingPedido.valor_total_venda + (viewingPedido.repassar_frete ? viewingPedido.frete : 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
                 <div className="text-lg font-bold text-primary">
                   Lucro: R$ {viewingPedido.lucro_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -1529,31 +1577,39 @@ export default function Pedidos() {
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setViewOpen(false)}>
+              Fechar
+            </Button>
             <Button 
               variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-white"
               onClick={() => {
                 setViewOpen(false);
-                handlePrintCliente(viewingPedido);
+                handleEdit(viewingPedido);
               }}
-              data-testid="print-cliente-button"
             >
-              <Printer className="h-4 w-4 mr-2" />
-              Via Cliente
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
             </Button>
-            <Button 
-              className="bg-secondary hover:bg-secondary/90"
-              onClick={() => {
-                setViewOpen(false);
-                handlePrintInterno(viewingPedido);
-              }}
-              data-testid="print-interno-button"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Via Interna
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="border-primary text-primary">
+                  <Printer className="h-4 w-4 mr-2" />
+                  Imprimir
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handlePrintCliente(viewingPedido)}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Via Cliente
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handlePrintInterno(viewingPedido)}>
+                  <Printer className="h-4 w-4 mr-2" />
+                  Via Interna
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </DialogFooter>
         </DialogContent>
       </Dialog>
