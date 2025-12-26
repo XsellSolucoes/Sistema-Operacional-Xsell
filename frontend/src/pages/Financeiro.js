@@ -212,6 +212,7 @@ export default function Financeiro() {
       status: 'pendente'
     });
     setEditingDespesa(null);
+    setArquivoBoleto(null);
   };
 
   const handleOpenChange = (isOpen) => {
