@@ -374,6 +374,43 @@ export default function Pedidos() {
     }
   };
 
+  const handleEdit = async (pedido) => {
+    try {
+      // Buscar dados completos do pedido
+      const response = await axios.get(`${API}/pedidos/${pedido.id}`, getAuthHeader());
+      const pedidoCompleto = response.data;
+      
+      // Encontrar o vendedor pelo nome
+      const vendedor = vendedores.find(v => v.nome === pedidoCompleto.vendedor);
+      const cliente = clientes.find(c => c.id === pedidoCompleto.cliente_id);
+      
+      setFormData({
+        codigo_cliente: cliente?.codigo || '',
+        cliente_id: pedidoCompleto.cliente_id,
+        cliente_nome: `${cliente?.nome || pedidoCompleto.cliente_nome} - ${cliente?.cnpj || ''}`,
+        forma_pagamento: pedidoCompleto.forma_pagamento || 'pix',
+        tipo_venda: pedidoCompleto.tipo_venda || 'consumidor_final',
+        vendedor_id: vendedor?.id || '',
+        frete: pedidoCompleto.frete?.toString() || '0',
+        repassar_frete: pedidoCompleto.repassar_frete || false,
+        outras_despesas: pedidoCompleto.outras_despesas?.toString() || '0',
+        descricao_outras_despesas: pedidoCompleto.descricao_outras_despesas || '',
+        repassar_outras_despesas: pedidoCompleto.repassar_outras_despesas || false,
+        prazo_entrega: pedidoCompleto.prazo_entrega || '',
+        status: pedidoCompleto.status || 'pendente',
+        dados_pagamento_id: pedidoCompleto.dados_pagamento_id || ''
+      });
+      
+      setItens(pedidoCompleto.itens || []);
+      setDespesasPedido(pedidoCompleto.despesas_detalhadas || []);
+      setEditingPedido(pedidoCompleto);
+      setOpen(true);
+    } catch (error) {
+      toast.error('Erro ao carregar pedido para edição');
+      console.error(error);
+    }
+  };
+
   const handlePrintCliente = (pedido) => {
     const printWindow = window.open('', '_blank');
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
