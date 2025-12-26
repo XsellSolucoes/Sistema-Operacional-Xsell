@@ -21,6 +21,28 @@ O usuário relatou que o download do boleto anexado a uma despesa no módulo Fin
 - `/app/backend/server.py` - Reorganização da variável UPLOAD_DIR
 - `/app/frontend/src/pages/Financeiro.js` - Nova função de download com autenticação
 
+## Latest Feature - Botão STATUS na Agenda de Licitações
+
+### Funcionalidade Implementada
+Adicionado botão "STATUS" na coluna "Resultado" de cada licitação na tabela de "Licitações Agendadas". Este botão permite registrar o resultado da licitação com as opções:
+- **VENCEMOS** (verde) - Indica que ganhamos a licitação
+- **NÃO GANHAMOS** (vermelho) - Indica que perdemos a licitação
+- **AGUARDANDO RESULTADO** (laranja) - Indica que ainda aguardamos o resultado
+
+### Arquivos Modificados
+- `/app/frontend/src/pages/AgendaLicitacoes.js` - Adicionada nova coluna "Resultado" com botão STATUS e dropdown
+- `/app/backend/server.py` - Adicionado novo status "aguardando" à lista de status válidos
+
+### O que testar
+1. Acessar a página "Agenda de Licitações"
+2. Verificar se a coluna "Resultado" aparece na tabela
+3. Clicar no botão "STATUS" de uma licitação
+4. Verificar se o dropdown aparece com as 3 opções
+5. Selecionar uma opção e verificar se o status é atualizado
+6. Verificar se o botão muda de cor conforme o resultado selecionado
+
+---
+
 ## BACKEND TESTING COMPLETED ✅
 
 ### Boleto Download Functionality - COMPREHENSIVE TESTING RESULTS
