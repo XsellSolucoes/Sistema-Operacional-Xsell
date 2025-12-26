@@ -2856,7 +2856,7 @@ async def update_agenda_licitacao_status(licitacao_id: str, status: str, current
     if not existing:
         raise HTTPException(status_code=404, detail="Licitação não encontrada")
     
-    valid_status = ["agendada", "em_andamento", "ganha", "perdida", "cancelada"]
+    valid_status = ["agendada", "em_andamento", "ganha", "perdida", "aguardando", "cancelada"]
     if status not in valid_status:
         raise HTTPException(status_code=400, detail=f"Status inválido. Use: {valid_status}")
     
