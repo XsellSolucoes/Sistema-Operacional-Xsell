@@ -90,16 +90,18 @@ export default function Pedidos() {
 
   const fetchData = async () => {
     try {
-      const [pedidosRes, clientesRes, produtosRes, vendedoresRes] = await Promise.all([
+      const [pedidosRes, clientesRes, produtosRes, vendedoresRes, dadosPagamentoRes] = await Promise.all([
         axios.get(`${API}/pedidos`, getAuthHeader()),
         axios.get(`${API}/clientes`, getAuthHeader()),
         axios.get(`${API}/produtos`, getAuthHeader()),
-        axios.get(`${API}/vendedores`, getAuthHeader())
+        axios.get(`${API}/vendedores`, getAuthHeader()),
+        axios.get(`${API}/dados-pagamento`, getAuthHeader())
       ]);
       setPedidos(pedidosRes.data);
       setClientes(clientesRes.data);
       setProdutos(produtosRes.data);
       setVendedores(vendedoresRes.data.filter(v => v.ativo));
+      setDadosPagamento(dadosPagamentoRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados');
     } finally {
