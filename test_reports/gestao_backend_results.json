@@ -1,0 +1,179 @@
+{
+  "timestamp": "2025-12-26T00:21:06.318150",
+  "total_tests": 34,
+  "passed_tests": 32,
+  "failed_tests": 2,
+  "success_rate": 94.11764705882352,
+  "test_results": [
+    {
+      "test": "User Registration",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "POST /api/dados-pagamento - Create Bank Account",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Bank Account Fields",
+      "success": true,
+      "details": "All fields saved correctly: True"
+    },
+    {
+      "test": "GET /api/dados-pagamento - List Accounts",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Find Created Account in List",
+      "success": true,
+      "details": "Found 1 accounts total"
+    },
+    {
+      "test": "Create Second Bank Account",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "POST /api/clientes - Create Pessoa F\u00edsica",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Automatic Client Code Generation",
+      "success": true,
+      "details": "Generated code: CLI-000003"
+    },
+    {
+      "test": "Verify Pessoa F\u00edsica New Fields",
+      "success": true,
+      "details": "All PF fields saved correctly: True"
+    },
+    {
+      "test": "POST /api/clientes - Create Pessoa Jur\u00eddica",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Pessoa Jur\u00eddica New Fields",
+      "success": false,
+      "details": "All PJ fields saved correctly: False"
+    },
+    {
+      "test": "POST /api/clientes/{id}/ocorrencias - Add Occurrence",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "GET /api/clientes - Verify History and Occurrences Fields",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify History and Occurrences Fields",
+      "success": true,
+      "details": "historico field: True, ocorrencias field: True, has occurrences: True"
+    },
+    {
+      "test": "POST /api/pedidos - Create Order with Payment Data",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Payment Data ID Saved",
+      "success": true,
+      "details": "dados_pagamento_id: bec1d6e0-66b6-4e83-9217-55995d42240d"
+    },
+    {
+      "test": "Automatic Order Number Generation",
+      "success": true,
+      "details": "Generated number: PED-000002"
+    },
+    {
+      "test": "Verify Client History Updated",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Client History Auto-Update",
+      "success": true,
+      "details": "History entries: 1"
+    },
+    {
+      "test": "PUT /api/pedidos/{id} - Edit Existing Order",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Order Edit Changes",
+      "success": true,
+      "details": "prazo_entrega: 7 dias \u00fateis, frete: 30.0"
+    },
+    {
+      "test": "GET /api/pedidos - List All Orders",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Order Fields for Frontend",
+      "success": true,
+      "details": "All required fields present: True"
+    },
+    {
+      "test": "Create Second Order for Integration Test",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Check Client History After Second Order",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Client History Multiple Orders",
+      "success": true,
+      "details": "History entries: 2"
+    },
+    {
+      "test": "Add Payment-Related Occurrence",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Final Client Data Verification",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Complete Client Data Integration",
+      "success": false,
+      "details": "History: 2 entries, Occurrences: 1 entries"
+    },
+    {
+      "test": "Cleanup: Delete Order 786f7806-3efc-4d3e-96c8-b40f69d7f2a1",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cleanup: Delete Client b9be9ecd-b24e-4e49-b37f-25db93b0a98b",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cleanup: Delete Client 797db3af-d08d-43d8-952e-dcd26baf4841",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cleanup: Delete Payment Data bec1d6e0-66b6-4e83-9217-55995d42240d",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cleanup: Delete Payment Data f7752e9f-656b-4187-828f-6db481461f8e",
+      "success": true,
+      "details": "Status: 200"
+    }
+  ]
+}
