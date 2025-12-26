@@ -55,12 +55,23 @@ const getStatusBadge = (status) => {
   const config = {
     'agendada': { label: 'Agendada', className: 'bg-blue-500 text-white' },
     'em_andamento': { label: 'Em Andamento', className: 'bg-yellow-500 text-white' },
-    'ganha': { label: 'Ganha', className: 'bg-green-500 text-white' },
-    'perdida': { label: 'Perdida', className: 'bg-red-500 text-white' },
+    'ganha': { label: 'VENCEMOS', className: 'bg-green-500 text-white' },
+    'perdida': { label: 'NÃO GANHAMOS', className: 'bg-red-500 text-white' },
+    'aguardando': { label: 'AGUARDANDO RESULTADO', className: 'bg-orange-500 text-white' },
     'cancelada': { label: 'Cancelada', className: 'bg-gray-500 text-white' }
   };
   const { label, className } = config[status] || config.agendada;
   return <Badge className={className}>{label}</Badge>;
+};
+
+// Badge de resultado para o dropdown STATUS
+const getResultadoBadge = (status) => {
+  const config = {
+    'ganha': { label: 'VENCEMOS', icon: Trophy, className: 'text-green-600' },
+    'perdida': { label: 'NÃO GANHAMOS', icon: XCircle, className: 'text-red-600' },
+    'aguardando': { label: 'AGUARDANDO RESULTADO', icon: Hourglass, className: 'text-orange-600' }
+  };
+  return config[status] || null;
 };
 
 // Badge de status do evento
