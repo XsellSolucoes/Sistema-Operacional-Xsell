@@ -273,6 +273,25 @@ export default function AgendaLicitacoes() {
     }
   };
 
+  // Alterar resultado (VENCEMOS/NÃO GANHAMOS/AGUARDANDO)
+  const handleAlterarResultado = async (id, resultado) => {
+    try {
+      await axios.put(`${API}/agenda-licitacoes/${id}/status?status=${resultado}`, {}, getAuthHeader());
+      
+      const mensagens = {
+        'ganha': '🏆 VENCEMOS! Parabéns!',
+        'perdida': '❌ Resultado registrado: Não ganhamos',
+        'aguardando': '⏳ Aguardando resultado...'
+      };
+      
+      toast.success(mensagens[resultado] || 'Resultado atualizado!');
+      setStatusDropdownOpen(null);
+      fetchLicitacoes();
+    } catch (error) {
+      toast.error('Erro ao atualizar resultado');
+    }
+  };
+
   // Adicionar evento
   const handleAdicionarEvento = async () => {
     if (!eventoForm.data || !eventoForm.descricao) {
