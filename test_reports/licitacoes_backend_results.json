@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-12-26T14:56:07.194502",
+  "total_tests": 22,
+  "passed_tests": 18,
+  "success_rate": "81.8%",
+  "test_details": [
+    {
+      "test": "User Registration (if needed)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Licita\u00e7\u00e3o with Contract",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Contract structure validation",
+      "success": true,
+      "details": "Contract data properly stored"
+    },
+    {
+      "test": "Product contract quantities",
+      "success": true,
+      "details": "Quantities properly calculated"
+    },
+    {
+      "test": "Contract value calculation",
+      "success": true,
+      "details": "Total value: R$ 3325.0"
+    },
+    {
+      "test": "Get Licita\u00e7\u00f5es List",
+      "success": false,
+      "details": "Status: 520 (Expected: 200) - Internal Server Error"
+    },
+    {
+      "test": "Licita\u00e7\u00f5es list",
+      "success": false,
+      "details": "Invalid response format"
+    },
+    {
+      "test": "Get Licita\u00e7\u00e3o for Fornecimento",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Register Partial Supply",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Supply quantity update",
+      "success": true,
+      "details": "Quantity correctly updated"
+    },
+    {
+      "test": "Remaining quantity calculation",
+      "success": true,
+      "details": "Remaining quantity correct"
+    },
+    {
+      "test": "Execution percentage calculation",
+      "success": true,
+      "details": "Percentage: 20.0%"
+    },
+    {
+      "test": "Get Licita\u00e7\u00e3o for Validation Test",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Validate Supply Quantity Limit",
+      "success": true,
+      "details": "Status: 400"
+    },
+    {
+      "test": "Get Current Licita\u00e7\u00e3o State",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Execution percentage accuracy",
+      "success": true,
+      "details": "Calculated: 20.0%, Expected: 20.0%"
+    },
+    {
+      "test": "Create Near-Expiry Contract",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Supply 90% of Contract",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Updated Licita\u00e7\u00e3o with Alerts",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Contract expiry alert",
+      "success": false,
+      "details": "No expiry alert found. Alerts: []"
+    },
+    {
+      "test": "90% execution alert",
+      "success": false,
+      "details": "No 90% alert found. Alerts: []"
+    }
+  ]
+}
