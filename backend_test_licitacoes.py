@@ -310,6 +310,152 @@ class LicitacoesAPITester:
         
         return None
 
+    def test_register_fornecimento_with_despesas(self):
+        """Test POST /api/licitacoes/{id}/fornecimentos with despesas field - NEW FEATURE"""
+        print("\n💰 Testing Fornecimento Registration with Despesas (Order Expenses)...")
+        
+        if not self.created_licitacao_id:
+            self.log_test("Fornecimento with despesas test setup", False, "No licitação ID available")
+            return None
+        
+        # Get the licitação to find a product ID
+        licitacao_data = self.run_test(
+            "Get Licitação for Despesas Test",
+            "GET",
+            f"licitacoes/{self.created_licitacao_id}",
+            200
+        )
+        
+        if not licitacao_data or not licitacao_data.get('produtos'):
+            self.log_test("Fornecimento with despesas test setup", False, "No products found in licitação")
+            return None
+        
+        # Use the second product if available, or first if only one
+        produtos = licitacao_data['produtos']
+        produto = produtos[1] if len(produtos) > 1 else produtos[0]
+        produto_id = produto.get('id')
+        
+        if not produto_id:
+            self.log_test("Fornecimento with despesas test setup", False, "Product ID not found")
+            return None
+        
+        # Register supply with expenses (despesas)
+        fornecimento_data = {
+            "produto_contrato_id": produto_id,
+            "quantidade": 20,  # 20 out of 50 for second product
+            "data_fornecimento": datetime.now().isoformat(),
+            "numero_nota_fornecimento": "NF-002/2025",
+            "numero_nota_empenho": "NE-002/2025",
+            "observacao": "Fornecimento com despesas de teste",
+            "despesas": [
+                {
+                    "descricao": "Frete",
+                    "valor": 150.00
+                },
+                {
+                    "descricao": "Taxa de entrega",
+                    "valor": 50.00
+                }
+            ]
+        }
+        
+        response_data = self.run_test(
+            "Register Supply with Expenses",
+            "POST",
+            f"licitacoes/{self.created_licitacao_id}/fornecimentos",
+            200,
+            data=fornecimento_data
+        )
+        
+        if response_data:
+            # Validate that despesas were accepted and saved
+            if 'despesas' in str(response_data) or response_data.get('total_despesas'):
+                self.log_test("Despesas field acceptance", True, "Despesas field accepted by API")
+            else:
+                self.log_test("Despesas field acceptance", False, "Despesas field not found in response")
+            
+            # Check if total_despesas is calculated
+            expected_total_despesas = 150.00 + 50.00  # 200.00
+            total_despesas = response_data.get('total_despesas', 0)
+            if abs(total_despesas - expected_total_despesas) < 0.01:
+                self.log_test("Despesas total calculation", True, f"Total despesas: R$ {total_despesas}")
+            else:
+                self.log_test("Despesas total calculation", False, f"Expected R$ {expected_total_despesas}, got R$ {total_despesas}")
+            
+            return response_data
+        
+        return None
+
+    def test_profit_calculation_with_despesas(self):
+        """Test that profit calculation deducts expenses (Lucro = Venda - Compra - Despesas)"""
+        print("\n📊 Testing Profit Calculation with Despesas Deduction...")
+        
+        if not self.created_licitacao_id:
+            self.log_test("Profit calculation test setup", False, "No licitação ID available")
+            return None
+        
+        # Get updated licitação with fornecimentos
+        licitacao_data = self.run_test(
+            "Get Licitação for Profit Calculation",
+            "GET",
+            f"licitacoes/{self.created_licitacao_id}",
+            200
+        )
+        
+        if not licitacao_data:
+            self.log_test("Profit calculation test setup", False, "Could not retrieve licitação")
+            return None
+        
+        # Check if fornecimentos exist
+        fornecimentos = licitacao_data.get('fornecimentos', [])
+        if not fornecimentos:
+            self.log_test("Profit calculation test setup", False, "No fornecimentos found")
+            return None
+        
+        # Calculate expected values
+        total_venda = 0
+        total_compra = 0
+        total_despesas = 0
+        
+        for fornecimento in fornecimentos:
+            produto_id = fornecimento.get('produto_contrato_id')
+            quantidade = fornecimento.get('quantidade', 0)
+            despesas_fornecimento = fornecimento.get('total_despesas', 0)
+            
+            # Find the product to get prices
+            produto = None
+            for p in licitacao_data.get('produtos', []):
+                if p.get('id') == produto_id:
+                    produto = p
+                    break
+            
+            if produto:
+                preco_venda = produto.get('preco_venda', 0)
+                preco_compra = produto.get('preco_compra', 0)
+                
+                total_venda += quantidade * preco_venda
+                total_compra += quantidade * preco_compra
+                total_despesas += despesas_fornecimento
+        
+        # Calculate expected profit
+        expected_lucro = total_venda - total_compra - total_despesas
+        
+        # Check if the licitação has the correct totals
+        actual_total_despesas = licitacao_data.get('despesas_totais', 0)
+        if abs(actual_total_despesas - total_despesas) < 0.01:
+            self.log_test("Total despesas consolidation", True, f"Total despesas: R$ {actual_total_despesas}")
+        else:
+            self.log_test("Total despesas consolidation", False, f"Expected R$ {total_despesas}, got R$ {actual_total_despesas}")
+        
+        # Check profit calculation
+        actual_lucro = licitacao_data.get('lucro_total', 0)
+        if abs(actual_lucro - expected_lucro) < 0.01:
+            self.log_test("Profit calculation with despesas", True, f"Lucro: R$ {actual_lucro} (Venda: R$ {total_venda} - Compra: R$ {total_compra} - Despesas: R$ {total_despesas})")
+        else:
+            self.log_test("Profit calculation with despesas", False, f"Expected R$ {expected_lucro}, got R$ {actual_lucro}")
+        
+        return licitacao_data
+
     def test_supply_validation(self):
         """Test validation that supply doesn't exceed contracted quantity"""
         print("\n⚠️ Testing Supply Quantity Validation...")
