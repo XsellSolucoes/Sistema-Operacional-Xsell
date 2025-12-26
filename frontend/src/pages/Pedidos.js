@@ -411,16 +411,10 @@ export default function Pedidos() {
     }
   };
 
-  const handlePrintCliente = (pedido) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      toast.error('Não foi possível abrir a janela de impressão. Verifique se o bloqueador de pop-ups está desativado.');
-      return;
-    }
-    
+  // Função auxiliar para gerar o HTML do PDF do Cliente
+  const gerarHtmlCliente = (pedido) => {
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     
-    // Calcular subtotal dos itens
     let subtotalItens = pedido.itens.reduce((sum, item) => {
       let precoItem = item.preco_venda;
       if (item.personalizado && item.repassar_personalizacao) {
@@ -428,6 +422,190 @@ export default function Pedidos() {
       }
       return sum + (precoItem * item.quantidade);
     }, 0);
+    
+    const despesasDetalhadas = pedido.despesas_detalhadas || [];
+    const despesasRepassadas = despesasDetalhadas.filter(d => d.repassar);
+    const totalDespesasRepassadas = despesasRepassadas.reduce((sum, d) => sum + d.valor, 0);
+    const freteRepassado = pedido.repassar_frete ? pedido.frete : 0;
+    const totalCliente = subtotalItens + totalDespesasRepassadas + freteRepassado;
+    
+    const clienteCnpj = cliente?.cpf_cnpj || cliente?.cnpj || '';
+    const clienteEndereco = cliente ? 
+      `${cliente.rua || cliente.endereco || ''}${cliente.numero ? `, ${cliente.numero}` : ''}${cliente.complemento ? ` - ${cliente.complemento}` : ''}` : '';
+    const clienteCidadeEstado = cliente ? `${cliente.bairro ? `${cliente.bairro} - ` : ''}${cliente.cidade || ''}/${cliente.estado || ''}${cliente.cep ? ` - CEP: ${cliente.cep}` : ''}` : '';
+    const clienteContato = cliente?.telefone || cliente?.whatsapp || '';
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Pedido ${pedido.numero} - Via Cliente</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px 40px; color: #333; font-size: 12px; }
+            .header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; }
+            .logo { width: 80px; height: auto; margin-right: 15px; }
+            .empresa-info { flex: 1; font-size: 12px; }
+            .empresa-info h2 { margin: 0 0 5px 0; font-size: 14px; color: #1e3a8a; }
+            .empresa-info p { margin: 2px 0; color: #666; }
+            .pedido-numero { text-align: right; }
+            .pedido-numero h1 { margin: 0; font-size: 16px; color: #1e3a8a; }
+            .pedido-numero p { margin: 5px 0 0 0; color: #666; }
+            .cliente-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 5px; padding: 15px; margin-bottom: 15px; }
+            .cliente-box h4 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 12px; }
+            .cliente-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; }
+            .cliente-dados p { margin: 3px 0; }
+            .info-section { margin-bottom: 15px; }
+            .info-label { font-weight: bold; color: #1e3a8a; }
+            table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #1e3a8a; color: white; font-size: 11px; }
+            .totais-section { margin-top: 20px; }
+            .totais-table { width: 350px; margin-left: auto; }
+            .totais-table td { padding: 6px 10px; border: none; }
+            .totais-table .label { text-align: right; font-weight: bold; color: #333; }
+            .totais-table .valor { text-align: right; }
+            .total-final { background-color: #1e3a8a; color: white; font-size: 14px; font-weight: bold; }
+            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666; }
+            .pagamento-box { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 5px; font-size: 11px; }
+            .pagamento-box h4 { margin: 0 0 10px 0; color: #1e3a8a; }
+            @media print { body { padding: 10px 20px; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
+            <div class="empresa-info">
+              <h2>Xsell Soluções Corporativas</h2>
+              <p>CNPJ: 19.820.742/0001-91</p>
+              <p>comercial@xsellsolucoes.com.br</p>
+            </div>
+            <div class="pedido-numero">
+              <h1>PEDIDO ${pedido.numero}</h1>
+              <p>${new Date(pedido.data).toLocaleDateString('pt-BR')}</p>
+            </div>
+          </div>
+
+          <div class="cliente-box">
+            <h4>DADOS DO CLIENTE</h4>
+            <div class="cliente-dados">
+              <p><span class="info-label">Nome/Razão Social:</span> ${pedido.cliente_nome}</p>
+              <p><span class="info-label">${cliente?.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ'}:</span> ${clienteCnpj}</p>
+              ${cliente?.inscricao_estadual ? `<p><span class="info-label">IE:</span> ${cliente.inscricao_estadual}</p>` : ''}
+              ${clienteContato ? `<p><span class="info-label">Telefone:</span> ${clienteContato}</p>` : ''}
+              ${clienteEndereco ? `<p><span class="info-label">Endereço:</span> ${clienteEndereco}</p>` : ''}
+              ${clienteCidadeEstado ? `<p><span class="info-label">Cidade:</span> ${clienteCidadeEstado}</p>` : ''}
+              ${cliente?.nome_contato ? `<p><span class="info-label">Contato:</span> ${cliente.nome_contato}</p>` : ''}
+              ${cliente?.email ? `<p><span class="info-label">E-mail:</span> ${cliente.email}</p>` : ''}
+            </div>
+          </div>
+
+          <div class="info-section">
+            <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
+            ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
+          </div>
+
+          <h3 style="font-size: 13px; color: #1e3a8a; margin-bottom: 10px;">Itens do Pedido</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Descrição</th>
+                <th style="text-align: center;">Qtd</th>
+                <th style="text-align: right;">Valor Unit.</th>
+                <th style="text-align: right;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pedido.itens.map(item => {
+                let precoFinal = item.preco_venda;
+                let descricao = item.produto_descricao;
+                if (item.variacao) descricao += ` (${item.variacao})`;
+                if (item.personalizado) descricao += ` - ${item.tipo_personalizacao}`;
+                
+                return `
+                  <tr>
+                    <td>${item.produto_codigo}</td>
+                    <td>${descricao}</td>
+                    <td style="text-align: center;">${item.quantidade}</td>
+                    <td style="text-align: right;">R$ ${precoFinal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    <td style="text-align: right;">R$ ${(precoFinal * item.quantidade).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+
+          <div class="totais-section">
+            <table class="totais-table">
+              <tr>
+                <td class="label">Subtotal Produtos:</td>
+                <td class="valor">R$ ${subtotalItens.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+              ${freteRepassado > 0 ? `
+                <tr>
+                  <td class="label">Frete:</td>
+                  <td class="valor">R$ ${freteRepassado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              ` : ''}
+              ${despesasRepassadas.map(d => `
+                <tr>
+                  <td class="label">${d.descricao}:</td>
+                  <td class="valor">R$ ${d.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                </tr>
+              `).join('')}
+              <tr class="total-final">
+                <td class="label">TOTAL A PAGAR:</td>
+                <td class="valor">R$ ${totalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <p><span class="info-label">Forma de Pagamento:</span> ${pedido.forma_pagamento?.toUpperCase() || '-'}</p>
+          </div>
+
+          <div class="pagamento-box">
+            <h4>Dados para Pagamento</h4>
+            <p><strong>Banco do Brasil</strong> | Agência: 1529-6 | Conta Corrente: 81517-9</p>
+            <p>Favorecido: XSELL SOLUÇÕES CORPORATIVAS LTDA</p>
+            <p><strong>Pix:</strong> comercial@xsellsolucoes.com.br</p>
+          </div>
+
+          <div class="footer">
+            <p>Xsell Soluções Corporativas LTDA | CNPJ: 19.820.742/0001-91 | comercial@xsellsolucoes.com.br</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
+  // Função para IMPRIMIR Via Cliente (abre Ctrl+P)
+  const handlePrintCliente = (pedido) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Não foi possível abrir a janela. Verifique se o bloqueador de pop-ups está desativado.');
+      return;
+    }
+    
+    printWindow.document.write(gerarHtmlCliente(pedido));
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 500);
+  };
+
+  // Função para SALVAR PDF Via Cliente (baixar)
+  const handleSaveCliente = (pedido) => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Não foi possível abrir a janela. Verifique se o bloqueador de pop-ups está desativado.');
+      return;
+    }
+    
+    printWindow.document.write(gerarHtmlCliente(pedido));
+    printWindow.document.close();
+    printWindow.focus();
+    toast.success('Documento aberto! Use Ctrl+S para salvar ou Ctrl+P para salvar como PDF.');
+  };
     
     // Despesas detalhadas que foram repassadas ao cliente
     const despesasDetalhadas = pedido.despesas_detalhadas || [];
