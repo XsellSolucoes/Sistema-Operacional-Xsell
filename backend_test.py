@@ -1002,6 +1002,12 @@ class XSELLAPITester:
             print("❌ Authentication failed - stopping tests")
             return False
 
+        # Run Boleto Download Test (Priority test from review request)
+        print("\n" + "="*60)
+        print("Testing BOLETO DOWNLOAD FUNCTIONALITY (Review Request)")
+        print("="*60)
+        self.test_boleto_download_functionality()
+
         # Run P1, P2, P3 test suites
         print("\n" + "="*60)
         print("Testing P1: Orçamentos Module")
