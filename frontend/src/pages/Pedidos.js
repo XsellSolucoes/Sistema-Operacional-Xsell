@@ -413,6 +413,11 @@ export default function Pedidos() {
 
   const handlePrintCliente = (pedido) => {
     const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Não foi possível abrir a janela de impressão. Verifique se o bloqueador de pop-ups está desativado.');
+      return;
+    }
+    
     const cliente = clientes.find(c => c.id === pedido.cliente_id);
     
     // Calcular subtotal dos itens
@@ -435,6 +440,13 @@ export default function Pedidos() {
     // Total final para o cliente
     const totalCliente = subtotalItens + totalDespesasRepassadas + freteRepassado;
     
+    // Dados do cliente formatados
+    const clienteCnpj = cliente?.cpf_cnpj || cliente?.cnpj || '';
+    const clienteEndereco = cliente ? 
+      `${cliente.rua || cliente.endereco || ''}${cliente.numero ? `, ${cliente.numero}` : ''}${cliente.complemento ? ` - ${cliente.complemento}` : ''}` : '';
+    const clienteCidadeEstado = cliente ? `${cliente.bairro ? `${cliente.bairro} - ` : ''}${cliente.cidade || ''}/${cliente.estado || ''}${cliente.cep ? ` - CEP: ${cliente.cep}` : ''}` : '';
+    const clienteContato = cliente?.telefone || cliente?.whatsapp || '';
+    
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -450,6 +462,10 @@ export default function Pedidos() {
             .pedido-numero { text-align: right; }
             .pedido-numero h1 { margin: 0; font-size: 16px; color: #1e3a8a; }
             .pedido-numero p { margin: 5px 0 0 0; color: #666; }
+            .cliente-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 5px; padding: 15px; margin-bottom: 15px; }
+            .cliente-box h4 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 12px; }
+            .cliente-dados { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 11px; }
+            .cliente-dados p { margin: 3px 0; }
             .info-section { margin-bottom: 15px; }
             .info-label { font-weight: bold; color: #1e3a8a; }
             table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px; }
@@ -467,6 +483,7 @@ export default function Pedidos() {
             .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666; }
             .pagamento-box { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 5px; font-size: 11px; }
             .pagamento-box h4 { margin: 0 0 10px 0; color: #1e3a8a; }
+            @media print { body { padding: 10px 20px; } }
           </style>
         </head>
         <body>
@@ -483,12 +500,21 @@ export default function Pedidos() {
             </div>
           </div>
 
+          <div class="cliente-box">
+            <h4>DADOS DO CLIENTE</h4>
+            <div class="cliente-dados">
+              <p><span class="info-label">Nome/Razão Social:</span> ${pedido.cliente_nome}</p>
+              <p><span class="info-label">${cliente?.tipo_pessoa === 'fisica' ? 'CPF' : 'CNPJ'}:</span> ${clienteCnpj}</p>
+              ${cliente?.inscricao_estadual ? `<p><span class="info-label">IE:</span> ${cliente.inscricao_estadual}</p>` : ''}
+              ${clienteContato ? `<p><span class="info-label">Telefone:</span> ${clienteContato}</p>` : ''}
+              ${clienteEndereco ? `<p><span class="info-label">Endereço:</span> ${clienteEndereco}</p>` : ''}
+              ${clienteCidadeEstado ? `<p><span class="info-label">Cidade:</span> ${clienteCidadeEstado}</p>` : ''}
+              ${cliente?.nome_contato ? `<p><span class="info-label">Contato:</span> ${cliente.nome_contato}</p>` : ''}
+              ${cliente?.email ? `<p><span class="info-label">E-mail:</span> ${cliente.email}</p>` : ''}
+            </div>
+          </div>
+
           <div class="info-section">
-            <p><span class="info-label">Cliente:</span> ${pedido.cliente_nome}</p>
-            ${cliente ? `
-              <p><span class="info-label">CNPJ:</span> ${cliente.cnpj}</p>
-              <p><span class="info-label">Endereço:</span> ${cliente.endereco}, ${cliente.cidade}/${cliente.estado}</p>
-            ` : ''}
             <p><span class="info-label">Vendedor:</span> ${pedido.vendedor}</p>
             ${pedido.prazo_entrega ? `<p><span class="info-label">Prazo de Entrega:</span> ${pedido.prazo_entrega}</p>` : ''}
           </div>
@@ -558,6 +584,18 @@ export default function Pedidos() {
             <p><strong>Banco do Brasil</strong> | Agência: 1529-6 | Conta Corrente: 81517-9</p>
             <p>Favorecido: XSELL SOLUÇÕES CORPORATIVAS LTDA</p>
             <p><strong>Pix:</strong> comercial@xsellsolucoes.com.br</p>
+          </div>
+
+          <div class="footer">
+            <p>Xsell Soluções Corporativas LTDA | CNPJ: 19.820.742/0001-91 | comercial@xsellsolucoes.com.br</p>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.focus();
+  };
           </div>
 
           <div class="footer">
