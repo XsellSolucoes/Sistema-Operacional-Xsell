@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Wallet, TrendingUp, TrendingDown, Check, Bell, Mail, AlertTriangle, Pencil, Trash2, Upload, FileText, Download, X } from 'lucide-react';
+import { Plus, Wallet, TrendingUp, TrendingDown, Check, Bell, Mail, AlertTriangle, Pencil, Trash2, Upload, FileText, Download, X, Eye, Calendar, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
