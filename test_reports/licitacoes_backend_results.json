@@ -1,13 +1,13 @@
 {
-  "timestamp": "2025-12-26T14:56:07.194502",
-  "total_tests": 22,
-  "passed_tests": 18,
-  "success_rate": "81.8%",
+  "timestamp": "2025-12-26T14:56:49.873061",
+  "total_tests": 23,
+  "passed_tests": 20,
+  "success_rate": "87.0%",
   "test_details": [
     {
       "test": "User Registration (if needed)",
-      "success": true,
-      "details": "Status: 200"
+      "success": false,
+      "details": "Status: 400 (Expected: 200) - Email already registered"
     },
     {
       "test": "User Login",
@@ -36,13 +36,18 @@
     },
     {
       "test": "Get Licita\u00e7\u00f5es List",
-      "success": false,
-      "details": "Status: 520 (Expected: 200) - Internal Server Error"
+      "success": true,
+      "details": "Status: 200"
     },
     {
-      "test": "Licita\u00e7\u00f5es list",
-      "success": false,
-      "details": "Invalid response format"
+      "test": "Calculated fields present",
+      "success": true,
+      "details": "All calculation fields available"
+    },
+    {
+      "test": "Contract alerts structure",
+      "success": true,
+      "details": "Alerts: 0 items"
     },
     {
       "test": "Get Licita\u00e7\u00e3o for Fornecimento",
