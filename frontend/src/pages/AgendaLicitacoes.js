@@ -321,9 +321,9 @@ export default function AgendaLicitacoes() {
     }
   };
 
-  // Filtrar licitações
+  // Filtrar e ordenar licitações - prioriza as que vão acontecer primeiro
   const licitacoesFiltradas = useMemo(() => {
-    return licitacoes.filter(lic => {
+    const filtradas = licitacoes.filter(lic => {
       const matchSearch = searchTerm === '' || 
         lic.numero_licitacao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         lic.cidade?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -334,6 +334,27 @@ export default function AgendaLicitacoes() {
       const matchPortal = filtroPortal === 'todos' || lic.portal === filtroPortal;
       
       return matchSearch && matchStatus && matchCidade && matchPortal;
+    });
+
+    // Ordenar: licitações futuras primeiro (por data crescente), depois as passadas
+    const agora = new Date();
+    return filtradas.sort((a, b) => {
+      const dataA = new Date(a.data_disputa);
+      const dataB = new Date(b.data_disputa);
+      const isFuturaA = dataA >= agora;
+      const isFuturaB = dataB >= agora;
+
+      // Se uma é futura e outra não, a futura vem primeiro
+      if (isFuturaA && !isFuturaB) return -1;
+      if (!isFuturaA && isFuturaB) return 1;
+
+      // Ambas futuras: ordem crescente (mais próxima primeiro)
+      // Ambas passadas: ordem decrescente (mais recente primeiro)
+      if (isFuturaA) {
+        return dataA - dataB;
+      } else {
+        return dataB - dataA;
+      }
     });
   }, [licitacoes, searchTerm, filtroStatus, filtroCidade, filtroPortal]);
 
