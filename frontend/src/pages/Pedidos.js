@@ -321,6 +321,7 @@ export default function Pedidos() {
         despesas_detalhadas: despesasPedido,
         prazo_entrega: formData.prazo_entrega,
         forma_pagamento: formData.forma_pagamento,
+        dados_pagamento_id: formData.dados_pagamento_id || null,
         tipo_venda: formData.tipo_venda,
         vendedor: vendedor.nome
       };
