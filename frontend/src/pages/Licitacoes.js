@@ -1109,11 +1109,37 @@ export default function Licitacoes() {
                       const totalCompras = (selectedContrato.produtos || []).reduce((acc, p) => {
                         return acc + ((p.quantidade_fornecida || 0) * (p.preco_compra || 0));
                       }, 0);
-                      const lucroRealizado = totalFornecido - totalCompras;
+                      const totalDespesas = (selectedContrato.fornecimentos || []).reduce((acc, f) => {
+                        return acc + (f.total_despesas || 0);
+                      }, 0);
+                      const lucroRealizado = totalFornecido - totalCompras - totalDespesas;
                       const lucroEstimado = (selectedContrato.produtos || []).reduce((acc, p) => {
                         const qtd = p.quantidade_contratada || p.quantidade_empenhada || 0;
                         return acc + ((p.preco_venda || 0) - (p.preco_compra || 0)) * qtd;
                       }, 0);
+
+                      // Agrupar fornecimentos por nota de empenho
+                      const fornecimentosPorEmpenho = {};
+                      (selectedContrato.fornecimentos || []).forEach(f => {
+                        const ne = f.numero_nota_empenho || f.numero_nota_fornecimento || 'S/N';
+                        if (!fornecimentosPorEmpenho[ne]) {
+                          fornecimentosPorEmpenho[ne] = {
+                            nota: ne,
+                            data: f.data_fornecimento,
+                            itens: [],
+                            totalVenda: 0,
+                            totalCompra: 0,
+                            totalDespesas: 0
+                          };
+                        }
+                        const prod = (selectedContrato.produtos || []).find(p => p.id === f.produto_contrato_id);
+                        const venda = f.quantidade * (prod?.preco_venda || 0);
+                        const compra = f.quantidade * (prod?.preco_compra || 0);
+                        fornecimentosPorEmpenho[ne].itens.push({ ...f, produto: prod });
+                        fornecimentosPorEmpenho[ne].totalVenda += venda;
+                        fornecimentosPorEmpenho[ne].totalCompra += compra;
+                        fornecimentosPorEmpenho[ne].totalDespesas += (f.total_despesas || 0);
+                      });
 
                       return (
                         <>
@@ -1129,9 +1155,49 @@ export default function Licitacoes() {
 
                           <Separator />
 
+                          {/* Detalhes por Nota de Empenho */}
+                          {Object.keys(fornecimentosPorEmpenho).length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-xs font-semibold text-green-700">DETALHES POR EMPENHO:</p>
+                              <div className="max-h-40 overflow-y-auto space-y-2">
+                                {Object.values(fornecimentosPorEmpenho).map((emp, idx) => {
+                                  const lucroEmp = emp.totalVenda - emp.totalCompra - emp.totalDespesas;
+                                  return (
+                                    <div key={idx} className="p-2 bg-white border border-green-200 rounded text-xs">
+                                      <div className="flex justify-between items-center mb-1">
+                                        <span className="font-bold text-green-700">NE: {emp.nota}</span>
+                                        <Badge variant="outline" className="text-xs">{formatDate(emp.data)}</Badge>
+                                      </div>
+                                      <div className="grid grid-cols-2 gap-1">
+                                        <div>Venda: <span className="font-medium">{formatCurrency(emp.totalVenda)}</span></div>
+                                        <div>Compra: <span className="font-medium">{formatCurrency(emp.totalCompra)}</span></div>
+                                        <div className="text-red-600">Despesas: <span className="font-medium">{formatCurrency(emp.totalDespesas)}</span></div>
+                                        <div className="text-emerald-600">Lucro: <span className="font-bold">{formatCurrency(lucroEmp)}</span></div>
+                                      </div>
+                                      {emp.itens.some(i => (i.despesas || []).length > 0) && (
+                                        <div className="mt-1 pt-1 border-t text-xs text-red-600">
+                                          {emp.itens.flatMap(i => i.despesas || []).map((d, di) => (
+                                            <div key={di}>• {d.descricao}: {formatCurrency(d.valor)}</div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+
+                          <Separator />
+
                           <div className="p-3 bg-blue-50 rounded-lg">
-                            <p className="text-xs text-muted-foreground">Total de Compras (Fornecido)</p>
+                            <p className="text-xs text-muted-foreground">Total de Compras</p>
                             <p className="text-xl font-bold text-blue-600">{formatCurrency(totalCompras)}</p>
+                          </div>
+
+                          <div className="p-3 bg-red-50 rounded-lg">
+                            <p className="text-xs text-muted-foreground">Total de Despesas</p>
+                            <p className="text-xl font-bold text-red-600">{formatCurrency(totalDespesas)}</p>
                           </div>
 
                           <div className="p-4 bg-emerald-100 rounded-lg text-center">
