@@ -27,16 +27,21 @@ const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 });
 
-// Formatar data
+// Formatar data - preserva a data exatamente como cadastrada
 const formatDate = (dateStr) => {
   if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('pt-BR');
+  // Parse the date and format without timezone conversion
+  const date = new Date(dateStr);
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${day}/${month}/${year}`;
 };
 
 // Formatar data e hora
 const formatDateTime = (dateStr, horario) => {
   if (!dateStr) return '-';
-  const data = new Date(dateStr).toLocaleDateString('pt-BR');
+  const data = formatDate(dateStr);
   return horario ? `${data} às ${horario}` : data;
 };
 
