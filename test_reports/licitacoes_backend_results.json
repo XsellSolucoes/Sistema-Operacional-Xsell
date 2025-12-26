@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-12-26T17:09:35.881976",
-  "total_tests": 23,
-  "passed_tests": 22,
-  "success_rate": "95.7%",
+  "timestamp": "2025-12-26T19:21:06.852472",
+  "total_tests": 30,
+  "passed_tests": 25,
+  "success_rate": "83.3%",
   "test_details": [
     {
       "test": "User Registration (if needed)",
@@ -75,6 +75,41 @@
       "details": "Percentage: 20.0%"
     },
     {
+      "test": "Get Licita\u00e7\u00e3o for Despesas Test",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Register Supply with Expenses",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Despesas field acceptance",
+      "success": false,
+      "details": "Despesas field not found in response"
+    },
+    {
+      "test": "Despesas total calculation",
+      "success": false,
+      "details": "Expected R$ 200.0, got R$ 0"
+    },
+    {
+      "test": "Get Licita\u00e7\u00e3o for Profit Calculation",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Total despesas consolidation",
+      "success": false,
+      "details": "Expected R$ 200.0, got R$ 675.0"
+    },
+    {
+      "test": "Profit calculation with despesas",
+      "success": false,
+      "details": "Expected R$ 157.5, got R$ 350.0"
+    },
+    {
       "test": "Get Licita\u00e7\u00e3o for Validation Test",
       "success": true,
       "details": "Status: 200"
@@ -92,7 +127,7 @@
     {
       "test": "Execution percentage accuracy",
       "success": true,
-      "details": "Calculated: 20.0%, Expected: 20.0%"
+      "details": "Calculated: 33.3%, Expected: 33.3%"
     },
     {
       "test": "Create Near-Expiry Contract",
