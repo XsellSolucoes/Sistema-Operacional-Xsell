@@ -808,12 +808,6 @@ export default function Pedidos() {
     printWindow.focus();
     toast.success('Documento aberto! Use Ctrl+S para salvar ou Ctrl+P para salvar como PDF.');
   };
-            .totais-section { margin-top: 20px; }
-            .totais-table { width: 350px; margin-left: auto; }
-            .totais-table td { padding: 6px 10px; border: none; }
-            .totais-table .label { text-align: right; font-weight: bold; color: #333; }
-            .totais-table .valor { text-align: right; }
-            .total-final { background-color: #1e3a8a; color: white; font-size: 14px; font-weight: bold; }
             .despesas-section { margin: 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
             .despesas-section h4 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 12px; }
             .despesa-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted #ddd; }
