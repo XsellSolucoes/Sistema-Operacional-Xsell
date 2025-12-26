@@ -1337,6 +1337,14 @@ export default function Pedidos() {
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(pedido)}
+                        data-testid={`edit-pedido-${pedido.id}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
