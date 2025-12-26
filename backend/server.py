@@ -1459,6 +1459,45 @@ async def get_licitacao(licitacao_id: str, current_user: User = Depends(get_curr
     if isinstance(lic.get("created_at"), str):
         lic["created_at"] = datetime.fromisoformat(lic["created_at"])
     
+    
+    # Calculate alerts for individual licitação (same logic as list endpoint)
+    qtd_contratada = 0
+    qtd_fornecida = 0
+    for p in lic.get("produtos", []):
+        qtd_contratada += p.get("quantidade_contratada", p.get("quantidade_empenhada", 0))
+        qtd_fornecida += p.get("quantidade_fornecida", 0)
+    
+    lic["quantidade_total_contratada"] = qtd_contratada
+    lic["quantidade_total_fornecida"] = qtd_fornecida
+    lic["quantidade_total_restante"] = qtd_contratada - qtd_fornecida
+    lic["percentual_executado"] = (qtd_fornecida / qtd_contratada * 100) if qtd_contratada > 0 else 0
+    
+    # Calculate alerts
+    alertas = []
+    if lic.get("contrato"):
+        contrato = lic["contrato"]
+        if isinstance(contrato.get("data_fim"), str):
+            data_fim = datetime.fromisoformat(contrato["data_fim"])
+        else:
+            data_fim = contrato.get("data_fim")
+        
+        if data_fim:
+            # Ensure both datetimes have the same timezone awareness
+            if data_fim.tzinfo is None:
+                data_fim = data_fim.replace(tzinfo=timezone.utc)
+            
+            dias_restantes = (data_fim - datetime.now(timezone.utc)).days
+            if dias_restantes < 0:
+                alertas.append("⚠️ Contrato VENCIDO")
+            elif dias_restantes <= 30:
+                alertas.append(f"⚠️ Contrato vence em {dias_restantes} dias")
+    
+    if qtd_contratada > 0 and qtd_fornecida >= qtd_contratada:
+        alertas.append("✅ Contrato totalmente executado")
+    elif qtd_contratada > 0 and (qtd_fornecida / qtd_contratada) >= 0.9:
+        alertas.append(f"⚠️ {((qtd_fornecida / qtd_contratada) * 100):.1f}% do contrato executado")
+    
+    lic["alertas"] = alertas
     return Licitacao(**lic)
 
 
