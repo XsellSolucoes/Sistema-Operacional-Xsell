@@ -625,7 +625,7 @@ export default function Financeiro() {
                           variant="ghost"
                           size="sm"
                           className="text-green-600 hover:text-green-700"
-                          onClick={() => window.open(`${API}/despesas/${despesa.id}/boleto/download`, '_blank')}
+                          onClick={() => handleDownloadBoleto(despesa)}
                           title={`Baixar: ${despesa.boleto.nome}`}
                         >
                           <FileText className="h-4 w-4 mr-1" />
