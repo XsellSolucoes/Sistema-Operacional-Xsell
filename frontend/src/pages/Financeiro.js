@@ -45,6 +45,40 @@ export default function Financeiro() {
     descricao: ''
   });
 
+  // Função para download de boleto com autenticação
+  const handleDownloadBoleto = async (despesa) => {
+    if (!despesa.boleto) {
+      toast.error('Esta despesa não possui boleto anexado');
+      return;
+    }
+    
+    try {
+      const response = await axios.get(
+        `${API}/despesas/${despesa.id}/boleto/download`,
+        {
+          ...getAuthHeader(),
+          responseType: 'blob'
+        }
+      );
+      
+      // Criar URL do blob e fazer download
+      const blob = new Blob([response.data], { type: despesa.boleto.tipo || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', despesa.boleto.nome || 'boleto');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Download iniciado!');
+    } catch (error) {
+      console.error('Erro ao baixar boleto:', error);
+      toast.error('Erro ao baixar boleto');
+    }
+  };
+
   // Função para visualizar despesa
   const handleVisualizarDespesa = (despesa) => {
     setSelectedDespesa(despesa);
