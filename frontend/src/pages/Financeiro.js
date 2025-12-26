@@ -489,7 +489,7 @@ export default function Financeiro() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(`${API}/despesas/${editingDespesa.id}/boleto/download`, '_blank')}
+                        onClick={() => handleDownloadBoleto(editingDespesa)}
                       >
                         <Download className="h-4 w-4 mr-1" />
                         Baixar
