@@ -105,13 +105,41 @@ export default function Financeiro() {
         data_vencimento: new Date(formData.data_vencimento + 'T12:00:00').toISOString()
       };
       
+      let despesaId;
       if (editingDespesa) {
         await axios.put(`${API}/despesas/${editingDespesa.id}`, payload, getAuthHeader());
+        despesaId = editingDespesa.id;
         toast.success('Despesa atualizada com sucesso!');
       } else {
-        await axios.post(`${API}/despesas`, payload, getAuthHeader());
+        const response = await axios.post(`${API}/despesas`, payload, getAuthHeader());
+        despesaId = response.data.id;
         toast.success('Despesa cadastrada com sucesso!');
       }
+
+      // Upload do boleto se houver arquivo selecionado
+      if (arquivoBoleto && despesaId) {
+        setUploadingBoleto(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', arquivoBoleto);
+        
+        try {
+          await axios.post(
+            `${API}/despesas/${despesaId}/upload-boleto`,
+            formDataUpload,
+            {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+          toast.success('Boleto anexado com sucesso!');
+        } catch (uploadError) {
+          toast.error('Despesa salva, mas erro ao anexar boleto');
+        }
+        setUploadingBoleto(false);
+      }
+
       setOpen(false);
       resetForm();
       fetchData();
