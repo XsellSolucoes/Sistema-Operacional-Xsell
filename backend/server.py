@@ -418,6 +418,7 @@ class Despesa(BaseModel):
     data_despesa: datetime
     data_vencimento: datetime
     status: str = "pendente"
+    boleto: Optional[Dict[str, Any]] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
