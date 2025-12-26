@@ -131,9 +131,6 @@ export default function Orcamentos() {
       frete_por_conta: 'destinatario',
       valor_frete: '0',
       repassar_frete: true,
-      outras_despesas: '0',
-      descricao_outras_despesas: '',
-      repassar_outras_despesas: false,
       desconto: '0',
       dias_cobrar_resposta: '',
       observacoes: 'Produto sujeito à disponibilidade de estoque no momento do fechamento do pedido, devido a estoque rotativo.'
@@ -141,6 +138,8 @@ export default function Orcamentos() {
     setClienteBusca('');
     setClienteSelecionado(null);
     setItensOrcamento([]);
+    setDespesasOrcamento([]);
+    setNovaDespesa({ descricao: '', valor: '', repassar: false });
     setNovoItem({
       produto_codigo: '',
       descricao: '',
@@ -153,6 +152,29 @@ export default function Orcamentos() {
       valor_personalizacao: '0'
     });
     setEditingOrcamento(null);
+  };
+
+  // Funções para múltiplas despesas
+  const adicionarDespesa = () => {
+    if (!novaDespesa.descricao || !novaDespesa.valor) {
+      toast.error('Preencha a descrição e valor da despesa');
+      return;
+    }
+    
+    setDespesasOrcamento([
+      ...despesasOrcamento,
+      {
+        id: Date.now().toString(),
+        descricao: novaDespesa.descricao,
+        valor: parseFloat(novaDespesa.valor),
+        repassar: novaDespesa.repassar
+      }
+    ]);
+    setNovaDespesa({ descricao: '', valor: '', repassar: false });
+  };
+
+  const removerDespesa = (id) => {
+    setDespesasOrcamento(despesasOrcamento.filter(d => d.id !== id));
   };
 
   const buscarClientePorCodigo = () => {
