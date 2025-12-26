@@ -3071,7 +3071,7 @@ async def get_agenda_filtros(current_user: User = Depends(get_current_user)):
         "estados": sorted(list(estados)),
         "portais": sorted(list(portais)),
         "produtos": sorted(list(produtos)),
-        "status": ["agendada", "em_andamento", "ganha", "perdida", "cancelada"]
+        "status": ["agendada", "em_andamento", "ganha", "perdida", "aguardando", "cancelada"]
     }
 
 
