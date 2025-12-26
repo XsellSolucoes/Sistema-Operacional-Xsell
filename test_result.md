@@ -6,37 +6,72 @@
 
 ## Changes Made This Session
 
-### Módulo Licitações - DESPESAS DO PEDIDO
+### NOVA ÁREA: Agenda de Licitações
 
-**Novas funcionalidades:**
+**Funcionalidades implementadas:**
 
-1. **Campo "Despesas do Pedido" no FORNECIMENTO:**
-   - Adicionado campo para especificar despesas no modal de fornecimento
-   - Botão "+ Despesas" para adicionar múltiplas despesas
-   - Cada despesa tem: Descrição e Valor (R$)
-   - Total de despesas calculado automaticamente
-   - Despesas deduzem do lucro em tempo real
+1. **Menu e Navegação:**
+   - Novo item no menu lateral: "Agenda de Licitações"
+   - Rota: /agenda-licitacoes
+   - Ícone: CalendarClock
 
-2. **Seção "DETALHES POR EMPENHO" no FINANCEIRO:**
-   - Lista cada fornecimento por número de nota de empenho
-   - Mostra para cada empenho:
-     - Número da NE e data
-     - Venda, Compra, Despesas, Lucro
-     - Lista das despesas quando existirem
+2. **Cadastro de Licitação:**
+   - Data da Disputa * (obrigatório)
+   - Horário * (obrigatório)
+   - Número da Licitação * (obrigatório)
+   - Portal (select com opções: ComprasNet, BLL, Licitações-e, etc.)
+   - Cidade, Estado
+   - Produtos (múltiplos, separados por vírgula)
+   - Objeto da Licitação
+   - Valor Estimado
+   - Observações
 
-3. **Cálculos atualizados:**
-   - Lucro = Venda - Compra - Despesas
-   - Total de Despesas consolidado
-   - Total de Lucros do Contrato com dedução das despesas
+3. **Dashboard com Alertas:**
+   - Alerta vermelho: Licitações do dia
+   - Alerta amarelo: Licitações próximas 48h
+   - Código de cores: 🔴 <24h, 🟡 <48h, 🟢 >48h
+   - Destaque visual para licitações vencidas
 
-**Backend atualizado:**
-- Modelo `DespesaFornecimento` adicionado
-- Modelo `FornecimentoCreate` atualizado com campo `despesas` e `numero_nota_empenho`
-- Endpoint POST /api/licitacoes/{id}/fornecimentos salva despesas e total_despesas
+4. **Filtros e Busca:**
+   - Busca rápida (número, cidade, portal)
+   - Filtro por Status
+   - Filtro por Cidade
+   - Filtro por Portal
+
+5. **Timeline de Andamento:**
+   - Adicionar eventos (proposta, esclarecimento, impugnação, sessão, julgamento, recurso, homologação, outro)
+   - Data, horário, descrição
+   - Status: pendente, concluído, atrasado
+   - Alterar status de eventos
+
+6. **Anexos:**
+   - Estrutura para anexos implementada
+   - Upload a ser implementado futuramente
+
+7. **Histórico:**
+   - Registro automático de alterações
+   - Data, usuário, ação
+
+8. **Status da Licitação:**
+   - agendada, em_andamento, ganha, perdida, cancelada
+
+**Endpoints implementados:**
+- GET /api/agenda-licitacoes - Listar com alertas
+- POST /api/agenda-licitacoes - Criar
+- GET /api/agenda-licitacoes/{id} - Detalhes
+- PUT /api/agenda-licitacoes/{id} - Atualizar
+- PUT /api/agenda-licitacoes/{id}/status - Alterar status
+- DELETE /api/agenda-licitacoes/{id} - Excluir
+- POST /api/agenda-licitacoes/{id}/eventos - Adicionar evento
+- PUT /api/agenda-licitacoes/{id}/eventos/{id}/status - Alterar status evento
+- DELETE /api/agenda-licitacoes/{id}/eventos/{id} - Excluir evento
+- POST /api/agenda-licitacoes/{id}/anexos - Adicionar anexo
+- DELETE /api/agenda-licitacoes/{id}/anexos/{id} - Excluir anexo
+- GET /api/agenda-licitacoes/filtros/options - Opções de filtros
 
 ## Tests To Run
-- Backend: Criar fornecimento com despesas
-- Frontend: Adicionar despesas no modal, verificar dedução do lucro, ver detalhes por empenho
+- Backend: CRUD agenda-licitacoes, eventos, filtros
+- Frontend: Dashboard, formulários, modais, filtros, timeline
 
 ## Incorporate User Feedback
-- Despesas do Pedido implementado conforme solicitado
+- Agenda de Licitações implementada conforme especificação
