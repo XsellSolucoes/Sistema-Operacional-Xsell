@@ -596,19 +596,6 @@ export default function Pedidos() {
     printWindow.document.close();
     printWindow.focus();
   };
-          </div>
-
-          <div class="footer">
-            <p>Xsell Soluções Corporativas LTDA | CNPJ: 19.820.742/0001-91 | comercial@xsellsolucoes.com.br</p>
-          </div>
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 500);
-  };
 
   const handlePrintInterno = (pedido) => {
     const printWindow = window.open('', '_blank');
