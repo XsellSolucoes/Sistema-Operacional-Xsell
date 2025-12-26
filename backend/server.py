@@ -1542,6 +1542,101 @@ async def update_licitacao_status(licitacao_id: str, status: str, current_user: 
     return {"message": "Status updated"}
 
 
+class FornecimentoCreate(BaseModel):
+    """Modelo para criar um fornecimento"""
+    produto_contrato_id: str
+    quantidade: float
+    data_fornecimento: datetime
+    numero_nota_fornecimento: Optional[str] = None
+    observacao: Optional[str] = None
+
+
+@api_router.post("/licitacoes/{licitacao_id}/fornecimentos")
+async def registrar_fornecimento(
+    licitacao_id: str, 
+    fornecimento: FornecimentoCreate, 
+    current_user: User = Depends(get_current_user)
+):
+    """Registra um fornecimento para um produto do contrato"""
+    lic = await db.licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    # Encontrar o produto no contrato
+    produto_encontrado = None
+    produto_index = -1
+    for i, p in enumerate(lic.get("produtos", [])):
+        if p.get("id") == fornecimento.produto_contrato_id:
+            produto_encontrado = p
+            produto_index = i
+            break
+    
+    if not produto_encontrado:
+        raise HTTPException(status_code=404, detail="Produto não encontrado no contrato")
+    
+    # Verificar se a quantidade não excede o disponível
+    qtd_contratada = produto_encontrado.get("quantidade_contratada", produto_encontrado.get("quantidade_empenhada", 0))
+    qtd_fornecida_atual = produto_encontrado.get("quantidade_fornecida", 0)
+    qtd_restante = qtd_contratada - qtd_fornecida_atual
+    
+    if fornecimento.quantidade > qtd_restante:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Quantidade excede o disponível no contrato. Restante: {qtd_restante}"
+        )
+    
+    # Criar registro de fornecimento
+    fornec_doc = {
+        "id": str(uuid.uuid4()),
+        "produto_contrato_id": fornecimento.produto_contrato_id,
+        "quantidade": fornecimento.quantidade,
+        "data_fornecimento": fornecimento.data_fornecimento.isoformat(),
+        "numero_nota_fornecimento": fornecimento.numero_nota_fornecimento,
+        "observacao": fornecimento.observacao,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Atualizar quantidade fornecida do produto
+    nova_qtd_fornecida = qtd_fornecida_atual + fornecimento.quantidade
+    nova_qtd_restante = qtd_contratada - nova_qtd_fornecida
+    
+    # Atualizar no banco
+    produtos = lic.get("produtos", [])
+    produtos[produto_index]["quantidade_fornecida"] = nova_qtd_fornecida
+    produtos[produto_index]["quantidade_restante"] = nova_qtd_restante
+    
+    fornecimentos = lic.get("fornecimentos", [])
+    fornecimentos.append(fornec_doc)
+    
+    # Calcular totais atualizados
+    qtd_total_contratada = sum(p.get("quantidade_contratada", p.get("quantidade_empenhada", 0)) for p in produtos)
+    qtd_total_fornecida = sum(p.get("quantidade_fornecida", 0) for p in produtos)
+    qtd_total_restante = qtd_total_contratada - qtd_total_fornecida
+    percentual = (qtd_total_fornecida / qtd_total_contratada * 100) if qtd_total_contratada > 0 else 0
+    
+    # Atualizar data de fornecimento efetivo se for o primeiro
+    update_data = {
+        "produtos": produtos,
+        "fornecimentos": fornecimentos,
+        "quantidade_total_fornecida": qtd_total_fornecida,
+        "quantidade_total_restante": qtd_total_restante,
+        "percentual_executado": percentual
+    }
+    
+    if not lic.get("fornecimento_efetivo"):
+        update_data["fornecimento_efetivo"] = fornecimento.data_fornecimento.isoformat()
+    
+    await db.licitacoes.update_one({"id": licitacao_id}, {"$set": update_data})
+    
+    return {
+        "message": "Fornecimento registrado com sucesso",
+        "fornecimento_id": fornec_doc["id"],
+        "quantidade_fornecida": nova_qtd_fornecida,
+        "quantidade_restante": nova_qtd_restante,
+        "percentual_executado": percentual
+    }
+
+
 @api_router.delete("/licitacoes/{licitacao_id}")
 async def delete_licitacao(licitacao_id: str, current_user: User = Depends(get_current_user)):
     result = await db.licitacoes.delete_one({"id": licitacao_id})
