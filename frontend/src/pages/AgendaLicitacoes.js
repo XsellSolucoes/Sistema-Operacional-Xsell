@@ -88,14 +88,14 @@ const tiposEvento = [
 
 // Portais predefinidos
 const portaisPredefinidos = [
-  'ComprasNet',
-  'BLL',
-  'Licitações-e',
+  'Bolsa de Licitações do Brasil (BLL)',
+  'BBMNET (Bolsa Brasileira)',
+  'Licitações-E',
+  'Compras.Gov',
   'Portal de Compras Públicas',
-  'Compras BR',
-  'Licitanet',
-  'Portal próprio do município',
-  'Outro'
+  'BNC',
+  'Banrisul',
+  'Outros'
 ];
 
 export default function AgendaLicitacoes() {
