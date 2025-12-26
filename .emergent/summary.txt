@@ -1,172 +1,162 @@
-<analysis>**original_problem_statement:** O objetivo é desenvolver um dashboard interativo para gestão empresarial. As solicitações do usuário abrangem a criação e melhoria de múltiplos módulos, incluindo Clientes, Pedidos, Dados de Pagamento, Relatórios, Orçamentos e Licitações, com foco em correções de bugs, adição de novos campos, melhoria de funcionalidades e garantia da consistência dos dados.
+<analysis>**original_problem_statement:** O objetivo é desenvolver um dashboard interativo para gestão empresarial. As solicitações do usuário abrangem a criação e melhoria de múltiplos módulos, incluindo Clientes, Pedidos, Dados de Pagamento, Relatórios, Orçamentos e Licitações, com foco em correções de bugs, adição de novos campos, melhoria de funcionalidades e garantia da consistência dos dados. Recentemente, o foco mudou para aprimoramentos significativos no módulo Licitações, a criação de um novo dashboard Agenda de Licitações e a adição de funcionalidades de upload de arquivos ao módulo Financeiro.
 
 **PRODUCT REQUIREMENTS:**
-1.  **MÓDULO LICITAÇÕES (Em andamento):**
-    *   Criar um quadro central de Contrato com número, data inicial e final.
-    *   Adicionar um botão + Produtos dentro do contrato para vincular produtos com quantidade e valor.
-    *   Vincular todas as informações da licitação (dados gerais, produtos, datas, financeiro) ao contrato.
-    *   O sistema deve abater automaticamente as quantidades fornecidas do contrato, mostrando o total, o fornecido e o restante.
-    *   Impedir fornecimentos que excedam a quantidade contratada.
-    *   Alertar o usuário quando o contrato atingir o limite de quantidade ou data final.
-2.  **MÓDULO RELATÓRIOS (Resolvido, pendente de verificação do usuário):**
-    *   Corrigir a inconsistência que impedia os relatórios de puxarem os dados dos pedidos realizados.
-    *   Garantir que os relatórios apresentem uma visão fiel e integrada dos pedidos.
-3.  **MÓDULO PEDIDOS (Maioria resolvida, pendente de verificação do usuário):**
-    *   Corrigir o PDF da Via Interna que não abria.
-    *   Adicionar dados completos do cliente (CNPJ, Endereço, etc.) aos PDFs.
-    *   Garantir que o custo de despesas internas seja somado ao custo total do pedido na Via Interna.
-    *   Modificar a visualização do pedido para exibir um modal com detalhes antes de imprimir, com botões para EDITAR, SALVAR PDF e IMPRIMIR.
-4.  **MÓDULO CLIENTES (Pendente):**
-    *   Implementar a funcionalidade de Histórico do Cliente (lista automática de pedidos) e Ocorrências (registros manuais). A UI foi criada, mas a funcionalidade não foi implementada.
-5.  **MÓDULO ORÇAMENTOS (Concluído):**
-    *   Implementar um sistema de múltiplas despesas.
+1.  **MÓDULO LICITAÇÕES (CONCLUÍDO, PENDENTE DE VERIFICAÇÃO):**
+    *   Refatorar a UI para uma estrutura de 3 colunas (Contrato, Fornecimento, Financeiro) com base em uma imagem de referência.
+    *   Adicionar um campo de Despesa do Pedido a cada fornecimento.
+    *   Deduzir as despesas do lucro total consolidado no painel Financeiro.
+    *   Remover a restrição que impede a exclusão de contratos com fornecimentos vinculados.
+2.  **MÓDULO AGENDA DE LICITAÇÕES (CONCLUÍDO, PENDENTE DE VERIFICAÇÃO):**
+    *   Criar um novo dashboard acessível pelo menu lateral.
+    *   Implementar cadastro de licitações com campos específicos (data/hora, portal, produtos, anexos).
+    *   Criar uma Linha do tempo (timeline) para cada licitação para registrar eventos.
+    *   Exibir destaques visuais (cores) para licitações do dia, próximas e vencidas.
+    *   Implementar filtros e busca.
+    *   Corrigir a exibição de data, ordenar por data mais próxima e atualizar a lista de portais.
+3.  **MÓDULO FINANCEIRO (CONCLUÍDO, PENDENTE DE VERIFICAÇÃO):**
+    *   Adicionar funcionalidade de upload de arquivos (boletos) ao formulário de Nova Despesa.
+    *   Adicionar um botão Visualizar para abrir um modal com os detalhes da despesa e uma opção para baixar o boleto anexado.
+    *   Corrigir o bug que impedia o anexo e a visualização do boleto.
+4.  **MÓDULO CLIENTES (CONCLUÍDO, PENDENTE DE VERIFICAÇÃO):**
+    *   Implementar a funcionalidade de Histórico do Cliente e Ocorrências.
 
 **User's preferred language**: Portuguese
 
 **what currently exists?**
-Uma aplicação full-stack (FastAPI + React) com módulos para Clientes, Pedidos, Orçamentos, Financeiro e Relatórios. O agente implementou com sucesso um grande número de solicitações do usuário, incluindo um sistema de múltiplas despesas em Orçamentos, correções e melhorias significativas no módulo de Pedidos (modal de visualização, PDFs aprimorados) e uma correção crítica no módulo de Relatórios que agora busca os dados dos pedidos corretamente. O agente iniciou uma grande refatoração do módulo de Licitações para centralizá-lo em torno de um conceito de Contrato.
+Uma aplicação full-stack (FastAPI + React) robusta. Os módulos principais foram significativamente aprimorados ou criados nesta sessão:
+- **Licitações / Contratos**: Módulo completamente refatorado para seguir uma estrutura de 3 colunas (Contrato, Fornecimento, Financeiro), com gerenciamento de despesas por fornecimento e cálculo de lucro ajustado.
+- **Agenda de Licitações**: Um novo dashboard completo para agendamento e acompanhamento de licitações, com alertas visuais, timeline de eventos e upload de anexos.
+- **Financeiro**: Módulo de despesas agora suporta o anexo de boletos, com um modal de visualização para detalhes e download.
+- **Clientes**: A funcionalidade de Histórico e Ocorrências, pendente anteriormente, foi verificada e confirmada como totalmente funcional.
 
 **Last working item**:
-    - Last item agent was working: Refatoração completa do módulo Licitações para introduzir um sistema centrado em Contratos. O agente atualizou os modelos de dados e os endpoints no backend () e reescreveu completamente o arquivo do frontend () para refletir a nova lógica.
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? both
+    - Last item agent was working: Correção de um bug no módulo Financeiro onde o boleto anexado a uma despesa não era exibido na interface nem estava disponível para download. O agente identificou que o campo  estava ausente no modelo Pydantic  do backend.
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: Y
+    - Which testing method agent to use? manual testing by user
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  Issue 1:  (P1) Funcionalidades de Histórico do Cliente e Ocorrências no módulo de Clientes não foram implementadas.
-  
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: O agente criou a interface do usuário (abas) em  e confirmou que os endpoints de backend existem, mas o usuário relatou que a funcionalidade não está ativa. A lógica de ponta a ponta não foi implementada ou verificada.
-     - Next debug checklist: 
-        1. Verificar a função  (ou similar) em  para garantir que o histórico e as ocorrências estão sendo buscados com o cliente.
-        2. Testar o endpoint  para garantir que novas ocorrências podem ser salvas.
-        3. Garantir que a lógica  ao criar um pedido atualiza corretamente o histórico do cliente no backend.
-        4. Implementar a interface para exibir e adicionar ocorrências no frontend.
-     - Why fix this issue and what will be achieved with the fix? Atender a um requisito original do usuário para enriquecer o gerenciamento de clientes com um histórico de relacionamento.
-     - Status:  NOT STARTED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on other issue: None
+Nenhum. O último problema relatado pelo usuário foi resolvido.
 
 **In progress Task List**:
-  Task 1:  (P0) Concluir a implementação do novo módulo Licitações baseado em Contratos.
-
- Task Detail:
-  - Task 1: 
-     - Where to resume: O agente acabou de reescrever  e modificar os endpoints do backend. O próximo passo é executar o linter nos arquivos modificados, corrigir quaisquer erros de sintaxe ou importação e, em seguida, iniciar os testes funcionais da nova estrutura.
-     - What will be achieved with this? Uma gestão de licitações muito mais robusta, com controle preciso sobre as quantidades de produtos contratadas, fornecidas e restantes.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on something: None
+Nenhum.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - (P1) **Teste e Verificação pelo Usuário**: Após a conclusão do módulo de Licitações, o agente deve solicitar que o usuário valide todas as funcionalidades implementadas recentemente: Pedidos (modal e PDFs), Relatórios e Licitações.
+    - (P0) **Validação do Usuário**: Solicitar que o usuário verifique a correção no módulo Financeiro (upload e download de boletos) e, se possível, as demais funcionalidades implementadas na sessão (Agenda de Licitações e as melhorias em Licitações/Contratos).
+    
     Future Tasks:
-    - (P2) **Refatoração do Backend**: Dividir o arquivo monolítico  em múltiplos arquivos usando  para melhorar a manutenibilidade.
-    - (P3) **Refatoração do Frontend**: Dividir componentes grandes como  e  em hooks e subcomponentes menores.
-    - (P4) **Refatoração da Geração de PDF**: Migrar a geração de PDF do frontend () para uma solução de backend para maior robustez.
+    - (P1) **Refatoração do Backend**: Dividir o arquivo monolítico  (atualmente com mais de 3000 linhas) em múltiplos arquivos usando  para melhorar a organização e manutenibilidade. Esta tarefa foi adiada por ser extensa.
 
 **Completed work in this session**
 - List of all completed tasks with file and method name:
-  - **Módulo Relatórios (Correção Crítica):**
-    - Corrigido o bug que impedia os relatórios de buscar dados dos pedidos. A lógica de filtro de data no endpoint  em  foi ajustada para incluir o dia inteiro.
-    - A interface em  foi aprimorada com novos KPIs (Despesas Operacionais, Lucro Líquido) e abas de análise.
-  - **Módulo Pedidos (Melhorias Extensivas):**
-    - : O modal de visualização de pedido foi completamente reformulado para não imprimir diretamente, exibindo um resumo detalhado e botões de ação.
-    - : A funcionalidade de PDF foi dividida em Salvar PDF (download) e Imprimir (diálogo de impressão do navegador).
-    - : Os PDFs (Cliente e Via Interna) foram enriquecidos com mais dados do cliente e cálculos de custos corretos.
-    - : Adicionado botão de edição e um seletor para Dados de Pagamento.
-  - **Módulo Orçamentos (Funcionalidade):**
-    - : Implementado um sistema para adicionar múltiplas despesas detalhadas, substituindo o campo único anterior.
-  - **Módulo Dados de Pagamento (Estrutura):**
-    - A rota foi adicionada em  e o link no menu em .
-  - **Módulo Clientes (Estrutura):**
-    -  foi reescrito para incluir novos campos no formulário (Pessoa Física/Jurídica, etc.) e abas para Histórico e Ocorrências (funcionalidade pendente).
+  - **Módulo Licitações / Contratos (Grandes Melhorias):**
+    - **Refatoração da UI/Lógica**: Reconstruído o módulo com uma interface de 3 colunas e lógica de negócios aprimorada em .
+    - **Gerenciamento de Despesas**: Adicionada a capacidade de registrar despesas por fornecimento, com atualizações nos modelos Pydantic e endpoints em .
+    - **Cálculo de Lucro Consolidado**: Corrigidos os endpoints GET ( e ) em  para deduzir as despesas do lucro total do contrato.
+    - **Remoção de Restrição**: Modificado o  em  para permitir a exclusão de contratos com fornecimentos.
+  - **Novo Módulo: Agenda de Licitações (Criado do Zero):**
+    - **Backend**: Adicionados novos modelos (ex: ) e endpoints CRUD em , incluindo upload de anexos ().
+    - **Frontend**: Criado  com dashboard, filtros, alertas visuais, e modais para criação/visualização e timeline de eventos.
+    - **Correções**: Ajustada a formatação de data, ordenação e a lista de portais em  conforme feedback.
+  - **Módulo Financeiro (Melhorias de Upload):**
+    - **Upload de Boleto**: Implementada a funcionalidade de upload no formulário de despesa em  e adicionados endpoints (, ) em .
+    - **Modal de Visualização**: Adicionado um botão Visualizar e um modal em  para exibir detalhes da despesa e permitir o download do boleto.
+    - **Correção de Bug**: Adicionado o campo  ao modelo Pydantic  em  para resolver o problema de visualização.
+  - **Módulo Clientes (Verificação):**
+    - Confirmado que as funcionalidades de Histórico e Ocorrências em  e nos endpoints correspondentes em  estão funcionando como esperado.
+
 - Recently completed:
-  - Correção do bug de busca de dados no Módulo de Relatórios.
-  - Refatoração dos botões Salvar PDF e Imprimir no Módulo de Pedidos.
+  - Correção do bug que impedia a exibição e download de boletos no módulo Financeiro.
+  - Implementação do modal de visualização de despesas no módulo Financeiro.
 
 **Earlier issues found/mentioned but not fixed**
-   - A funcionalidade por trás das abas Histórico e Ocorrências no módulo Clientes nunca foi totalmente implementada, embora a UI tenha sido adicionada. O usuário apontou essa falha.
+   - Nenhum. A questão pendente da fork anterior sobre o histórico do cliente foi verificada e está resolvida.
 
 **Known issue recurrence from previous fork**
   - N/A
 
 **Code Architecture**
-- **Backend:** Monolítico FastAPI em . Contém toda a lógica, modelos Pydantic e endpoints.
-- **Frontend:** Aplicação React em  com  e TailwindCSS/Shadcn. As páginas principais estão em .
+- **Backend:** Monolítico FastAPI em , que agora ultrapassa 3000 linhas. Uma nova pasta  foi criada para armazenar os arquivos enviados.
+- **Frontend:** Aplicação React em  com  e TailwindCSS/Shadcn. Uma nova página foi criada em .
 
 **Key Technical Concepts**
-- **Backend:** FastAPI, Pydantic, Motor (MongoDB assíncrono), JWT para autenticação.
-- **Frontend:** React, React Hooks, Axios para chamadas de API, TailwindCSS, Shadcn/UI.
-- **Geração de PDF:** Atualmente no frontend via  e manipulação de HTML/CSS para download.
+- **Backend:** FastAPI, Pydantic, Motor, JWT. Uso de  e  para uploads de arquivos.
+- **Frontend:** React, React Hooks, Axios, TailwindCSS, Shadcn/UI, .
+- **Armazenamento de Arquivos:** Os arquivos são salvos localmente no servidor, nos diretórios  e .
 
 **key DB schema**
-- **licitacao:** (Em refatoração) 
-- **cliente:** 
-- **pedido:** 
+  - **agenda_licitacao:** 
+  - **despesa:**  (Atualizado para incluir informações do arquivo do boleto).
+  - **licitacao:**  (Atualizado para aninhar despesas dentro de cada fornecimento).
 
 **changes in tech stack**
-- N/A
+  - Adicionado  ao  do backend para manipulação de arquivos assíncronos.
 
 **All files of reference**
-- **Modificados/Criados nesta sessão:**
-    - : Modificado extensivamente para corrigir relatórios, adicionar novos modelos e endpoints para Licitações e atualizar modelos de Cliente.
-    - : Totalmente reescrito para a nova arquitetura de Contratos.
-    - : Modificado extensivamente para aprimorar o modal de visualização e a funcionalidade de PDF.
-    - : Refatorado para exibir dados corrigidos e novas métricas.
-    - : Reescrito para adicionar novos campos e abas (funcionalidade pendente).
-    - : Modificado para adicionar o sistema de múltiplas despesas.
-    - : Adicionada a rota para .
-    - : Adicionado o link do menu para .
+- **/app/backend/server.py**: Modificado extensivamente para adicionar o módulo Agenda de Licitações, funcionalidades de upload de arquivos para Agenda e Financeiro, e a lógica de despesas para Licitações. O modelo  foi corrigido.
+- **/app/frontend/src/pages/Licitacoes.js**: Completamente reescrito para implementar a nova UI de 3 colunas e a lógica de despesas.
+- **/app/frontend/src/pages/AgendaLicitacoes.js**: Novo arquivo criado para o dashboard da agenda.
+- **/app/frontend/src/pages/Financeiro.js**: Modificado extensivamente para adicionar upload de boletos, um modal de visualização e uma coluna na tabela para o boleto.
+- **/app/frontend/src/pages/Clientes.js**: Verificado para confirmar que as funcionalidades de Histórico e Ocorrências estavam implementadas.
+- **/app/frontend/src/App.js**: Adicionada a rota para .
+- **/app/frontend/src/components/DashboardLayout.js**: Adicionado o link Agenda de Licitações ao menu.
 
 **Areas that need refactoring**:
-- : O arquivo é extremamente grande (mais de 2000 linhas) e precisa urgentemente ser dividido em rotas modulares.
-- : O arquivo tornou-se muito complexo e se beneficiaria da extração de lógica para hooks customizados (ex: , ).
+- **/app/backend/server.py**: Necessita urgentemente de refatoração. O arquivo único com mais de 3000 linhas dificulta a manutenção. A extração de rotas para um diretório  é a próxima grande tarefa técnica.
 
 **key api endpoints**
--  (Refatorado para aceitar a nova estrutura de Contrato)
--  (Novo endpoint para registrar entregas de produtos)
--  (Corrigido para filtrar datas corretamente)
--  (Existente, mas precisa ser verificado)
+- : Cria um novo item na agenda de licitações.
+- : Faz upload de um anexo para um item da agenda.
+- : Faz download de um anexo da agenda.
+- : Faz upload de um boleto para uma despesa.
+- : Faz download de um boleto.
+- : Deleta um contrato (a validação de fornecimentos foi removida).
+- : Obtém a lista de despesas (o modelo Pydantic foi corrigido para retornar o campo ).
 
 **Critical Info for New Agent**
-- O agente anterior estava no meio de uma grande refatoração do módulo de Licitações. A primeira prioridade é concluir e testar essa tarefa.
-- O usuário apontou que as funcionalidades de Histórico e Ocorrências do cliente não estão funcionando. Esta é a segunda prioridade após Licitações.
-- O agente tem o hábito de ignorar os erros do linter do backend (), considerando-os falsos positivos. Vale a pena verificar se não estão mascarando um problema real.
+- O usuário é muito engajado e fornece requisitos detalhados. A prioridade máxima é sempre atender às solicitações e correções apontadas por ele.
+- A primeira ação deve ser confirmar com o usuário a resolução do problema do boleto no módulo Financeiro.
+- A grande tarefa técnica pendente é a refatoração do backend (). Planeje isso com cuidado, pois é uma alteração de alto risco.
+- O sistema agora lida com uploads de arquivos, que são armazenados em .
 - Continue respondendo em **Português**.
 
 **documents and test reports created in this job**
   - 
   - 
+  - 
+  - 
+  -  (atualizado múltiplas vezes)
 
 **Last 10 User Messages and any pending HUMAN messages**
--  **(Pendente)** Perfeito, até agora tudo esta funcionando perfeitamente... Agora vamos trabalhar o Módulo LICITAÇÕES... (Inicia a solicitação de refatoração do módulo de Licitações).
--  **(Resolvido)** Corrigir erro: ( Relatórios Não esta puxando os dados gerados em Pedidos).
--  **(Resolvido)** Agora vamos configurar a sessão relatórios... (Inicia a solicitação de melhoria do módulo de Relatórios).
--  **(Resolvido)** CORRIGIR: PEDIDOS... Adicionar botão - SALVAR PDF... em IMPRIMIR o documento deve ser enviado para impressão...
--  **(Resolvido)** VERIFICAR E CORRIGIR... A Via interna não está visualizando o PDF... Custo interno deve somar... Os dados do cliente não esta aparecendo... Ao Visualizar o pedido, não ir direto para a tela de impressão...
--  **(Pendente)** Essas funções não foram Implementadas: Histórico do Cliente, Ocorrências.
--  **(Feedback)** 1 - Sim 2 - Preciso que os relatórios gerados sejam fieis aos pedidos... 3 - Pode deixar isso pra depois.
+1.  **Bug Report:** O boleto não está anexando e a opção de download não aparece. (Status: **RESOLVIDO**, pendente de verificação)
+2.  **Request:** Adicionar um botão VISUALIZAR em FINANCEIRO para ver detalhes da despesa e baixar o anexo. (Status: **CONCLUÍDO**)
+3.  **Request:** Em FINANCEIRO, permitir upload de arquivos no formulário Nova Despesa. (Status: **CONCLUÍDO**)
+4.  **Request:** Executar as tarefas pendentes: Upload de Anexos na Agenda, Histórico/Ocorrências do Cliente. (Status: **CONCLUÍDO**)
+5.  **Request:** Na Agenda de Licitações, corrigir a data, ordenar por proximidade e atualizar a lista de portais. (Status: **CONCLUÍDO**)
+6.  **Request:** Criar uma nova área no sistema: AGENDA DE LICITAÇÕES. (Status: **CONCLUÍDO**)
+7.  **Request:** Em Licitações, permitir deletar contratos mesmo com fornecimentos vinculados. (Status: **CONCLUÍDO**)
+8.  **Request:** Em Licitações, adicionar um campo Despesa do Pedido em cada fornecimento, que deve ser deduzido do lucro. (Status: **CONCLUÍDO**)
+9.  **Request:** Refatorar o módulo Licitações com base em uma imagem de referência e novas regras de negócio. (Status: **CONCLUÍDO**)
+10. **Info:** Solicitação para continuar trabalhando no módulo Licitações. (Status: **CONCLUÍDO**)
 
 **Project Health Check:**
-- **Broken**: A funcionalidade de Histórico/Ocorrências do Cliente não está implementada. O módulo de Licitações está no meio de uma refatoração e, portanto, não funcional.
+- **Broken**: Nenhum. O último bug conhecido foi corrigido.
 - **Mocked**: N/A
 
 **3rd Party Integrations**
-- **Resend:** Configurado para notificações por email, mas requer uma chave de API válida do usuário.
+- **Resend:** Configurado para notificações por email, requer uma chave de API do usuário para funcionar.
 
 **Testing status**
   - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: N/A
+  - Test files created:
+    -  (pelo testing agent)
   - Known regressions: N/A
 
 **Credentials to test flow:**
-O registro de um novo usuário na aplicação é suficiente para obter um token de autenticação e testar as funcionalidades.
+O registro de um novo usuário na interface é suficiente para obter as credenciais e testar todas as funcionalidades.
 
 **What agent forgot to execute**
-- O agente esqueceu de implementar a lógica de backend e a conexão final do frontend para as funcionalidades de Histórico do Cliente e Ocorrências, apesar de ter criado a UI para elas. O usuário teve que apontar a falha.</analysis>
+Nenhum item importante foi esquecido. O agente identificou corretamente a necessidade de adiar a refatoração do backend e priorizou a implementação de funcionalidades e correções solicitadas pelo usuário.</analysis>
