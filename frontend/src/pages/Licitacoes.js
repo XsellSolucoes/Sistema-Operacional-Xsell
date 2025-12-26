@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Eye, Pencil, Trash2, X, FileText, DollarSign, Package, Calendar, Building2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Plus, Eye, Pencil, Trash2, FileText, Package, Calendar, Wallet, Truck, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 
@@ -19,52 +20,58 @@ const getAuthHeader = () => ({
   headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
 });
 
-const ESTADOS_BR = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
-  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
-
-const STATUS_PAGAMENTO = [
-  { value: 'pendente', label: 'Pendente', color: 'secondary' },
-  { value: 'programado', label: 'Programado', color: 'default' },
-  { value: 'pago', label: 'Pago', color: 'default' }
-];
-
 export default function Licitacoes() {
   const [licitacoes, setLicitacoes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
+  const [fornecimentoOpen, setFornecimentoOpen] = useState(false);
   const [viewingLicitacao, setViewingLicitacao] = useState(null);
   const [editingLicitacao, setEditingLicitacao] = useState(null);
-  
+  const [produtoSelecionadoFornecimento, setProdutoSelecionadoFornecimento] = useState(null);
+
+  // Estado do formulário principal
   const [formData, setFormData] = useState({
+    // Contrato
+    numero_contrato: '',
+    data_inicio_contrato: '',
+    data_fim_contrato: '',
+    // Dados Gerais
     numero_licitacao: '',
     cidade: '',
     estado: '',
     orgao_publico: '',
     numero_empenho: '',
-    data_empenho: new Date().toISOString().split('T')[0],
+    data_empenho: '',
     numero_nota_empenho: '',
-    numero_nota_fornecimento: '',
+    // Datas
     previsao_fornecimento: '',
-    fornecimento_efetivo: '',
     previsao_pagamento: '',
+    // Financeiro
     frete: '0',
     impostos: '0',
     outras_despesas: '0',
     descricao_outras_despesas: ''
   });
-  
-  const [itensLicitacao, setItensLicitacao] = useState([]);
+
+  // Estado dos produtos do contrato
+  const [itensContrato, setItensContrato] = useState([]);
   const [novoItem, setNovoItem] = useState({
+    produto_id: '',
     descricao: '',
-    quantidade_empenhada: '1',
-    quantidade_fornecida: '0',
+    quantidade_contratada: '1',
     preco_compra: '0',
     preco_venda: '0',
     despesas_extras: '0'
+  });
+
+  // Estado do fornecimento
+  const [fornecimentoData, setFornecimentoData] = useState({
+    quantidade: '',
+    data_fornecimento: new Date().toISOString().split('T')[0],
+    numero_nota_fornecimento: '',
+    observacao: ''
   });
 
   useEffect(() => {
@@ -73,12 +80,12 @@ export default function Licitacoes() {
 
   const fetchData = async () => {
     try {
-      const [licitacoesRes, produtosRes] = await Promise.all([
+      const [licRes, prodRes] = await Promise.all([
         axios.get(`${API}/licitacoes`, getAuthHeader()),
         axios.get(`${API}/produtos`, getAuthHeader())
       ]);
-      setLicitacoes(licitacoesRes.data);
-      setProdutos(produtosRes.data);
+      setLicitacoes(licRes.data);
+      setProdutos(prodRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados');
     } finally {
@@ -88,27 +95,28 @@ export default function Licitacoes() {
 
   const resetForm = () => {
     setFormData({
+      numero_contrato: '',
+      data_inicio_contrato: '',
+      data_fim_contrato: '',
       numero_licitacao: '',
       cidade: '',
       estado: '',
       orgao_publico: '',
       numero_empenho: '',
-      data_empenho: new Date().toISOString().split('T')[0],
+      data_empenho: '',
       numero_nota_empenho: '',
-      numero_nota_fornecimento: '',
       previsao_fornecimento: '',
-      fornecimento_efetivo: '',
       previsao_pagamento: '',
       frete: '0',
       impostos: '0',
       outras_despesas: '0',
       descricao_outras_despesas: ''
     });
-    setItensLicitacao([]);
+    setItensContrato([]);
     setNovoItem({
+      produto_id: '',
       descricao: '',
-      quantidade_empenhada: '1',
-      quantidade_fornecida: '0',
+      quantidade_contratada: '1',
       preco_compra: '0',
       preco_venda: '0',
       despesas_extras: '0'
@@ -116,70 +124,84 @@ export default function Licitacoes() {
     setEditingLicitacao(null);
   };
 
-  const adicionarItem = () => {
+  const adicionarProdutoContrato = () => {
     if (!novoItem.descricao) {
       toast.error('Digite a descrição do produto');
       return;
     }
 
-    const qtdEmpenhada = parseFloat(novoItem.quantidade_empenhada) || 0;
-    const qtdFornecida = parseFloat(novoItem.quantidade_fornecida) || 0;
+    const qtdContratada = parseFloat(novoItem.quantidade_contratada) || 0;
     const precoCompra = parseFloat(novoItem.preco_compra) || 0;
     const precoVenda = parseFloat(novoItem.preco_venda) || 0;
     const despesasExtras = parseFloat(novoItem.despesas_extras) || 0;
-    const qtdRestante = qtdEmpenhada - qtdFornecida;
     const lucroUnitario = precoVenda - precoCompra - despesasExtras;
+    const valorTotal = precoVenda * qtdContratada;
 
     const item = {
+      id: Date.now().toString(),
+      produto_id: novoItem.produto_id,
       descricao: novoItem.descricao,
-      quantidade_empenhada: qtdEmpenhada,
-      quantidade_fornecida: qtdFornecida,
-      quantidade_restante: qtdRestante,
+      quantidade_contratada: qtdContratada,
+      quantidade_fornecida: 0,
+      quantidade_restante: qtdContratada,
       preco_compra: precoCompra,
       preco_venda: precoVenda,
+      valor_total: valorTotal,
       despesas_extras: despesasExtras,
       lucro_unitario: lucroUnitario
     };
 
-    setItensLicitacao([...itensLicitacao, item]);
+    setItensContrato([...itensContrato, item]);
     setNovoItem({
+      produto_id: '',
       descricao: '',
-      quantidade_empenhada: '1',
-      quantidade_fornecida: '0',
+      quantidade_contratada: '1',
       preco_compra: '0',
       preco_venda: '0',
       despesas_extras: '0'
     });
-    toast.success('Produto adicionado!');
+    toast.success('Produto adicionado ao contrato!');
   };
 
   const removerItem = (index) => {
-    setItensLicitacao(itensLicitacao.filter((_, i) => i !== index));
+    setItensContrato(itensContrato.filter((_, i) => i !== index));
   };
 
   const calcularTotais = () => {
-    const valorTotalVenda = itensLicitacao.reduce((acc, item) => acc + (item.preco_venda * item.quantidade_empenhada), 0);
-    const valorTotalCompra = itensLicitacao.reduce((acc, item) => acc + (item.preco_compra * item.quantidade_empenhada), 0);
-    const despesasProdutos = itensLicitacao.reduce((acc, item) => acc + (item.despesas_extras * item.quantidade_empenhada), 0);
+    const valorTotalVenda = itensContrato.reduce((acc, item) => acc + item.valor_total, 0);
+    const valorTotalCompra = itensContrato.reduce((acc, item) => acc + (item.preco_compra * item.quantidade_contratada), 0);
+    const despesasProdutos = itensContrato.reduce((acc, item) => acc + (item.despesas_extras * item.quantidade_contratada), 0);
     const frete = parseFloat(formData.frete) || 0;
     const impostos = parseFloat(formData.impostos) || 0;
     const outrasDespesas = parseFloat(formData.outras_despesas) || 0;
     const despesasTotais = despesasProdutos + frete + impostos + outrasDespesas;
     const lucroTotal = valorTotalVenda - valorTotalCompra - despesasTotais;
+    const qtdTotalContratada = itensContrato.reduce((acc, item) => acc + item.quantidade_contratada, 0);
 
-    return { valorTotalVenda, valorTotalCompra, despesasTotais, lucroTotal };
+    return { valorTotalVenda, valorTotalCompra, despesasTotais, lucroTotal, qtdTotalContratada };
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (itensLicitacao.length === 0) {
-      toast.error('Adicione pelo menos um produto');
+    if (!formData.numero_contrato) {
+      toast.error('Informe o número do contrato');
+      return;
+    }
+    if (!formData.data_inicio_contrato || !formData.data_fim_contrato) {
+      toast.error('Informe as datas do contrato');
+      return;
+    }
+    if (itensContrato.length === 0) {
+      toast.error('Adicione pelo menos um produto ao contrato');
       return;
     }
 
     try {
       const payload = {
+        numero_contrato: formData.numero_contrato,
+        data_inicio_contrato: new Date(formData.data_inicio_contrato).toISOString(),
+        data_fim_contrato: new Date(formData.data_fim_contrato).toISOString(),
         numero_licitacao: formData.numero_licitacao,
         cidade: formData.cidade,
         estado: formData.estado,
@@ -187,10 +209,12 @@ export default function Licitacoes() {
         numero_empenho: formData.numero_empenho,
         data_empenho: new Date(formData.data_empenho).toISOString(),
         numero_nota_empenho: formData.numero_nota_empenho,
-        numero_nota_fornecimento: formData.numero_nota_fornecimento || null,
-        produtos: itensLicitacao,
+        produtos: itensContrato.map(item => ({
+          ...item,
+          quantidade_contratada: item.quantidade_contratada,
+          quantidade_fornecida: item.quantidade_fornecida || 0
+        })),
         previsao_fornecimento: formData.previsao_fornecimento ? new Date(formData.previsao_fornecimento).toISOString() : null,
-        fornecimento_efetivo: formData.fornecimento_efetivo ? new Date(formData.fornecimento_efetivo).toISOString() : null,
         previsao_pagamento: formData.previsao_pagamento ? new Date(formData.previsao_pagamento).toISOString() : null,
         frete: parseFloat(formData.frete) || 0,
         impostos: parseFloat(formData.impostos) || 0,
@@ -211,13 +235,18 @@ export default function Licitacoes() {
       fetchData();
     } catch (error) {
       console.error(error);
-      toast.error('Erro ao salvar licitação');
+      toast.error(error.response?.data?.detail || 'Erro ao salvar licitação');
     }
   };
 
   const handleEdit = (licitacao) => {
     setEditingLicitacao(licitacao);
+    const contrato = licitacao.contrato || {};
+    
     setFormData({
+      numero_contrato: contrato.numero_contrato || licitacao.numero_licitacao || '',
+      data_inicio_contrato: contrato.data_inicio ? new Date(contrato.data_inicio).toISOString().split('T')[0] : '',
+      data_fim_contrato: contrato.data_fim ? new Date(contrato.data_fim).toISOString().split('T')[0] : '',
       numero_licitacao: licitacao.numero_licitacao,
       cidade: licitacao.cidade,
       estado: licitacao.estado,
@@ -225,16 +254,24 @@ export default function Licitacoes() {
       numero_empenho: licitacao.numero_empenho,
       data_empenho: licitacao.data_empenho ? new Date(licitacao.data_empenho).toISOString().split('T')[0] : '',
       numero_nota_empenho: licitacao.numero_nota_empenho || '',
-      numero_nota_fornecimento: licitacao.numero_nota_fornecimento || '',
       previsao_fornecimento: licitacao.previsao_fornecimento ? new Date(licitacao.previsao_fornecimento).toISOString().split('T')[0] : '',
-      fornecimento_efetivo: licitacao.fornecimento_efetivo ? new Date(licitacao.fornecimento_efetivo).toISOString().split('T')[0] : '',
       previsao_pagamento: licitacao.previsao_pagamento ? new Date(licitacao.previsao_pagamento).toISOString().split('T')[0] : '',
       frete: licitacao.frete?.toString() || '0',
       impostos: licitacao.impostos?.toString() || '0',
       outras_despesas: licitacao.outras_despesas?.toString() || '0',
       descricao_outras_despesas: licitacao.descricao_outras_despesas || ''
     });
-    setItensLicitacao(licitacao.produtos || []);
+    
+    // Converter produtos para o formato do formulário
+    const produtosConvertidos = (licitacao.produtos || []).map(p => ({
+      ...p,
+      quantidade_contratada: p.quantidade_contratada || p.quantidade_empenhada || 0,
+      quantidade_fornecida: p.quantidade_fornecida || 0,
+      quantidade_restante: (p.quantidade_contratada || p.quantidade_empenhada || 0) - (p.quantidade_fornecida || 0),
+      valor_total: (p.preco_venda || 0) * (p.quantidade_contratada || p.quantidade_empenhada || 0)
+    }));
+    
+    setItensContrato(produtosConvertidos);
     setOpen(true);
   };
 
@@ -255,26 +292,82 @@ export default function Licitacoes() {
     }
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (id, novoStatus) => {
     try {
-      await axios.put(`${API}/licitacoes/${id}/status?status=${newStatus}`, {}, getAuthHeader());
-      toast.success(`Status atualizado para ${STATUS_PAGAMENTO.find(s => s.value === newStatus)?.label}!`);
-      if (newStatus === 'pago') {
-        toast.success('Valor creditado no caixa!');
-      }
+      await axios.put(`${API}/licitacoes/${id}/status?status=${novoStatus}`, {}, getAuthHeader());
+      toast.success('Status atualizado!');
       fetchData();
     } catch (error) {
       toast.error('Erro ao atualizar status');
     }
   };
 
+  const abrirFornecimento = (produto) => {
+    setProdutoSelecionadoFornecimento(produto);
+    setFornecimentoData({
+      quantidade: '',
+      data_fornecimento: new Date().toISOString().split('T')[0],
+      numero_nota_fornecimento: '',
+      observacao: ''
+    });
+    setFornecimentoOpen(true);
+  };
+
+  const registrarFornecimento = async () => {
+    if (!fornecimentoData.quantidade || parseFloat(fornecimentoData.quantidade) <= 0) {
+      toast.error('Informe uma quantidade válida');
+      return;
+    }
+
+    const qtdRestante = (produtoSelecionadoFornecimento.quantidade_contratada || produtoSelecionadoFornecimento.quantidade_empenhada || 0) 
+                        - (produtoSelecionadoFornecimento.quantidade_fornecida || 0);
+    
+    if (parseFloat(fornecimentoData.quantidade) > qtdRestante) {
+      toast.error(`Quantidade excede o disponível no contrato. Máximo: ${qtdRestante}`);
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${API}/licitacoes/${viewingLicitacao.id}/fornecimentos`,
+        {
+          produto_contrato_id: produtoSelecionadoFornecimento.id,
+          quantidade: parseFloat(fornecimentoData.quantidade),
+          data_fornecimento: new Date(fornecimentoData.data_fornecimento).toISOString(),
+          numero_nota_fornecimento: fornecimentoData.numero_nota_fornecimento || null,
+          observacao: fornecimentoData.observacao || null
+        },
+        getAuthHeader()
+      );
+      
+      toast.success('Fornecimento registrado com sucesso!');
+      setFornecimentoOpen(false);
+      
+      // Atualizar dados
+      const response = await axios.get(`${API}/licitacoes/${viewingLicitacao.id}`, getAuthHeader());
+      setViewingLicitacao(response.data);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao registrar fornecimento');
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value) => {
+    return (value || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   const getStatusBadge = (status) => {
-    const statusInfo = STATUS_PAGAMENTO.find(s => s.value === status) || STATUS_PAGAMENTO[0];
-    return (
-      <Badge variant={statusInfo.color} className={status === 'pago' ? 'bg-green-600' : status === 'programado' ? 'bg-blue-600' : ''}>
-        {statusInfo.label.toUpperCase()}
-      </Badge>
-    );
+    const config = {
+      'pendente': { variant: 'secondary', label: 'Pendente' },
+      'pago': { variant: 'default', label: 'Pago' }
+    };
+    const { variant, label } = config[status] || config.pendente;
+    return <Badge variant={variant}>{label}</Badge>;
   };
 
   const totais = calcularTotais();
@@ -292,384 +385,351 @@ export default function Licitacoes() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-heading font-bold tracking-tight text-primary">Licitações</h1>
-          <p className="text-muted-foreground mt-2">Gerencie contratos públicos e empenhos</p>
+          <p className="text-muted-foreground mt-2">Gerencie contratos e licitações públicas</p>
         </div>
-        <Dialog open={open} onOpenChange={(isOpen) => {
-          setOpen(isOpen);
-          if (!isOpen) resetForm();
-        }}>
+        <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-secondary hover:bg-secondary/90" data-testid="nova-licitacao-button">
+            <Button className="bg-secondary hover:bg-secondary/90" data-testid="add-licitacao-button">
               <Plus className="h-4 w-4 mr-2" />
               Nova Licitação
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-heading">
-                {editingLicitacao ? 'Editar Licitação' : 'Nova Licitação'}
-              </DialogTitle>
-              <DialogDescription>
-                Preencha todos os campos para cadastrar a licitação
-              </DialogDescription>
+              <DialogTitle>{editingLicitacao ? 'Editar Licitação' : 'Nova Licitação'}</DialogTitle>
+              <DialogDescription>Preencha os dados do contrato e adicione os produtos</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <Tabs defaultValue="dados" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="dados"><Building2 className="h-4 w-4 mr-2" />Dados Gerais</TabsTrigger>
-                  <TabsTrigger value="produtos"><Package className="h-4 w-4 mr-2" />Produtos</TabsTrigger>
-                  <TabsTrigger value="datas"><Calendar className="h-4 w-4 mr-2" />Datas</TabsTrigger>
-                  <TabsTrigger value="financeiro"><DollarSign className="h-4 w-4 mr-2" />Financeiro</TabsTrigger>
-                </TabsList>
-                
-                {/* Tab Dados Gerais */}
-                <TabsContent value="dados" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Número da Licitação *</Label>
-                      <Input
-                        value={formData.numero_licitacao}
-                        onChange={(e) => setFormData({...formData, numero_licitacao: e.target.value})}
-                        placeholder="Ex: PE-001/2024"
-                        required
-                        data-testid="numero-licitacao-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Órgão Público *</Label>
-                      <Input
-                        value={formData.orgao_publico}
-                        onChange={(e) => setFormData({...formData, orgao_publico: e.target.value})}
-                        placeholder="Nome do órgão público"
-                        required
-                        data-testid="orgao-publico-input"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <Label>Cidade *</Label>
-                      <Input
-                        value={formData.cidade}
-                        onChange={(e) => setFormData({...formData, cidade: e.target.value})}
-                        placeholder="Nome da cidade"
-                        required
-                        data-testid="cidade-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Estado *</Label>
-                      <Select value={formData.estado} onValueChange={(v) => setFormData({...formData, estado: v})}>
-                        <SelectTrigger data-testid="estado-select">
-                          <SelectValue placeholder="UF" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ESTADOS_BR.map(uf => (
-                            <SelectItem key={uf} value={uf}>{uf}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Número do Empenho *</Label>
-                      <Input
-                        value={formData.numero_empenho}
-                        onChange={(e) => setFormData({...formData, numero_empenho: e.target.value})}
-                        placeholder="Nº Empenho"
-                        required
-                        data-testid="numero-empenho-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Data do Empenho *</Label>
-                      <Input
-                        type="date"
-                        value={formData.data_empenho}
-                        onChange={(e) => setFormData({...formData, data_empenho: e.target.value})}
-                        required
-                        data-testid="data-empenho-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Nº Nota de Empenho</Label>
-                      <Input
-                        value={formData.numero_nota_empenho}
-                        onChange={(e) => setFormData({...formData, numero_nota_empenho: e.target.value})}
-                        placeholder="Nº NE"
-                        data-testid="numero-nota-empenho-input"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nº Nota de Fornecimento</Label>
-                    <Input
-                      value={formData.numero_nota_fornecimento}
-                      onChange={(e) => setFormData({...formData, numero_nota_fornecimento: e.target.value})}
-                      placeholder="Nº NF"
-                      data-testid="numero-nota-fornecimento-input"
-                    />
-                  </div>
-                </TabsContent>
-                
-                {/* Tab Produtos */}
-                <TabsContent value="produtos" className="space-y-4 mt-4">
-                  <Card className="bg-slate-50">
+              <div className="grid grid-cols-3 gap-6">
+                {/* QUADRO CONTRATO - Elemento Central */}
+                <div className="col-span-1">
+                  <Card className="border-2 border-primary bg-primary/5 sticky top-0">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">Adicionar Produto</CardTitle>
+                      <CardTitle className="flex items-center gap-2 text-primary">
+                        <FileText className="h-5 w-5" />
+                        Contrato
+                      </CardTitle>
+                      <CardDescription>Elemento central da licitação</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Descrição do Produto *</Label>
+                        <Label htmlFor="numero_contrato" className="text-primary font-semibold">Número do Contrato *</Label>
                         <Input
-                          value={novoItem.descricao}
-                          onChange={(e) => setNovoItem({...novoItem, descricao: e.target.value})}
-                          placeholder="Descrição do produto empenhado"
-                          data-testid="produto-descricao-input"
+                          id="numero_contrato"
+                          value={formData.numero_contrato}
+                          onChange={(e) => setFormData({...formData, numero_contrato: e.target.value})}
+                          required
+                          placeholder="Ex: CT-2025/001"
+                          className="border-primary/30"
                         />
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>Qtd Empenhada *</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={novoItem.quantidade_empenhada}
-                            onChange={(e) => setNovoItem({...novoItem, quantidade_empenhada: e.target.value})}
-                            data-testid="quantidade-empenhada-input"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Qtd Fornecida</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={novoItem.quantidade_fornecida}
-                            onChange={(e) => setNovoItem({...novoItem, quantidade_fornecida: e.target.value})}
-                            data-testid="quantidade-fornecida-input"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Qtd Restante</Label>
-                          <Input
-                            type="number"
-                            value={(parseFloat(novoItem.quantidade_empenhada) || 0) - (parseFloat(novoItem.quantidade_fornecida) || 0)}
-                            disabled
-                            className="bg-slate-100"
-                          />
+                      <div className="space-y-2">
+                        <Label className="text-primary font-semibold">Data Inicial *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_inicio_contrato}
+                          onChange={(e) => setFormData({...formData, data_inicio_contrato: e.target.value})}
+                          required
+                          className="border-primary/30"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-primary font-semibold">Data Final *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_fim_contrato}
+                          onChange={(e) => setFormData({...formData, data_fim_contrato: e.target.value})}
+                          required
+                          className="border-primary/30"
+                        />
+                      </div>
+                      
+                      {/* Resumo do Contrato */}
+                      <div className="pt-4 border-t border-primary/20 space-y-2">
+                        <p className="text-sm font-medium text-primary">Resumo do Contrato</p>
+                        <div className="text-sm space-y-1">
+                          <div className="flex justify-between">
+                            <span>Itens:</span>
+                            <span className="font-bold">{itensContrato.length}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Qtd Total:</span>
+                            <span className="font-bold">{totais.qtdTotalContratada}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Valor:</span>
+                            <span className="font-bold text-green-600">R$ {formatCurrency(totais.valorTotalVenda)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Lucro Est.:</span>
+                            <span className="font-bold text-blue-600">R$ {formatCurrency(totais.lucroTotal)}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label>Preço de Compra *</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={novoItem.preco_compra}
-                            onChange={(e) => setNovoItem({...novoItem, preco_compra: e.target.value})}
-                            data-testid="preco-compra-input"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Preço de Venda *</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={novoItem.preco_venda}
-                            onChange={(e) => setNovoItem({...novoItem, preco_venda: e.target.value})}
-                            data-testid="preco-venda-input"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Despesas Extras</Label>
-                          <Input
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={novoItem.despesas_extras}
-                            onChange={(e) => setNovoItem({...novoItem, despesas_extras: e.target.value})}
-                            data-testid="despesas-extras-input"
-                          />
-                        </div>
-                      </div>
-                      <Button type="button" onClick={adicionarItem} className="w-full bg-primary">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Adicionar Produto
-                      </Button>
                     </CardContent>
                   </Card>
-                  
-                  {itensLicitacao.length > 0 && (
-                    <Card>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">Produtos Adicionados ({itensLicitacao.length})</CardTitle>
-                      </CardHeader>
-                      <CardContent>
+                </div>
+
+                {/* Dados Gerais e Produtos */}
+                <div className="col-span-2 space-y-4">
+                  <Tabs defaultValue="dados" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
+                      <TabsTrigger value="produtos">Produtos ({itensContrato.length})</TabsTrigger>
+                      <TabsTrigger value="datas">Datas</TabsTrigger>
+                      <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="dados" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nº Licitação *</Label>
+                          <Input
+                            value={formData.numero_licitacao}
+                            onChange={(e) => setFormData({...formData, numero_licitacao: e.target.value})}
+                            required
+                            placeholder="PE-001/2025"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Órgão Público *</Label>
+                          <Input
+                            value={formData.orgao_publico}
+                            onChange={(e) => setFormData({...formData, orgao_publico: e.target.value})}
+                            required
+                            placeholder="Prefeitura de..."
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Cidade *</Label>
+                          <Input
+                            value={formData.cidade}
+                            onChange={(e) => setFormData({...formData, cidade: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Estado *</Label>
+                          <Input
+                            value={formData.estado}
+                            onChange={(e) => setFormData({...formData, estado: e.target.value})}
+                            required
+                            maxLength={2}
+                            placeholder="UF"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nº Empenho *</Label>
+                          <Input
+                            value={formData.numero_empenho}
+                            onChange={(e) => setFormData({...formData, numero_empenho: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Data do Empenho *</Label>
+                          <Input
+                            type="date"
+                            value={formData.data_empenho}
+                            onChange={(e) => setFormData({...formData, data_empenho: e.target.value})}
+                            required
+                          />
+                        </div>
+                        <div className="col-span-2 space-y-2">
+                          <Label>Nº Nota de Empenho</Label>
+                          <Input
+                            value={formData.numero_nota_empenho}
+                            onChange={(e) => setFormData({...formData, numero_nota_empenho: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="produtos" className="space-y-4 mt-4">
+                      <Card className="border-dashed">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Adicionar Produto ao Contrato
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-6 gap-2">
+                            <div className="col-span-2 space-y-1">
+                              <Label className="text-xs">Descrição *</Label>
+                              <Input
+                                value={novoItem.descricao}
+                                onChange={(e) => setNovoItem({...novoItem, descricao: e.target.value})}
+                                placeholder="Descrição do produto"
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Qtd Contratada *</Label>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={novoItem.quantidade_contratada}
+                                onChange={(e) => setNovoItem({...novoItem, quantidade_contratada: e.target.value})}
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Preço Compra</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={novoItem.preco_compra}
+                                onChange={(e) => setNovoItem({...novoItem, preco_compra: e.target.value})}
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-xs">Preço Venda</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={novoItem.preco_venda}
+                                onChange={(e) => setNovoItem({...novoItem, preco_venda: e.target.value})}
+                                className="h-9"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <Button type="button" onClick={adicionarProdutoContrato} className="w-full h-9">
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {itensContrato.length > 0 && (
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Descrição</TableHead>
-                              <TableHead className="text-center">Emp.</TableHead>
-                              <TableHead className="text-center">Forn.</TableHead>
-                              <TableHead className="text-center">Rest.</TableHead>
+                              <TableHead>Produto</TableHead>
+                              <TableHead className="text-center">Qtd Contratada</TableHead>
                               <TableHead className="text-right">P. Compra</TableHead>
                               <TableHead className="text-right">P. Venda</TableHead>
+                              <TableHead className="text-right">Valor Total</TableHead>
                               <TableHead className="text-right">Lucro Unit.</TableHead>
-                              <TableHead className="text-center">Ação</TableHead>
+                              <TableHead></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {itensLicitacao.map((item, index) => (
+                            {itensContrato.map((item, index) => (
                               <TableRow key={index}>
-                                <TableCell className="font-medium max-w-[200px] truncate">{item.descricao}</TableCell>
-                                <TableCell className="text-center">{item.quantidade_empenhada}</TableCell>
-                                <TableCell className="text-center">{item.quantidade_fornecida}</TableCell>
-                                <TableCell className="text-center">{item.quantidade_restante}</TableCell>
-                                <TableCell className="text-right">R$ {item.preco_compra.toFixed(2)}</TableCell>
-                                <TableCell className="text-right">R$ {item.preco_venda.toFixed(2)}</TableCell>
-                                <TableCell className="text-right text-green-600 font-medium">R$ {item.lucro_unitario.toFixed(2)}</TableCell>
-                                <TableCell className="text-center">
-                                  <Button variant="ghost" size="sm" onClick={() => removerItem(index)}>
-                                    <X className="h-4 w-4 text-red-500" />
+                                <TableCell className="font-medium">{item.descricao}</TableCell>
+                                <TableCell className="text-center">{item.quantidade_contratada}</TableCell>
+                                <TableCell className="text-right">R$ {formatCurrency(item.preco_compra)}</TableCell>
+                                <TableCell className="text-right">R$ {formatCurrency(item.preco_venda)}</TableCell>
+                                <TableCell className="text-right font-medium">R$ {formatCurrency(item.valor_total)}</TableCell>
+                                <TableCell className="text-right text-green-600">R$ {formatCurrency(item.lucro_unitario)}</TableCell>
+                                <TableCell>
+                                  <Button type="button" variant="ghost" size="icon" onClick={() => removerItem(index)}>
+                                    <X className="h-4 w-4 text-destructive" />
                                   </Button>
                                 </TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
                         </Table>
-                      </CardContent>
-                    </Card>
-                  )}
-                </TabsContent>
-                
-                {/* Tab Datas */}
-                <TabsContent value="datas" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Previsão de Fornecimento</Label>
-                      <Input
-                        type="date"
-                        value={formData.previsao_fornecimento}
-                        onChange={(e) => setFormData({...formData, previsao_fornecimento: e.target.value})}
-                        data-testid="previsao-fornecimento-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Fornecimento Efetivo</Label>
-                      <Input
-                        type="date"
-                        value={formData.fornecimento_efetivo}
-                        onChange={(e) => setFormData({...formData, fornecimento_efetivo: e.target.value})}
-                        data-testid="fornecimento-efetivo-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Previsão de Pagamento</Label>
-                      <Input
-                        type="date"
-                        value={formData.previsao_pagamento}
-                        onChange={(e) => setFormData({...formData, previsao_pagamento: e.target.value})}
-                        data-testid="previsao-pagamento-input"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-                
-                {/* Tab Financeiro */}
-                <TabsContent value="financeiro" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Frete (R$)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.frete}
-                        onChange={(e) => setFormData({...formData, frete: e.target.value})}
-                        data-testid="frete-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Impostos (R$)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.impostos}
-                        onChange={(e) => setFormData({...formData, impostos: e.target.value})}
-                        data-testid="impostos-input"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Outras Despesas (R$)</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={formData.outras_despesas}
-                        onChange={(e) => setFormData({...formData, outras_despesas: e.target.value})}
-                        data-testid="outras-despesas-input"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Descrição das Outras Despesas</Label>
-                    <Input
-                      value={formData.descricao_outras_despesas}
-                      onChange={(e) => setFormData({...formData, descricao_outras_despesas: e.target.value})}
-                      placeholder="Descreva as outras despesas"
-                      data-testid="descricao-outras-despesas-input"
-                    />
-                  </div>
-                  
-                  {/* Resumo Financeiro */}
-                  <Card className="bg-primary/5 border-primary/20">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-primary">Resumo Financeiro</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                          <p className="text-sm text-muted-foreground">Valor Total Venda</p>
-                          <p className="text-xl font-bold text-blue-600">
-                            R$ {totais.valorTotalVenda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="datas" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Previsão de Fornecimento</Label>
+                          <Input
+                            type="date"
+                            value={formData.previsao_fornecimento}
+                            onChange={(e) => setFormData({...formData, previsao_fornecimento: e.target.value})}
+                          />
                         </div>
-                        <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                          <p className="text-sm text-muted-foreground">Valor Total Compra</p>
-                          <p className="text-xl font-bold text-gray-600">
-                            R$ {totais.valorTotalCompra.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                          <p className="text-sm text-muted-foreground">Despesas Totais</p>
-                          <p className="text-xl font-bold text-red-600">
-                            R$ {totais.despesasTotais.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
-                        </div>
-                        <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                          <p className="text-sm text-muted-foreground">Lucro Total</p>
-                          <p className={`text-xl font-bold ${totais.lucroTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            R$ {totais.lucroTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </p>
+                        <div className="space-y-2">
+                          <Label>Previsão de Pagamento</Label>
+                          <Input
+                            type="date"
+                            value={formData.previsao_pagamento}
+                            onChange={(e) => setFormData({...formData, previsao_pagamento: e.target.value})}
+                          />
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-              
+                    </TabsContent>
+
+                    <TabsContent value="financeiro" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>Frete (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.frete}
+                            onChange={(e) => setFormData({...formData, frete: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Impostos (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.impostos}
+                            onChange={(e) => setFormData({...formData, impostos: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Outras Despesas (R$)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={formData.outras_despesas}
+                            onChange={(e) => setFormData({...formData, outras_despesas: e.target.value})}
+                          />
+                        </div>
+                        {parseFloat(formData.outras_despesas) > 0 && (
+                          <div className="col-span-3 space-y-2">
+                            <Label>Descrição das Outras Despesas</Label>
+                            <Input
+                              value={formData.descricao_outras_despesas}
+                              onChange={(e) => setFormData({...formData, descricao_outras_despesas: e.target.value})}
+                              placeholder="Descreva as despesas..."
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <div className="grid grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">Valor Venda</p>
+                            <p className="text-lg font-bold">R$ {formatCurrency(totais.valorTotalVenda)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Custo Total</p>
+                            <p className="text-lg font-bold">R$ {formatCurrency(totais.valorTotalCompra)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Despesas</p>
+                            <p className="text-lg font-bold text-red-600">R$ {formatCurrency(totais.despesasTotais)}</p>
+                          </div>
+                          <div>
+                            <p className="text-muted-foreground">Lucro Estimado</p>
+                            <p className="text-lg font-bold text-green-600">R$ {formatCurrency(totais.lucroTotal)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => { setOpen(false); resetForm(); }}>
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-secondary hover:bg-secondary/90" data-testid="salvar-licitacao-button">
-                  {editingLicitacao ? 'Atualizar' : 'Cadastrar'} Licitação
+                <Button type="submit" className="bg-secondary hover:bg-secondary/90">
+                  {editingLicitacao ? 'Atualizar' : 'Cadastrar'}
                 </Button>
               </DialogFooter>
             </form>
@@ -677,320 +737,368 @@ export default function Licitacoes() {
         </Dialog>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Licitações</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-primary">{licitacoes.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-yellow-600">
-              {licitacoes.filter(l => l.status_pagamento === 'pendente').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Programadas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-blue-600">
-              {licitacoes.filter(l => l.status_pagamento === 'programado').length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Pagas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-green-600">
-              {licitacoes.filter(l => l.status_pagamento === 'pago').length}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabela de Licitações */}
+      {/* Lista de Licitações */}
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="font-heading">Lista de Licitações</CardTitle>
+          <CardTitle className="font-heading">Contratos Cadastrados</CardTitle>
         </CardHeader>
         <CardContent>
           {licitacoes.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Nenhuma licitação cadastrada</p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nº Licitação</TableHead>
-                    <TableHead>Órgão</TableHead>
-                    <TableHead>Cidade/UF</TableHead>
-                    <TableHead>Nº Empenho</TableHead>
-                    <TableHead className="text-right">Valor Venda</TableHead>
-                    <TableHead className="text-right">Lucro</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {licitacoes.map((lic) => (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Contrato</TableHead>
+                  <TableHead>Órgão/Cidade</TableHead>
+                  <TableHead>Vigência</TableHead>
+                  <TableHead className="text-center">Execução</TableHead>
+                  <TableHead className="text-right">Valor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {licitacoes.map((lic) => {
+                  const contrato = lic.contrato || {};
+                  const percentual = lic.percentual_executado || 0;
+                  
+                  return (
                     <TableRow key={lic.id} data-testid={`licitacao-row-${lic.id}`}>
-                      <TableCell className="font-mono font-medium">{lic.numero_licitacao}</TableCell>
-                      <TableCell className="max-w-[150px] truncate">{lic.orgao_publico}</TableCell>
-                      <TableCell>{lic.cidade}/{lic.estado}</TableCell>
-                      <TableCell className="font-mono text-sm">{lic.numero_empenho}</TableCell>
-                      <TableCell className="text-right">
-                        R$ {(lic.valor_total_venda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </TableCell>
-                      <TableCell className={`text-right font-medium ${lic.lucro_total >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        R$ {(lic.lucro_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </TableCell>
                       <TableCell>
-                        <Select 
-                          value={lic.status_pagamento || 'pendente'} 
-                          onValueChange={(v) => handleStatusChange(lic.id, v)}
-                        >
-                          <SelectTrigger className="w-[130px]" data-testid={`status-select-${lic.id}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUS_PAGAMENTO.map(status => (
-                              <SelectItem key={status.value} value={status.value}>
-                                {status.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => handleView(lic)} data-testid={`view-${lic.id}`}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(lic)} data-testid={`edit-${lic.id}`}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(lic.id)} data-testid={`delete-${lic.id}`}>
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </Button>
+                        <div>
+                          <p className="font-medium">{contrato.numero_contrato || lic.numero_licitacao}</p>
+                          <p className="text-xs text-muted-foreground">{lic.numero_empenho}</p>
                         </div>
                       </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{lic.orgao_publico}</p>
+                          <p className="text-xs text-muted-foreground">{lic.cidade}/{lic.estado}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          <p>{formatDate(contrato.data_inicio || lic.data_empenho)}</p>
+                          <p className="text-muted-foreground">até {formatDate(contrato.data_fim)}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Progress value={percentual} className="h-2" />
+                          <p className="text-xs text-center text-muted-foreground">{percentual.toFixed(1)}%</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <p className="font-medium">R$ {formatCurrency(lic.valor_total_venda)}</p>
+                        <p className="text-xs text-green-600">Lucro: R$ {formatCurrency(lic.lucro_total)}</p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {getStatusBadge(lic.status_pagamento)}
+                          {(lic.alertas || []).map((alerta, idx) => (
+                            <p key={idx} className="text-xs text-orange-600">{alerta}</p>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button variant="ghost" size="icon" onClick={() => handleView(lic)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(lic)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(lic.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
       {/* Dialog de Visualização */}
       <Dialog open={viewOpen} onOpenChange={setViewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-heading flex items-center gap-2">
-              <FileText className="h-6 w-6" />
-              Detalhes da Licitação
-            </DialogTitle>
+            <DialogTitle>Detalhes da Licitação</DialogTitle>
+            <DialogDescription>Visualização completa do contrato e fornecimentos</DialogDescription>
           </DialogHeader>
           {viewingLicitacao && (
             <div className="space-y-6">
-              {/* Dados Gerais */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Dados Gerais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nº Licitação</p>
-                      <p className="font-medium">{viewingLicitacao.numero_licitacao}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Órgão Público</p>
-                      <p className="font-medium">{viewingLicitacao.orgao_publico}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Local</p>
-                      <p className="font-medium">{viewingLicitacao.cidade}/{viewingLicitacao.estado}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nº Empenho</p>
-                      <p className="font-medium">{viewingLicitacao.numero_empenho}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Data do Empenho</p>
-                      <p className="font-medium">{new Date(viewingLicitacao.data_empenho).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nº Nota Empenho</p>
-                      <p className="font-medium">{viewingLicitacao.numero_nota_empenho || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nº Nota Fornecimento</p>
-                      <p className="font-medium">{viewingLicitacao.numero_nota_fornecimento || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Status Pagamento</p>
-                      {getStatusBadge(viewingLicitacao.status_pagamento)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Alertas */}
+              {(viewingLicitacao.alertas || []).length > 0 && (
+                <div className="space-y-2">
+                  {viewingLicitacao.alertas.map((alerta, idx) => (
+                    <Alert key={idx} variant={alerta.includes('VENCIDO') || alerta.includes('90%') ? 'destructive' : 'default'}>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Atenção</AlertTitle>
+                      <AlertDescription>{alerta}</AlertDescription>
+                    </Alert>
+                  ))}
+                </div>
+              )}
 
-              {/* Produtos */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Package className="h-5 w-5" />
-                    Produtos Empenhados
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead className="text-center">Qtd Emp.</TableHead>
-                        <TableHead className="text-center">Qtd Forn.</TableHead>
-                        <TableHead className="text-center">Qtd Rest.</TableHead>
-                        <TableHead className="text-right">P. Compra</TableHead>
-                        <TableHead className="text-right">P. Venda</TableHead>
-                        <TableHead className="text-right">Desp. Ext.</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {viewingLicitacao.produtos?.map((produto, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{produto.descricao}</TableCell>
-                          <TableCell className="text-center">{produto.quantidade_empenhada}</TableCell>
-                          <TableCell className="text-center">{produto.quantidade_fornecida || 0}</TableCell>
-                          <TableCell className="text-center">{produto.quantidade_restante || (produto.quantidade_empenhada - (produto.quantidade_fornecida || 0))}</TableCell>
-                          <TableCell className="text-right">R$ {(produto.preco_compra || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">R$ {(produto.preco_venda || 0).toFixed(2)}</TableCell>
-                          <TableCell className="text-right">R$ {(produto.despesas_extras || 0).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-3 gap-6">
+                {/* Quadro do Contrato */}
+                <Card className="border-2 border-primary bg-primary/5">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-primary">
+                      <FileText className="h-5 w-5" />
+                      Contrato
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Número</p>
+                      <p className="font-bold text-lg">{viewingLicitacao.contrato?.numero_contrato || viewingLicitacao.numero_licitacao}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Início</p>
+                        <p>{formatDate(viewingLicitacao.contrato?.data_inicio || viewingLicitacao.data_empenho)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Fim</p>
+                        <p>{formatDate(viewingLicitacao.contrato?.data_fim)}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Valor Total</p>
+                      <p className="font-bold text-xl text-green-600">R$ {formatCurrency(viewingLicitacao.valor_total_venda)}</p>
+                    </div>
+                    <div className="pt-3 border-t">
+                      <p className="text-xs text-muted-foreground mb-1">Execução do Contrato</p>
+                      <Progress value={viewingLicitacao.percentual_executado || 0} className="h-3" />
+                      <div className="flex justify-between text-xs mt-1">
+                        <span>Fornecido: {viewingLicitacao.quantidade_total_fornecida || 0}</span>
+                        <span>Restante: {viewingLicitacao.quantidade_total_restante || 0}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-              {/* Datas */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-5 w-5" />
-                    Datas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Previsão Fornecimento</p>
-                      <p className="font-medium">
-                        {viewingLicitacao.previsao_fornecimento 
-                          ? new Date(viewingLicitacao.previsao_fornecimento).toLocaleDateString('pt-BR') 
-                          : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Fornecimento Efetivo</p>
-                      <p className="font-medium">
-                        {viewingLicitacao.fornecimento_efetivo 
-                          ? new Date(viewingLicitacao.fornecimento_efetivo).toLocaleDateString('pt-BR') 
-                          : '-'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Previsão Pagamento</p>
-                      <p className="font-medium">
-                        {viewingLicitacao.previsao_pagamento 
-                          ? new Date(viewingLicitacao.previsao_pagamento).toLocaleDateString('pt-BR') 
-                          : '-'}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Informações */}
+                <div className="col-span-2">
+                  <Tabs defaultValue="produtos">
+                    <TabsList>
+                      <TabsTrigger value="produtos">Produtos ({(viewingLicitacao.produtos || []).length})</TabsTrigger>
+                      <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
+                      <TabsTrigger value="fornecimentos">Fornecimentos ({(viewingLicitacao.fornecimentos || []).length})</TabsTrigger>
+                      <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+                    </TabsList>
 
-              {/* Financeiro */}
-              <Card className="bg-primary/5 border-primary/20">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2 text-primary">
-                    <DollarSign className="h-5 w-5" />
-                    Resumo Financeiro
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                      <p className="text-sm text-muted-foreground">Valor Total Venda</p>
-                      <p className="text-xl font-bold text-blue-600">
-                        R$ {(viewingLicitacao.valor_total_venda || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                      <p className="text-sm text-muted-foreground">Valor Total Compra</p>
-                      <p className="text-xl font-bold text-gray-600">
-                        R$ {(viewingLicitacao.valor_total_compra || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                      <p className="text-sm text-muted-foreground">Despesas Totais</p>
-                      <p className="text-xl font-bold text-red-600">
-                        R$ {(viewingLicitacao.despesas_totais || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-white rounded-lg shadow-sm">
-                      <p className="text-sm text-muted-foreground">Lucro Total</p>
-                      <p className={`text-xl font-bold ${(viewingLicitacao.lucro_total || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        R$ {(viewingLicitacao.lucro_total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                  </div>
-                  {(viewingLicitacao.frete > 0 || viewingLicitacao.impostos > 0 || viewingLicitacao.outras_despesas > 0) && (
-                    <div className="border-t pt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Detalhamento das Despesas:</p>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Frete:</span>{' '}
-                          <span className="font-medium">R$ {(viewingLicitacao.frete || 0).toFixed(2)}</span>
+                    <TabsContent value="produtos" className="mt-4">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Produto</TableHead>
+                            <TableHead className="text-center">Contratado</TableHead>
+                            <TableHead className="text-center">Fornecido</TableHead>
+                            <TableHead className="text-center">Restante</TableHead>
+                            <TableHead className="text-right">Valor Unit.</TableHead>
+                            <TableHead></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(viewingLicitacao.produtos || []).map((prod, idx) => {
+                            const qtdContratada = prod.quantidade_contratada || prod.quantidade_empenhada || 0;
+                            const qtdFornecida = prod.quantidade_fornecida || 0;
+                            const qtdRestante = qtdContratada - qtdFornecida;
+                            
+                            return (
+                              <TableRow key={idx}>
+                                <TableCell className="font-medium">{prod.descricao}</TableCell>
+                                <TableCell className="text-center">{qtdContratada}</TableCell>
+                                <TableCell className="text-center text-green-600">{qtdFornecida}</TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant={qtdRestante === 0 ? 'default' : qtdRestante < qtdContratada * 0.1 ? 'destructive' : 'secondary'}>
+                                    {qtdRestante}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right">R$ {formatCurrency(prod.preco_venda)}</TableCell>
+                                <TableCell>
+                                  {qtdRestante > 0 && (
+                                    <Button size="sm" variant="outline" onClick={() => abrirFornecimento(prod)}>
+                                      <Truck className="h-3 w-3 mr-1" />
+                                      Fornecer
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TabsContent>
+
+                    <TabsContent value="dados" className="mt-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div><span className="font-medium">Licitação:</span> {viewingLicitacao.numero_licitacao}</div>
+                        <div><span className="font-medium">Órgão:</span> {viewingLicitacao.orgao_publico}</div>
+                        <div><span className="font-medium">Cidade:</span> {viewingLicitacao.cidade}/{viewingLicitacao.estado}</div>
+                        <div><span className="font-medium">Empenho:</span> {viewingLicitacao.numero_empenho}</div>
+                        <div><span className="font-medium">Data Empenho:</span> {formatDate(viewingLicitacao.data_empenho)}</div>
+                        <div><span className="font-medium">Nota Empenho:</span> {viewingLicitacao.numero_nota_empenho || '-'}</div>
+                        <div><span className="font-medium">Prev. Fornecimento:</span> {formatDate(viewingLicitacao.previsao_fornecimento)}</div>
+                        <div><span className="font-medium">Fornec. Efetivo:</span> {formatDate(viewingLicitacao.fornecimento_efetivo)}</div>
+                        <div><span className="font-medium">Prev. Pagamento:</span> {formatDate(viewingLicitacao.previsao_pagamento)}</div>
+                        <div><span className="font-medium">Status Pagamento:</span> {getStatusBadge(viewingLicitacao.status_pagamento)}</div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="fornecimentos" className="mt-4">
+                      {(viewingLicitacao.fornecimentos || []).length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8">Nenhum fornecimento registrado</p>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Data</TableHead>
+                              <TableHead>Produto</TableHead>
+                              <TableHead className="text-center">Quantidade</TableHead>
+                              <TableHead>Nota Fiscal</TableHead>
+                              <TableHead>Observação</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {viewingLicitacao.fornecimentos.map((forn, idx) => {
+                              const prod = (viewingLicitacao.produtos || []).find(p => p.id === forn.produto_contrato_id);
+                              return (
+                                <TableRow key={idx}>
+                                  <TableCell>{formatDate(forn.data_fornecimento)}</TableCell>
+                                  <TableCell>{prod?.descricao || '-'}</TableCell>
+                                  <TableCell className="text-center font-medium">{forn.quantidade}</TableCell>
+                                  <TableCell>{forn.numero_nota_fornecimento || '-'}</TableCell>
+                                  <TableCell className="text-muted-foreground">{forn.observacao || '-'}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="financeiro" className="mt-4">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                          <div className="flex justify-between py-2 border-b">
+                            <span>Valor Total Venda</span>
+                            <span className="font-bold">R$ {formatCurrency(viewingLicitacao.valor_total_venda)}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span>Custo Total</span>
+                            <span>R$ {formatCurrency(viewingLicitacao.valor_total_compra)}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span>Frete</span>
+                            <span>R$ {formatCurrency(viewingLicitacao.frete)}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span>Impostos</span>
+                            <span>R$ {formatCurrency(viewingLicitacao.impostos)}</span>
+                          </div>
+                          <div className="flex justify-between py-2 border-b">
+                            <span>Outras Despesas</span>
+                            <span>R$ {formatCurrency(viewingLicitacao.outras_despesas)}</span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-muted-foreground">Impostos:</span>{' '}
-                          <span className="font-medium">R$ {(viewingLicitacao.impostos || 0).toFixed(2)}</span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Outras:</span>{' '}
-                          <span className="font-medium">R$ {(viewingLicitacao.outras_despesas || 0).toFixed(2)}</span>
+                        <div className="flex flex-col justify-center items-center p-6 bg-green-50 rounded-lg">
+                          <p className="text-sm text-muted-foreground">Lucro Total Estimado</p>
+                          <p className="text-4xl font-bold text-green-600">R$ {formatCurrency(viewingLicitacao.lucro_total)}</p>
                         </div>
                       </div>
-                      {viewingLicitacao.descricao_outras_despesas && (
-                        <p className="text-sm mt-2">
-                          <span className="text-muted-foreground">Descrição:</span>{' '}
-                          {viewingLicitacao.descricao_outras_despesas}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </div>
             </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewOpen(false)}>Fechar</Button>
+            {viewingLicitacao?.status_pagamento !== 'pago' && (
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  handleStatusChange(viewingLicitacao.id, 'pago');
+                  setViewOpen(false);
+                }}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Marcar como Pago
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Fornecimento */}
+      <Dialog open={fornecimentoOpen} onOpenChange={setFornecimentoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registrar Fornecimento</DialogTitle>
+            <DialogDescription>
+              Produto: {produtoSelecionadoFornecimento?.descricao}
+            </DialogDescription>
+          </DialogHeader>
+          {produtoSelecionadoFornecimento && (
+            <div className="space-y-4">
+              <Alert>
+                <Package className="h-4 w-4" />
+                <AlertTitle>Quantidade Disponível</AlertTitle>
+                <AlertDescription>
+                  Restante no contrato: <strong>{(produtoSelecionadoFornecimento.quantidade_contratada || produtoSelecionadoFornecimento.quantidade_empenhada || 0) - (produtoSelecionadoFornecimento.quantidade_fornecida || 0)}</strong> unidades
+                </AlertDescription>
+              </Alert>
+              
+              <div className="space-y-2">
+                <Label>Quantidade a Fornecer *</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max={(produtoSelecionadoFornecimento.quantidade_contratada || produtoSelecionadoFornecimento.quantidade_empenhada || 0) - (produtoSelecionadoFornecimento.quantidade_fornecida || 0)}
+                  value={fornecimentoData.quantidade}
+                  onChange={(e) => setFornecimentoData({...fornecimentoData, quantidade: e.target.value})}
+                  placeholder="Digite a quantidade"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Data do Fornecimento *</Label>
+                <Input
+                  type="date"
+                  value={fornecimentoData.data_fornecimento}
+                  onChange={(e) => setFornecimentoData({...fornecimentoData, data_fornecimento: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Número da Nota Fiscal</Label>
+                <Input
+                  value={fornecimentoData.numero_nota_fornecimento}
+                  onChange={(e) => setFornecimentoData({...fornecimentoData, numero_nota_fornecimento: e.target.value})}
+                  placeholder="Ex: NF-001234"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Observação</Label>
+                <Input
+                  value={fornecimentoData.observacao}
+                  onChange={(e) => setFornecimentoData({...fornecimentoData, observacao: e.target.value})}
+                  placeholder="Observações..."
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFornecimentoOpen(false)}>Cancelar</Button>
+            <Button onClick={registrarFornecimento} className="bg-secondary hover:bg-secondary/90">
+              <Truck className="h-4 w-4 mr-2" />
+              Registrar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
