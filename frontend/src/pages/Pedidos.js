@@ -808,16 +808,7 @@ export default function Pedidos() {
     printWindow.focus();
     toast.success('Documento aberto! Use Ctrl+S para salvar ou Ctrl+P para salvar como PDF.');
   };
-            .despesas-section { margin: 15px 0; padding: 10px; background-color: #f8f9fa; border-radius: 5px; }
-            .despesas-section h4 { margin: 0 0 10px 0; color: #1e3a8a; font-size: 12px; }
-            .despesa-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dotted #ddd; }
-            .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #ddd; text-align: center; font-size: 11px; color: #666; }
-            .pagamento-box { margin-top: 20px; padding: 15px; background-color: #f8fafc; border-radius: 5px; font-size: 11px; }
-            .pagamento-box h4 { margin: 0 0 10px 0; color: #1e3a8a; }
-            @media print { body { padding: 10px 20px; } }
-          </style>
-        </head>
-        <body>
+ 
           <div class="header">
             <img src="https://customer-assets.emergentagent.com/job_xsellmanager/artifacts/isjxf46l_logo%20alternativo.png" alt="XSELL Logo" class="logo" />
             <div class="empresa-info">
