@@ -778,15 +778,15 @@ export default function Relatorios() {
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <ArrowDownRight className="h-4 w-4 text-red-600" />
-                  Total Despesas
+                  Despesas Operacionais
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-3xl font-heading font-bold text-red-600">
-                  R$ {formatCurrency(relatorio.total_despesas)}
+                  R$ {formatCurrency(relatorio.total_despesas_operacionais || relatorio.total_despesas || 0)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Despesas operacionais do período
+                  Despesas do módulo financeiro
                 </p>
               </CardContent>
             </Card>
