@@ -639,7 +639,7 @@ export default function Licitacoes() {
                       <div className="text-center py-8 text-muted-foreground">
                         <Truck className="h-12 w-12 mx-auto mb-3 opacity-30" />
                         <p className="text-sm">Os fornecimentos serão registrados após salvar o contrato.</p>
-                        <p className="text-xs mt-2">Use o botão "Fornecer" na lista de contratos.</p>
+                        <p className="text-xs mt-2">Use o botão &quot;Fornecer&quot; na lista de contratos.</p>
                       </div>
 
                       <Separator />
