@@ -11,6 +11,7 @@ import Relatorios from './pages/Relatorios';
 import Financeiro from './pages/Financeiro';
 import Licitacoes from './pages/Licitacoes';
 import Orcamentos from './pages/Orcamentos';
+import DadosPagamento from './pages/DadosPagamento';
 import DashboardLayout from './components/DashboardLayout';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
