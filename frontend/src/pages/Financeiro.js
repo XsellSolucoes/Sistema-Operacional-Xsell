@@ -27,6 +27,8 @@ export default function Financeiro() {
   const [openMovimento, setOpenMovimento] = useState(false);
   const [despesasVencimento, setDespesasVencimento] = useState([]);
   const [notificacaoConfig, setNotificacaoConfig] = useState({});
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedDespesa, setSelectedDespesa] = useState(null);
   const [formData, setFormData] = useState({
     tipo: 'agua',
     descricao: '',
@@ -42,6 +44,12 @@ export default function Financeiro() {
     valor: '',
     descricao: ''
   });
+
+  // Função para visualizar despesa
+  const handleVisualizarDespesa = (despesa) => {
+    setSelectedDespesa(despesa);
+    setViewDialogOpen(true);
+  };
 
   useEffect(() => {
     fetchData();
