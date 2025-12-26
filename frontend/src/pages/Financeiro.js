@@ -645,6 +645,137 @@ export default function Financeiro() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Visualização de Despesa */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary" />
+              Detalhes da Despesa
+            </DialogTitle>
+            <DialogDescription>
+              Visualização completa da despesa
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDespesa && (
+            <div className="space-y-4">
+              {/* Status */}
+              <div className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm text-muted-foreground">Status</span>
+                <Badge 
+                  variant={selectedDespesa.status === 'pago' ? 'default' : 'secondary'}
+                  className={selectedDespesa.status === 'pago' ? 'bg-green-500' : 'bg-yellow-500'}
+                >
+                  {selectedDespesa.status?.toUpperCase()}
+                </Badge>
+              </div>
+
+              {/* Tipo e Descrição */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Tipo</p>
+                  <p className="font-semibold capitalize">{selectedDespesa.tipo}</p>
+                </div>
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Valor</p>
+                  <p className="font-bold text-red-600 text-xl">
+                    R$ {selectedDespesa.valor?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </p>
+                </div>
+              </div>
+
+              {/* Descrição */}
+              {selectedDespesa.descricao && (
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground mb-1">Descrição</p>
+                  <p className="text-sm">{selectedDespesa.descricao}</p>
+                </div>
+              )}
+
+              {/* Datas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground">Data da Despesa</p>
+                  </div>
+                  <p className="font-medium">
+                    {selectedDespesa.data_despesa 
+                      ? new Date(selectedDespesa.data_despesa).toLocaleDateString('pt-BR')
+                      : '-'}
+                  </p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    <p className="text-xs text-muted-foreground">Vencimento</p>
+                  </div>
+                  <p className="font-medium">
+                    {selectedDespesa.data_vencimento 
+                      ? new Date(selectedDespesa.data_vencimento).toLocaleDateString('pt-BR')
+                      : '-'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Boleto Anexado */}
+              <div className="p-4 border-2 border-dashed rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <FileText className="h-5 w-5 text-red-500" />
+                  <p className="font-semibold">Boleto Anexado</p>
+                </div>
+                
+                {selectedDespesa.boleto ? (
+                  <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-green-600" />
+                      <div>
+                        <p className="font-medium text-green-700">{selectedDespesa.boleto.nome}</p>
+                        <p className="text-xs text-green-600">
+                          {((selectedDespesa.boleto.tamanho || 0) / 1024).toFixed(1)} KB • 
+                          Enviado em {new Date(selectedDespesa.boleto.uploaded_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => window.open(`${API}/despesas/${selectedDespesa.id}/boleto/download`, '_blank')}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Baixar Boleto
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm">Nenhum boleto anexado</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
+              Fechar
+            </Button>
+            <Button 
+              variant="default"
+              onClick={() => {
+                setViewDialogOpen(false);
+                handleEditDespesa(selectedDespesa);
+              }}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
