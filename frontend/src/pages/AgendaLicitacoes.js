@@ -689,7 +689,7 @@ export default function AgendaLicitacoes() {
                   <TableHead className="font-bold">Local</TableHead>
                   <TableHead className="font-bold">Produtos</TableHead>
                   <TableHead className="font-bold text-center">Status</TableHead>
-                  <TableHead className="font-bold text-center">Alertas</TableHead>
+                  <TableHead className="font-bold text-center">Resultado</TableHead>
                   <TableHead className="font-bold text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -742,13 +742,57 @@ export default function AgendaLicitacoes() {
                         {getStatusBadge(lic.status)}
                       </TableCell>
                       <TableCell className="text-center">
-                        {(lic.alertas || []).length > 0 && (
-                          <div className="flex flex-col gap-1">
-                            {lic.alertas.slice(0, 2).map((a, i) => (
-                              <span key={i} className="text-xs">{a}</span>
-                            ))}
-                          </div>
-                        )}
+                        <div className="relative">
+                          <Button
+                            variant={lic.status === 'ganha' ? 'default' : lic.status === 'perdida' ? 'destructive' : 'outline'}
+                            size="sm"
+                            className={`min-w-[100px] ${
+                              lic.status === 'ganha' ? 'bg-green-600 hover:bg-green-700' : 
+                              lic.status === 'perdida' ? 'bg-red-600 hover:bg-red-700' :
+                              lic.status === 'aguardando' ? 'bg-orange-500 hover:bg-orange-600 text-white' : ''
+                            }`}
+                            onClick={() => setStatusDropdownOpen(statusDropdownOpen === lic.id ? null : lic.id)}
+                          >
+                            {lic.status === 'ganha' ? (
+                              <><Trophy className="h-3 w-3 mr-1" /> VENCEMOS</>
+                            ) : lic.status === 'perdida' ? (
+                              <><XCircle className="h-3 w-3 mr-1" /> NÃO GANHAMOS</>
+                            ) : lic.status === 'aguardando' ? (
+                              <><Hourglass className="h-3 w-3 mr-1" /> AGUARDANDO</>
+                            ) : (
+                              'STATUS'
+                            )}
+                          </Button>
+                          
+                          {/* Dropdown Menu */}
+                          {statusDropdownOpen === lic.id && (
+                            <div className="absolute z-50 mt-1 right-0 w-48 bg-white border rounded-lg shadow-lg">
+                              <div className="py-1">
+                                <button
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-green-50 flex items-center gap-2 text-green-700"
+                                  onClick={() => handleAlterarResultado(lic.id, 'ganha')}
+                                >
+                                  <Trophy className="h-4 w-4" />
+                                  VENCEMOS
+                                </button>
+                                <button
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 flex items-center gap-2 text-red-700"
+                                  onClick={() => handleAlterarResultado(lic.id, 'perdida')}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                  NÃO GANHAMOS
+                                </button>
+                                <button
+                                  className="w-full px-4 py-2 text-left text-sm hover:bg-orange-50 flex items-center gap-2 text-orange-700"
+                                  onClick={() => handleAlterarResultado(lic.id, 'aguardando')}
+                                >
+                                  <Hourglass className="h-4 w-4" />
+                                  AGUARDANDO RESULTADO
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
