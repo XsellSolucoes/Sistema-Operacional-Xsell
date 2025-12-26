@@ -1816,6 +1816,112 @@ async def delete_despesa(despesa_id: str, current_user: User = Depends(get_curre
     return {"message": "Despesa deleted"}
 
 
+# Upload de boleto para despesa
+@api_router.post("/despesas/{despesa_id}/upload-boleto")
+async def upload_boleto_despesa(
+    despesa_id: str, 
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload de boleto (PDF, JPG, PNG) para uma despesa"""
+    desp = await db.despesas.find_one({"id": despesa_id}, {"_id": 0})
+    if not desp:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    
+    # Validar tipo de arquivo
+    allowed_types = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use PDF, JPG ou PNG.")
+    
+    # Criar diretório para boletos
+    import os
+    import shutil
+    boletos_dir = os.path.join(UPLOAD_DIR, "boletos")
+    os.makedirs(boletos_dir, exist_ok=True)
+    
+    # Gerar nome único para o arquivo
+    file_id = str(uuid.uuid4())
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
+    file_name = f"{despesa_id}_{file_id}{file_ext}"
+    file_path = os.path.join(boletos_dir, file_name)
+    
+    # Salvar arquivo
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar arquivo: {str(e)}")
+    
+    # Criar registro do boleto
+    boleto_doc = {
+        "id": file_id,
+        "nome": file.filename,
+        "nome_arquivo": file_name,
+        "tipo": file.content_type,
+        "tamanho": os.path.getsize(file_path),
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.despesas.update_one(
+        {"id": despesa_id},
+        {"$set": {"boleto": boleto_doc}}
+    )
+    
+    return {"message": "Boleto anexado com sucesso", "boleto": boleto_doc}
+
+
+@api_router.get("/despesas/{despesa_id}/boleto/download")
+async def download_boleto_despesa(despesa_id: str, current_user: User = Depends(get_current_user)):
+    """Download do boleto de uma despesa"""
+    from fastapi.responses import FileResponse
+    import os
+    
+    desp = await db.despesas.find_one({"id": despesa_id}, {"_id": 0})
+    if not desp:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    
+    boleto = desp.get("boleto")
+    if not boleto:
+        raise HTTPException(status_code=404, detail="Esta despesa não possui boleto anexado")
+    
+    file_path = os.path.join(UPLOAD_DIR, "boletos", boleto.get("nome_arquivo", ""))
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado no servidor")
+    
+    return FileResponse(
+        file_path, 
+        filename=boleto.get("nome", "boleto"),
+        media_type=boleto.get("tipo", "application/octet-stream")
+    )
+
+
+@api_router.delete("/despesas/{despesa_id}/boleto")
+async def delete_boleto_despesa(despesa_id: str, current_user: User = Depends(get_current_user)):
+    """Excluir boleto de uma despesa"""
+    import os
+    
+    desp = await db.despesas.find_one({"id": despesa_id}, {"_id": 0})
+    if not desp:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    
+    boleto = desp.get("boleto")
+    if not boleto:
+        raise HTTPException(status_code=404, detail="Esta despesa não possui boleto anexado")
+    
+    # Remover arquivo do disco
+    file_path = os.path.join(UPLOAD_DIR, "boletos", boleto.get("nome_arquivo", ""))
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    
+    # Remover registro do banco
+    await db.despesas.update_one(
+        {"id": despesa_id},
+        {"$unset": {"boleto": ""}}
+    )
+    
+    return {"message": "Boleto excluído com sucesso"}
+
+
 # ==================== NOTIFICAÇÕES ====================
 
 @api_router.get("/notificacoes/despesas-vencimento")
