@@ -6,27 +6,44 @@
 
 ## Changes Made This Session
 
-### 1. Módulo Pedidos
-- Adicionado botão "Editar Pedido" na tabela com função handleEdit
-- Adicionado seletor de "Dados de Pagamento" (contas bancárias) no formulário
-- Corrigido PDF da "Via Interna" com null safety para evitar erros
-- Integrado dados_pagamento_id no payload do pedido
+### 1. Módulo Licitações (REFATORADO - Nova Arquitetura)
+- Nova estrutura centralizada em "Contratos":
+  - Quadro de Contrato: número, data inicial, data final, valor total
+  - Produtos vinculados ao contrato com: quantidade contratada, fornecida, restante
+  - Sistema de fornecimentos parciais com abatimento automático de quantidades
+  - Alertas automáticos: contrato vencido, vence em X dias, 90% executado
+  - Impedimento de fornecimentos que excedam quantidade contratada
+- Backend endpoints funcionando:
+  - POST /api/licitacoes (criar com estrutura de contrato)
+  - GET /api/licitacoes (listar com cálculos de quantidades e alertas)
+  - GET /api/licitacoes/{id} (detalhes)
+  - PUT /api/licitacoes/{id} (atualizar)
+  - DELETE /api/licitacoes/{id} (excluir)
+  - POST /api/licitacoes/{id}/fornecimentos (registrar fornecimento)
+  - PUT /api/licitacoes/{id}/status (marcar como pago)
+- Frontend atualizado:
+  - Formulário com Quadro de Contrato destacado
+  - Abas: Dados Gerais, Produtos, Datas, Financeiro
+  - Modal de visualização com controle de execução
+  - Modal de registro de fornecimento
+  - Tabela com barra de progresso e alertas
 
-### 2. Módulo Clientes  
-- Reformulado formulário com campos: Tipo de Pessoa (PF/PJ), CPF/CNPJ, Razão Social, Nome Fantasia, Nome do Contato
-- Endereço completo: Rua, Número, Complemento, Bairro, Cidade, Estado, CEP
-- Adicionado sistema de Tabs na visualização: Dados, Histórico, Ocorrências
-- Histórico do Cliente: Lista automática de pedidos realizados
-- Ocorrências: Formulário para adicionar observações (pagamento atrasado, reclamação, etc.)
-
-### 3. Módulo Dados de Pagamento
-- Módulo já estava completo da sessão anterior
+### 2. Módulo Clientes (UI criada, funcionalidade pendente)
+- Histórico do Cliente: não implementado
+- Ocorrências: não implementado
 
 ## Tests To Run
-- Backend: POST/GET/PUT dados-pagamento, POST clientes/{id}/ocorrencias
-- Frontend: Formulário de pedido com edição, formulário de cliente com novos campos, tabs de visualização
+- Backend: 
+  - POST /api/licitacoes (criar licitação com contrato e produtos)
+  - POST /api/licitacoes/{id}/fornecimentos (registrar fornecimento)
+  - Validar impedimento de exceder quantidade
+  - Validar cálculos de alertas
+- Frontend:
+  - Formulário de nova licitação com contrato
+  - Modal de visualização com abas
+  - Botão "Fornecer" e modal de fornecimento
+  - Barra de progresso de execução
 
 ## Incorporate User Feedback
-- Prioridade 1: Módulo Dados de Pagamento completo
-- Prioridade 2: Módulo Clientes com histórico e ocorrências
-- Prioridade 3: Módulo Pedidos com edição e seleção de conta bancária
+- Prioridade 1: Módulo Licitações com sistema de Contratos (EM TESTE)
+- Prioridade 2: Histórico e Ocorrências do Cliente (PENDENTE)
