@@ -176,8 +176,12 @@ export default function AgendaLicitacoes() {
     }
 
     try {
+      // Criar data com hora 12:00 para evitar problemas de timezone
+      const [year, month, day] = formData.data_disputa.split('-');
+      const dataDisputa = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), 12, 0, 0));
+      
       const payload = {
-        data_disputa: new Date(formData.data_disputa).toISOString(),
+        data_disputa: dataDisputa.toISOString(),
         horario_disputa: formData.horario_disputa,
         numero_licitacao: formData.numero_licitacao,
         portal: formData.portal,
