@@ -1636,14 +1636,19 @@ async def registrar_fornecimento(
             detail=f"Quantidade excede o disponível no contrato. Restante: {qtd_restante}"
         )
     
-    # Criar registro de fornecimento
+    # Criar registro de fornecimento com despesas
+    total_despesas = sum(d.get("valor", 0) for d in fornecimento.despesas)
+    
     fornec_doc = {
         "id": str(uuid.uuid4()),
         "produto_contrato_id": fornecimento.produto_contrato_id,
         "quantidade": fornecimento.quantidade,
         "data_fornecimento": fornecimento.data_fornecimento.isoformat(),
         "numero_nota_fornecimento": fornecimento.numero_nota_fornecimento,
+        "numero_nota_empenho": fornecimento.numero_nota_empenho,
         "observacao": fornecimento.observacao,
+        "despesas": fornecimento.despesas,
+        "total_despesas": total_despesas,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
