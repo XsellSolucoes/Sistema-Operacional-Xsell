@@ -2525,6 +2525,445 @@ async def get_filtros_disponiveis(current_user: User = Depends(get_current_user)
     }
 
 
+# =============================================================================
+# AGENDA DE LICITAÇÕES - Models and Endpoints
+# =============================================================================
+
+class EventoAgenda(BaseModel):
+    """Evento da timeline de uma licitação na agenda"""
+    id: Optional[str] = None
+    data: datetime
+    horario: Optional[str] = None
+    tipo: str  # proposta, esclarecimento, impugnacao, sessao, julgamento, recurso, homologacao, outro
+    descricao: str
+    status: str = "pendente"  # pendente, concluido, atrasado
+    created_at: Optional[datetime] = None
+
+
+class AgendaLicitacaoCreate(BaseModel):
+    """Modelo para criar uma licitação na agenda"""
+    data_disputa: datetime
+    horario_disputa: str
+    numero_licitacao: str
+    portal: str
+    cidade: str
+    estado: str
+    produtos: List[str] = []  # Lista de IDs ou nomes de produtos
+    objeto: Optional[str] = None  # Descrição do objeto da licitação
+    valor_estimado: Optional[float] = None
+    observacoes: Optional[str] = None
+
+
+class AgendaLicitacao(BaseModel):
+    """Modelo completo de uma licitação na agenda"""
+    id: str
+    data_disputa: datetime
+    horario_disputa: str
+    numero_licitacao: str
+    portal: str
+    cidade: str
+    estado: str
+    produtos: List[str] = []
+    objeto: Optional[str] = None
+    valor_estimado: Optional[float] = None
+    observacoes: Optional[str] = None
+    anexos: List[Dict[str, Any]] = []  # {id, nome, url, tipo, uploaded_at}
+    eventos: List[Dict[str, Any]] = []  # Timeline de eventos
+    status: str = "agendada"  # agendada, em_andamento, ganha, perdida, cancelada
+    historico: List[Dict[str, Any]] = []  # Histórico de alterações
+    alertas: List[str] = []
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Endpoints da Agenda de Licitações
+@api_router.get("/agenda-licitacoes", response_model=List[AgendaLicitacao])
+async def get_agenda_licitacoes(current_user: User = Depends(get_current_user)):
+    """Listar todas as licitações da agenda com alertas e ordenação por data"""
+    licitacoes = await db.agenda_licitacoes.find({}, {"_id": 0}).sort("data_disputa", 1).to_list(1000)
+    
+    agora = datetime.now(timezone.utc)
+    
+    for lic in licitacoes:
+        # Converter strings para datetime
+        if isinstance(lic.get("data_disputa"), str):
+            lic["data_disputa"] = datetime.fromisoformat(lic["data_disputa"])
+        if isinstance(lic.get("created_at"), str):
+            lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+        if lic.get("updated_at") and isinstance(lic["updated_at"], str):
+            lic["updated_at"] = datetime.fromisoformat(lic["updated_at"])
+        
+        # Calcular alertas
+        alertas = []
+        data_disputa = lic.get("data_disputa")
+        if data_disputa:
+            if data_disputa.tzinfo is None:
+                data_disputa = data_disputa.replace(tzinfo=timezone.utc)
+            
+            diff = data_disputa - agora
+            dias = diff.days
+            horas = diff.total_seconds() / 3600
+            
+            if dias < 0:
+                alertas.append("⚠️ Licitação vencida")
+            elif horas <= 24:
+                alertas.append(f"🔴 Disputa em menos de 24h")
+            elif horas <= 48:
+                alertas.append(f"🟡 Disputa em menos de 48h")
+            elif dias <= 7:
+                alertas.append(f"🟢 Disputa em {dias} dias")
+        
+        # Verificar eventos próximos
+        for evento in lic.get("eventos", []):
+            if evento.get("status") == "pendente":
+                evento_data = evento.get("data")
+                if isinstance(evento_data, str):
+                    evento_data = datetime.fromisoformat(evento_data)
+                if evento_data and evento_data.tzinfo is None:
+                    evento_data = evento_data.replace(tzinfo=timezone.utc)
+                
+                if evento_data:
+                    diff_evento = (evento_data - agora).total_seconds() / 3600
+                    if diff_evento <= 24 and diff_evento > 0:
+                        alertas.append(f"📅 Evento próximo: {evento.get('descricao', 'Evento')}")
+        
+        lic["alertas"] = alertas
+        
+        # Garantir campos padrão
+        if "anexos" not in lic:
+            lic["anexos"] = []
+        if "eventos" not in lic:
+            lic["eventos"] = []
+        if "historico" not in lic:
+            lic["historico"] = []
+    
+    return licitacoes
+
+
+@api_router.post("/agenda-licitacoes", response_model=AgendaLicitacao)
+async def create_agenda_licitacao(lic_data: AgendaLicitacaoCreate, current_user: User = Depends(get_current_user)):
+    """Criar nova licitação na agenda"""
+    lic_id = str(uuid.uuid4())
+    
+    lic_doc = {
+        "id": lic_id,
+        "data_disputa": lic_data.data_disputa.isoformat(),
+        "horario_disputa": lic_data.horario_disputa,
+        "numero_licitacao": lic_data.numero_licitacao,
+        "portal": lic_data.portal,
+        "cidade": lic_data.cidade,
+        "estado": lic_data.estado,
+        "produtos": lic_data.produtos,
+        "objeto": lic_data.objeto,
+        "valor_estimado": lic_data.valor_estimado,
+        "observacoes": lic_data.observacoes,
+        "anexos": [],
+        "eventos": [],
+        "status": "agendada",
+        "historico": [{
+            "data": datetime.now(timezone.utc).isoformat(),
+            "usuario": current_user.email,
+            "acao": "Licitação criada"
+        }],
+        "alertas": [],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": None
+    }
+    
+    await db.agenda_licitacoes.insert_one(lic_doc)
+    
+    # Converter para retorno
+    lic_doc["data_disputa"] = lic_data.data_disputa
+    lic_doc["created_at"] = datetime.now(timezone.utc)
+    
+    return AgendaLicitacao(**lic_doc)
+
+
+@api_router.get("/agenda-licitacoes/{licitacao_id}", response_model=AgendaLicitacao)
+async def get_agenda_licitacao(licitacao_id: str, current_user: User = Depends(get_current_user)):
+    """Obter detalhes de uma licitação da agenda"""
+    lic = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not lic:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    # Converter strings para datetime
+    if isinstance(lic.get("data_disputa"), str):
+        lic["data_disputa"] = datetime.fromisoformat(lic["data_disputa"])
+    if isinstance(lic.get("created_at"), str):
+        lic["created_at"] = datetime.fromisoformat(lic["created_at"])
+    
+    return AgendaLicitacao(**lic)
+
+
+@api_router.put("/agenda-licitacoes/{licitacao_id}", response_model=AgendaLicitacao)
+async def update_agenda_licitacao(licitacao_id: str, lic_data: AgendaLicitacaoCreate, current_user: User = Depends(get_current_user)):
+    """Atualizar licitação da agenda"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    # Adicionar ao histórico
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": "Licitação atualizada"
+    })
+    
+    update_doc = {
+        "data_disputa": lic_data.data_disputa.isoformat(),
+        "horario_disputa": lic_data.horario_disputa,
+        "numero_licitacao": lic_data.numero_licitacao,
+        "portal": lic_data.portal,
+        "cidade": lic_data.cidade,
+        "estado": lic_data.estado,
+        "produtos": lic_data.produtos,
+        "objeto": lic_data.objeto,
+        "valor_estimado": lic_data.valor_estimado,
+        "observacoes": lic_data.observacoes,
+        "historico": historico,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.agenda_licitacoes.update_one({"id": licitacao_id}, {"$set": update_doc})
+    
+    updated = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if isinstance(updated.get("data_disputa"), str):
+        updated["data_disputa"] = datetime.fromisoformat(updated["data_disputa"])
+    if isinstance(updated.get("created_at"), str):
+        updated["created_at"] = datetime.fromisoformat(updated["created_at"])
+    
+    return AgendaLicitacao(**updated)
+
+
+@api_router.put("/agenda-licitacoes/{licitacao_id}/status")
+async def update_agenda_licitacao_status(licitacao_id: str, status: str, current_user: User = Depends(get_current_user)):
+    """Atualizar status da licitação"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    valid_status = ["agendada", "em_andamento", "ganha", "perdida", "cancelada"]
+    if status not in valid_status:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {valid_status}")
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": f"Status alterado para: {status}"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"status": status, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Status atualizado com sucesso"}
+
+
+@api_router.delete("/agenda-licitacoes/{licitacao_id}")
+async def delete_agenda_licitacao(licitacao_id: str, current_user: User = Depends(get_current_user)):
+    """Excluir licitação da agenda"""
+    result = await db.agenda_licitacoes.delete_one({"id": licitacao_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    return {"message": "Licitação excluída com sucesso"}
+
+
+# Eventos da Timeline
+@api_router.post("/agenda-licitacoes/{licitacao_id}/eventos")
+async def add_evento_agenda(licitacao_id: str, evento: EventoAgenda, current_user: User = Depends(get_current_user)):
+    """Adicionar evento à timeline da licitação"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    evento_doc = {
+        "id": str(uuid.uuid4()),
+        "data": evento.data.isoformat(),
+        "horario": evento.horario,
+        "tipo": evento.tipo,
+        "descricao": evento.descricao,
+        "status": evento.status,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    eventos = existing.get("eventos", [])
+    eventos.append(evento_doc)
+    
+    # Ordenar eventos por data
+    eventos.sort(key=lambda x: x.get("data", ""))
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": f"Evento adicionado: {evento.descricao}"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"eventos": eventos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Evento adicionado com sucesso", "evento": evento_doc}
+
+
+@api_router.put("/agenda-licitacoes/{licitacao_id}/eventos/{evento_id}/status")
+async def update_evento_status(licitacao_id: str, evento_id: str, status: str, current_user: User = Depends(get_current_user)):
+    """Atualizar status de um evento"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    valid_status = ["pendente", "concluido", "atrasado"]
+    if status not in valid_status:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {valid_status}")
+    
+    eventos = existing.get("eventos", [])
+    evento_encontrado = False
+    for e in eventos:
+        if e.get("id") == evento_id:
+            e["status"] = status
+            evento_encontrado = True
+            break
+    
+    if not evento_encontrado:
+        raise HTTPException(status_code=404, detail="Evento não encontrado")
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": f"Status do evento alterado para: {status}"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"eventos": eventos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Status do evento atualizado"}
+
+
+@api_router.delete("/agenda-licitacoes/{licitacao_id}/eventos/{evento_id}")
+async def delete_evento_agenda(licitacao_id: str, evento_id: str, current_user: User = Depends(get_current_user)):
+    """Excluir evento da timeline"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    eventos = existing.get("eventos", [])
+    eventos = [e for e in eventos if e.get("id") != evento_id]
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": "Evento removido"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"eventos": eventos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Evento excluído com sucesso"}
+
+
+# Anexos
+@api_router.post("/agenda-licitacoes/{licitacao_id}/anexos")
+async def add_anexo_agenda(licitacao_id: str, anexo: Dict[str, Any], current_user: User = Depends(get_current_user)):
+    """Adicionar anexo (edital) à licitação"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    anexo_doc = {
+        "id": str(uuid.uuid4()),
+        "nome": anexo.get("nome", "Anexo"),
+        "url": anexo.get("url", ""),
+        "tipo": anexo.get("tipo", "application/pdf"),
+        "tamanho": anexo.get("tamanho", 0),
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    anexos = existing.get("anexos", [])
+    anexos.append(anexo_doc)
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": f"Anexo adicionado: {anexo_doc['nome']}"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"anexos": anexos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Anexo adicionado com sucesso", "anexo": anexo_doc}
+
+
+@api_router.delete("/agenda-licitacoes/{licitacao_id}/anexos/{anexo_id}")
+async def delete_anexo_agenda(licitacao_id: str, anexo_id: str, current_user: User = Depends(get_current_user)):
+    """Excluir anexo"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    anexos = existing.get("anexos", [])
+    anexos = [a for a in anexos if a.get("id") != anexo_id]
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": "Anexo removido"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"anexos": anexos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Anexo excluído com sucesso"}
+
+
+# Filtros para agenda
+@api_router.get("/agenda-licitacoes/filtros/options")
+async def get_agenda_filtros(current_user: User = Depends(get_current_user)):
+    """Obter opções de filtros para a agenda"""
+    licitacoes = await db.agenda_licitacoes.find({}, {"_id": 0}).to_list(1000)
+    
+    cidades = set()
+    estados = set()
+    portais = set()
+    produtos = set()
+    
+    for lic in licitacoes:
+        if lic.get("cidade"):
+            cidades.add(lic["cidade"])
+        if lic.get("estado"):
+            estados.add(lic["estado"])
+        if lic.get("portal"):
+            portais.add(lic["portal"])
+        for p in lic.get("produtos", []):
+            produtos.add(p)
+    
+    return {
+        "cidades": sorted(list(cidades)),
+        "estados": sorted(list(estados)),
+        "portais": sorted(list(portais)),
+        "produtos": sorted(list(produtos)),
+        "status": ["agendada", "em_andamento", "ganha", "perdida", "cancelada"]
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
