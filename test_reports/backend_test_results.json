@@ -1,14 +1,89 @@
 {
-  "timestamp": "2025-12-24T11:53:20.389407",
-  "total_tests": 32,
+  "timestamp": "2025-12-26T23:21:02.827539",
+  "total_tests": 31,
   "passed_tests": 30,
-  "failed_tests": 2,
-  "success_rate": 93.75,
+  "failed_tests": 1,
+  "success_rate": 96.7741935483871,
   "test_results": [
     {
-      "test": "User Login",
+      "test": "User Login (testfinanceiro@test.com)",
       "success": true,
       "details": "Status: 200"
+    },
+    {
+      "test": "Create Test User (if not exists)",
+      "success": false,
+      "details": "Status: 400 (Expected: 200) - Email already registered"
+    },
+    {
+      "test": "Create Test Despesa",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Upload Boleto File",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get Despesa with Boleto Info",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Despesa Contains Boleto Info",
+      "success": true,
+      "details": "Boleto attached: test_boleto.pdf"
+    },
+    {
+      "test": "Download Boleto File",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Boleto Download Content Verification",
+      "success": true,
+      "details": "Downloaded 328 bytes"
+    },
+    {
+      "test": "Boleto Download Content-Type",
+      "success": true,
+      "details": "Content-Type: application/pdf"
+    },
+    {
+      "test": "Create Despesa Without Boleto",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Download Non-existent Boleto (should fail 404)",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "test": "Download Boleto Invalid Despesa ID (should fail 404)",
+      "success": true,
+      "details": "Status: 404"
+    },
+    {
+      "test": "Download Existing Boleto (ID from review)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Existing Boleto Download Success",
+      "success": true,
+      "details": "Downloaded 649760 bytes from existing despesa"
+    },
+    {
+      "test": "Delete Boleto",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Download Deleted Boleto (should fail 404)",
+      "success": true,
+      "details": "Status: 404"
     },
     {
       "test": "Setup: Create Test Cliente",
@@ -19,86 +94,6 @@
       "test": "Setup: Create Test Produto",
       "success": true,
       "details": "Status: 200"
-    },
-    {
-      "test": "P1: Create Or\u00e7amento with Personalization & New Fields",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Automatic Numbering Format (ORC-2025-XXXX)",
-      "success": true,
-      "details": "Generated number: ORC-2025-0004, Expected format: ORC-2025-XXXX"
-    },
-    {
-      "test": "P1: Automatic Calculations with Frete/Despesas Repasse",
-      "success": false,
-      "details": "Subtotal: 540.0, Final: 595.0, Expected Final: 575.0"
-    },
-    {
-      "test": "P1: Days to Charge Response Configuration",
-      "success": true,
-      "details": "dias_cobrar_resposta: 5, data_cobrar_resposta: 2025-12-29T11:53:19.713741Z"
-    },
-    {
-      "test": "P1: Get Specific Or\u00e7amento with New Fields",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Personalization Fields Preserved",
-      "success": true,
-      "details": "personalizado: True, tipo: Grava\u00e7\u00e3o a Laser, valor: 10.0"
-    },
-    {
-      "test": "P1: Mark Cliente as Cobrado",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Cliente Cobrado Status Update",
-      "success": true,
-      "details": "cliente_cobrado: True"
-    },
-    {
-      "test": "P1: Edit Or\u00e7amento with Different Repasse Options",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Calculations with Repasse = False",
-      "success": false,
-      "details": "Final value: 515.0, Expected: 495.0"
-    },
-    {
-      "test": "P1: Convert Or\u00e7amento to Pedido",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Pedido Creation from Or\u00e7amento",
-      "success": true,
-      "details": "Created pedido: PED-2025-0004"
-    },
-    {
-      "test": "P1: Get All Or\u00e7amentos for Status Cards",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Find Created Or\u00e7amento in List",
-      "success": true,
-      "details": "Found 4 or\u00e7amentos total, 0 abertos, 4 convertidos"
-    },
-    {
-      "test": "P1: Create Or\u00e7amento with 1-day Response Time",
-      "success": true,
-      "details": "Status: 200"
-    },
-    {
-      "test": "P1: Urgent Or\u00e7amento Created for Cobran\u00e7a Testing",
-      "success": true,
-      "details": "Created urgent or\u00e7amento: ORC-2025-0005"
     },
     {
       "test": "P2: Create Expense Due Today",
@@ -118,7 +113,7 @@
     {
       "test": "P2: Alert Card Data (Expenses Near Due)",
       "success": true,
-      "details": "Found 5 expenses near expiration"
+      "details": "Found 2 expenses near expiration"
     },
     {
       "test": "P2: Get Notification Configuration",
@@ -138,7 +133,7 @@
     {
       "test": "P2: Email Processing Logic",
       "success": true,
-      "details": "Message: API Key do Resend n\u00e3o configurada. Configure RESEND_API_KEY no arquivo .env, Expenses found: 5"
+      "details": "Message: API Key do Resend n\u00e3o configurada. Configure RESEND_API_KEY no arquivo .env, Expenses found: 2"
     },
     {
       "test": "P3: Get Current User Level (/api/vendedores/me)",
