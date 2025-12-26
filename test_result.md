@@ -21,9 +21,59 @@ O usuário relatou que o download do boleto anexado a uma despesa no módulo Fin
 - `/app/backend/server.py` - Reorganização da variável UPLOAD_DIR
 - `/app/frontend/src/pages/Financeiro.js` - Nova função de download com autenticação
 
-## Tests To Run
-- Backend: Testar endpoint GET /api/despesas/{id}/boleto/download com autenticação
-- Frontend: Verificar se o download do boleto funciona ao clicar nos botões de download na tabela e no modal de visualização
+## BACKEND TESTING COMPLETED ✅
+
+### Boleto Download Functionality - COMPREHENSIVE TESTING RESULTS
+
+**Test Date:** 2024-12-26 23:21:02  
+**Total Tests:** 31 | **Passed:** 30 | **Failed:** 1 | **Success Rate:** 96.8%
+
+#### ✅ BOLETO DOWNLOAD TESTS - ALL PASSED
+1. **Authentication Test** ✅ - Login with testfinanceiro@test.com successful
+2. **Create Test Despesa** ✅ - New expense created successfully
+3. **Upload Boleto File** ✅ - PDF file uploaded successfully (test_boleto.pdf)
+4. **Despesa Contains Boleto Info** ✅ - Boleto information correctly stored in despesa
+5. **Download Boleto File** ✅ - File download endpoint working (Status: 200)
+6. **Boleto Download Content Verification** ✅ - Downloaded 328 bytes successfully
+7. **Boleto Download Content-Type** ✅ - Correct Content-Type: application/pdf
+8. **Download Non-existent Boleto** ✅ - Correctly returns 404 for despesa without boleto
+9. **Download Invalid Despesa ID** ✅ - Correctly returns 404 for invalid ID
+10. **Download Existing Boleto (ID: 3306f4a4-f623-4b2f-a886-dcda2fee9d4d)** ✅ - Successfully downloaded 649,760 bytes from existing despesa
+11. **Delete Boleto** ✅ - Boleto deletion working correctly
+12. **Download Deleted Boleto** ✅ - Correctly returns 404 after deletion
+
+#### 🔧 BACKEND ENDPOINTS TESTED AND WORKING:
+- `POST /api/auth/login` ✅
+- `POST /api/despesas` ✅ 
+- `POST /api/despesas/{id}/upload-boleto` ✅
+- `GET /api/despesas` ✅
+- `GET /api/despesas/{id}/boleto/download` ✅ **[MAIN FOCUS - WORKING PERFECTLY]**
+- `DELETE /api/despesas/{id}/boleto` ✅
+
+#### 📋 AUTHENTICATION & AUTHORIZATION:
+- ✅ Token-based authentication working correctly
+- ✅ Protected endpoints require valid Bearer token
+- ✅ File download includes proper authentication headers
+- ✅ 403 Forbidden issue RESOLVED - downloads work with authentication
+
+#### 📁 FILE HANDLING:
+- ✅ PDF file upload working correctly
+- ✅ File storage in `/app/uploads/boletos/` directory
+- ✅ Unique filename generation with UUID
+- ✅ File metadata stored in database
+- ✅ File download with correct Content-Type headers
+- ✅ File deletion removes both database record and physical file
+
+#### ⚠️ MINOR ISSUE (Non-Critical):
+- User registration test failed (400 - Email already registered) - This is expected behavior as the test user already exists
+
+### Frontend Testing Required:
+- Frontend UI testing not performed (as per system limitations)
+- Manual verification needed for:
+  - Login to https://compro-dash.preview.emergentagent.com
+  - Navigate to Financeiro page
+  - Verify boleto download buttons in table and modal
+  - Test download functionality in browser
 
 ---
 
