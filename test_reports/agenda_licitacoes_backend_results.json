@@ -1,0 +1,248 @@
+{
+  "timestamp": "2025-12-26T20:26:18.776444",
+  "total_tests": 48,
+  "passed_tests": 47,
+  "success_rate": "97.9%",
+  "test_details": [
+    {
+      "test": "User Registration (if needed)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Agenda Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Required fields validation",
+      "success": true,
+      "details": "All required fields present"
+    },
+    {
+      "test": "Default status validation",
+      "success": true,
+      "details": "Status set to 'agendada'"
+    },
+    {
+      "test": "History creation",
+      "success": true,
+      "details": "Creation history entry added"
+    },
+    {
+      "test": "Validation - Missing Required Fields",
+      "success": true,
+      "details": "Status: 422"
+    },
+    {
+      "test": "Validation - Empty Required Fields",
+      "success": true,
+      "details": "Status: 422"
+    },
+    {
+      "test": "Get Agenda Licita\u00e7\u00f5es List",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Alerts calculation",
+      "success": true,
+      "details": "Alerts field present with 1 items"
+    },
+    {
+      "test": "Date ordering",
+      "success": true,
+      "details": "Results ordered by data_disputa"
+    },
+    {
+      "test": "Get Agenda Licita\u00e7\u00e3o by ID",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "ID validation",
+      "success": true,
+      "details": "Correct licita\u00e7\u00e3o returned"
+    },
+    {
+      "test": "Update Agenda Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Update validation",
+      "success": true,
+      "details": "Fields updated correctly"
+    },
+    {
+      "test": "Update history",
+      "success": true,
+      "details": "Update history entry added"
+    },
+    {
+      "test": "Update Status to 'em_andamento'",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Status Update",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Status update verification",
+      "success": true,
+      "details": "Status updated to 'em_andamento'"
+    },
+    {
+      "test": "Invalid Status Update",
+      "success": true,
+      "details": "Status: 400"
+    },
+    {
+      "test": "Add Event to Timeline",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Event creation",
+      "success": true,
+      "details": "Event created with ID: a37fe21e-cafb-4eb5-9b3a-9ba86cfbd480"
+    },
+    {
+      "test": "Verify Event Added",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Event integration",
+      "success": true,
+      "details": "Event added to licita\u00e7\u00e3o, total events: 1"
+    },
+    {
+      "test": "Update Event Status to 'concluido'",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Event Status Update",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Event status verification",
+      "success": true,
+      "details": "Event status updated to 'concluido'"
+    },
+    {
+      "test": "Delete Event",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Event Deleted",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Event deletion verification",
+      "success": true,
+      "details": "Event successfully deleted"
+    },
+    {
+      "test": "Add Attachment",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Attachment creation",
+      "success": true,
+      "details": "Attachment created with ID: e58bb025-af8e-437e-9152-55cd154fd824"
+    },
+    {
+      "test": "Verify Attachment Added",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Attachment integration",
+      "success": true,
+      "details": "Attachment added to licita\u00e7\u00e3o, total attachments: 1"
+    },
+    {
+      "test": "Delete Attachment",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Attachment Deleted",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Attachment deletion verification",
+      "success": true,
+      "details": "Attachment successfully deleted"
+    },
+    {
+      "test": "Get Filter Options",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Filter options structure",
+      "success": true,
+      "details": "Filter options available: ['cidades', 'estados', 'portais', 'produtos']"
+    },
+    {
+      "test": "Create Today's Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Tomorrow's Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Get List with Alerts",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Red alert (today)",
+      "success": false,
+      "details": "No red alert found. Alerts: ['\u26a0\ufe0f Licita\u00e7\u00e3o vencida']"
+    },
+    {
+      "test": "Yellow alert (48h)",
+      "success": true,
+      "details": "Yellow alert generated for 48h licita\u00e7\u00e3o"
+    },
+    {
+      "test": "Cleanup Today's Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Cleanup Tomorrow's Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Delete Agenda Licita\u00e7\u00e3o",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Verify Licita\u00e7\u00e3o Deleted",
+      "success": true,
+      "details": "Status: 404"
+    }
+  ]
+}
