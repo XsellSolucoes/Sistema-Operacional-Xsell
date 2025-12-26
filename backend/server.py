@@ -1896,8 +1896,10 @@ async def get_relatorio_geral(
     vendedor: Optional[str] = None,
     segmento: Optional[str] = None,
     cidade: Optional[str] = None,
+    status: Optional[str] = None,
     current_user: User = Depends(get_current_user)
 ):
+    """Relatório geral com dados fiéis aos pedidos"""
     # Build filter for pedidos
     filter_pedidos = {}
     if data_inicio and data_fim:
@@ -1911,6 +1913,8 @@ async def get_relatorio_geral(
         filter_pedidos["vendedor"] = vendedor
     if segmento and segmento != "todos":
         filter_pedidos["tipo_venda"] = segmento
+    if status and status != "todos":
+        filter_pedidos["status"] = status
     
     # Build filter for licitações
     filter_licitacoes = {}
@@ -1951,47 +1955,84 @@ async def get_relatorio_geral(
         cliente_ids_in_cidade = [c["id"] for c in clientes]
         pedidos = [p for p in pedidos if p.get("cliente_id") in cliente_ids_in_cidade]
     
-    # Calculate totals
+    # Calculate totals from pedidos - using actual stored values
     total_faturado_pedidos = sum(p.get("valor_total_venda", 0) for p in pedidos)
-    total_faturado_licitacoes = sum(lic.get("valor_total_venda", 0) for lic in licitacoes)
-    total_faturado = total_faturado_pedidos + total_faturado_licitacoes
-    
     total_custo_pedidos = sum(p.get("custo_total", 0) for p in pedidos)
-    total_custo_licitacoes = sum(lic.get("valor_total_compra", 0) for lic in licitacoes)
-    total_custo = total_custo_pedidos + total_custo_licitacoes
-    
     total_lucro_pedidos = sum(p.get("lucro_total", 0) for p in pedidos)
+    
+    # Calculate despesas detalhadas from pedidos
+    total_frete_pedidos = sum(p.get("frete", 0) for p in pedidos)
+    total_frete_repassado = sum(p.get("frete", 0) for p in pedidos if p.get("repassar_frete", False))
+    total_frete_interno = total_frete_pedidos - total_frete_repassado
+    
+    # Despesas detalhadas dos pedidos
+    total_despesas_pedidos = 0
+    total_despesas_repassadas_pedidos = 0
+    total_despesas_internas_pedidos = 0
+    
+    for p in pedidos:
+        despesas_det = p.get("despesas_detalhadas", [])
+        for d in despesas_det:
+            valor = d.get("valor", 0)
+            total_despesas_pedidos += valor
+            if d.get("repassar", False):
+                total_despesas_repassadas_pedidos += valor
+            else:
+                total_despesas_internas_pedidos += valor
+    
+    # Total despesas internas (não repassadas) - impactam o custo real
+    total_despesas_internas = total_frete_interno + total_despesas_internas_pedidos
+    
+    # Licitações
+    total_faturado_licitacoes = sum(lic.get("valor_total_venda", 0) for lic in licitacoes)
+    total_custo_licitacoes = sum(lic.get("valor_total_compra", 0) for lic in licitacoes)
     total_lucro_licitacoes = sum(lic.get("lucro_total", 0) for lic in licitacoes)
     
-    total_despesas = sum(d.get("valor", 0) for d in despesas)
+    total_faturado = total_faturado_pedidos + total_faturado_licitacoes
+    total_custo = total_custo_pedidos + total_custo_licitacoes
+    
+    total_despesas_operacionais = sum(d.get("valor", 0) for d in despesas)
     
     # Group by segmento
     segmentos_pedidos = {}
     for p in pedidos:
         seg = p.get("tipo_venda", "outros")
         if seg not in segmentos_pedidos:
-            segmentos_pedidos[seg] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+            segmentos_pedidos[seg] = {"quantidade": 0, "faturamento": 0, "lucro": 0, "custo": 0}
         segmentos_pedidos[seg]["quantidade"] += 1
         segmentos_pedidos[seg]["faturamento"] += p.get("valor_total_venda", 0)
         segmentos_pedidos[seg]["lucro"] += p.get("lucro_total", 0)
+        segmentos_pedidos[seg]["custo"] += p.get("custo_total", 0)
     
     # Add licitações as a segment
     if licitacoes:
         segmentos_pedidos["licitacao"] = {
             "quantidade": len(licitacoes),
             "faturamento": total_faturado_licitacoes,
-            "lucro": total_lucro_licitacoes
+            "lucro": total_lucro_licitacoes,
+            "custo": total_custo_licitacoes
         }
+    
+    # Group by status
+    status_pedidos = {}
+    for p in pedidos:
+        st = p.get("status", "pendente")
+        if st not in status_pedidos:
+            status_pedidos[st] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+        status_pedidos[st]["quantidade"] += 1
+        status_pedidos[st]["faturamento"] += p.get("valor_total_venda", 0)
+        status_pedidos[st]["lucro"] += p.get("lucro_total", 0)
     
     # Group by vendedor
     vendedores_stats = {}
     for p in pedidos:
         vend = p.get("vendedor", "Não informado")
         if vend not in vendedores_stats:
-            vendedores_stats[vend] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+            vendedores_stats[vend] = {"quantidade": 0, "faturamento": 0, "lucro": 0, "custo": 0}
         vendedores_stats[vend]["quantidade"] += 1
         vendedores_stats[vend]["faturamento"] += p.get("valor_total_venda", 0)
         vendedores_stats[vend]["lucro"] += p.get("lucro_total", 0)
+        vendedores_stats[vend]["custo"] += p.get("custo_total", 0)
     
     # Group by cidade (from clientes)
     cidades_stats = {}
@@ -2018,29 +2059,66 @@ async def get_relatorio_geral(
         cidades_stats[cid]["faturamento"] += lic.get("valor_total_venda", 0)
         cidades_stats[cid]["lucro"] += lic.get("lucro_total", 0)
     
-    # Recent transactions (last 10)
-    transacoes_recentes = []
-    for p in sorted(pedidos, key=lambda x: x.get("data", ""), reverse=True)[:10]:
-        transacoes_recentes.append({
-            "tipo": "Pedido",
+    # Group by forma de pagamento
+    formas_pagamento_stats = {}
+    for p in pedidos:
+        forma = p.get("forma_pagamento", "Não informado")
+        if forma not in formas_pagamento_stats:
+            formas_pagamento_stats[forma] = {"quantidade": 0, "faturamento": 0}
+        formas_pagamento_stats[forma]["quantidade"] += 1
+        formas_pagamento_stats[forma]["faturamento"] += p.get("valor_total_venda", 0)
+    
+    # Group by month for trend analysis
+    pedidos_por_mes = {}
+    for p in pedidos:
+        data_str = p.get("data", "")
+        if data_str:
+            try:
+                data = datetime.fromisoformat(data_str.replace("Z", "+00:00"))
+                mes_ano = data.strftime("%Y-%m")
+                if mes_ano not in pedidos_por_mes:
+                    pedidos_por_mes[mes_ano] = {"quantidade": 0, "faturamento": 0, "lucro": 0}
+                pedidos_por_mes[mes_ano]["quantidade"] += 1
+                pedidos_por_mes[mes_ano]["faturamento"] += p.get("valor_total_venda", 0)
+                pedidos_por_mes[mes_ano]["lucro"] += p.get("lucro_total", 0)
+            except:
+                pass
+    
+    # All pedidos details for the table (sorted by date desc)
+    pedidos_detalhados = []
+    for p in sorted(pedidos, key=lambda x: x.get("data", ""), reverse=True):
+        cliente = clientes_dict.get(p.get("cliente_id"), {})
+        pedidos_detalhados.append({
+            "id": p.get("id"),
             "numero": p.get("numero", ""),
-            "cliente": p.get("cliente_nome", ""),
-            "valor": p.get("valor_total_venda", 0),
-            "lucro": p.get("lucro_total", 0),
             "data": p.get("data", ""),
-            "segmento": p.get("tipo_venda", ""),
-            "vendedor": p.get("vendedor", "")
+            "cliente_nome": p.get("cliente_nome", ""),
+            "cliente_cidade": cliente.get("cidade", ""),
+            "vendedor": p.get("vendedor", ""),
+            "status": p.get("status", "pendente"),
+            "tipo_venda": p.get("tipo_venda", ""),
+            "forma_pagamento": p.get("forma_pagamento", ""),
+            "valor_venda": p.get("valor_total_venda", 0),
+            "custo_total": p.get("custo_total", 0),
+            "lucro": p.get("lucro_total", 0),
+            "frete": p.get("frete", 0),
+            "repassar_frete": p.get("repassar_frete", False),
+            "qtd_itens": len(p.get("itens", []))
         })
+    
+    # Recent transactions (last 10)
+    transacoes_recentes = pedidos_detalhados[:10]
     
     for lic in sorted(licitacoes, key=lambda x: x.get("data_empenho", ""), reverse=True)[:10]:
         transacoes_recentes.append({
             "tipo": "Licitação",
             "numero": lic.get("numero_licitacao", ""),
-            "cliente": lic.get("orgao_publico", ""),
-            "valor": lic.get("valor_total_venda", 0),
+            "cliente_nome": lic.get("orgao_publico", ""),
+            "valor_venda": lic.get("valor_total_venda", 0),
             "lucro": lic.get("lucro_total", 0),
             "data": lic.get("data_empenho", ""),
-            "segmento": "licitacao",
+            "status": lic.get("status", ""),
+            "tipo_venda": "licitacao",
             "vendedor": "-"
         })
     
@@ -2048,20 +2126,43 @@ async def get_relatorio_geral(
     transacoes_recentes = sorted(transacoes_recentes, key=lambda x: x.get("data", ""), reverse=True)[:10]
     
     return {
+        # Totais gerais
         "total_faturado": total_faturado,
         "total_faturado_pedidos": total_faturado_pedidos,
         "total_faturado_licitacoes": total_faturado_licitacoes,
         "total_custo": total_custo,
+        "total_custo_pedidos": total_custo_pedidos,
+        "total_custo_licitacoes": total_custo_licitacoes,
         "total_lucro_pedidos": total_lucro_pedidos,
         "total_lucro_licitacoes": total_lucro_licitacoes,
         "lucro_total": total_lucro_pedidos + total_lucro_licitacoes,
-        "total_despesas": total_despesas,
-        "lucro_liquido": total_lucro_pedidos + total_lucro_licitacoes - total_despesas,
+        
+        # Despesas detalhadas
+        "total_frete": total_frete_pedidos,
+        "total_frete_repassado": total_frete_repassado,
+        "total_frete_interno": total_frete_interno,
+        "total_despesas_pedidos": total_despesas_pedidos,
+        "total_despesas_repassadas": total_despesas_repassadas_pedidos,
+        "total_despesas_internas": total_despesas_internas,
+        
+        # Despesas operacionais (do módulo financeiro)
+        "total_despesas_operacionais": total_despesas_operacionais,
+        "lucro_liquido": total_lucro_pedidos + total_lucro_licitacoes - total_despesas_operacionais,
+        
+        # Quantidades
         "quantidade_pedidos": len(pedidos),
         "quantidade_licitacoes": len(licitacoes),
+        
+        # Agrupamentos
         "por_segmento": segmentos_pedidos,
+        "por_status": status_pedidos,
         "por_vendedor": vendedores_stats,
         "por_cidade": cidades_stats,
+        "por_forma_pagamento": formas_pagamento_stats,
+        "por_mes": dict(sorted(pedidos_por_mes.items())),
+        
+        # Detalhes
+        "pedidos_detalhados": pedidos_detalhados,
         "transacoes_recentes": transacoes_recentes
     }
 
