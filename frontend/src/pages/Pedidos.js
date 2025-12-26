@@ -752,7 +752,8 @@ export default function Pedidos() {
       descricao_outras_despesas: '',
       repassar_outras_despesas: false,
       prazo_entrega: '',
-      status: 'pendente'
+      status: 'pendente',
+      dados_pagamento_id: ''
     });
     setItens([]);
     setDespesasPedido([]);
