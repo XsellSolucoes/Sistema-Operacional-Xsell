@@ -411,7 +411,14 @@ export default function Licitacoes() {
     }
 
     try {
-      // Registrar cada item como fornecimento
+      // Registrar cada item como fornecimento com despesas rateadas
+      const despesasPorItem = fornecimentoForm.despesasGerais.length > 0 && itensComQuantidade.length > 0
+        ? fornecimentoForm.despesasGerais.map(d => ({
+            descricao: d.descricao,
+            valor: d.valor / itensComQuantidade.length // Ratear despesas
+          }))
+        : [];
+
       for (const item of itensComQuantidade) {
         await axios.post(
           `${API}/licitacoes/${selectedContrato.id}/fornecimentos`,
@@ -420,7 +427,9 @@ export default function Licitacoes() {
             quantidade: parseFloat(item.quantidade),
             data_fornecimento: new Date(fornecimentoForm.data_fornecimento).toISOString(),
             numero_nota_fornecimento: fornecimentoForm.numero_nota_fiscal,
-            observacao: `NE: ${fornecimentoForm.numero_nota_empenho || 'N/A'}`
+            numero_nota_empenho: fornecimentoForm.numero_nota_empenho || null,
+            observacao: `NE: ${fornecimentoForm.numero_nota_empenho || 'N/A'}`,
+            despesas: despesasPorItem
           },
           getAuthHeader()
         );
