@@ -28,12 +28,16 @@ class XSELLAPITester:
             "details": details
         })
 
-    def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
+    def run_test(self, name, method, endpoint, expected_status, data=None, params=None, files=None):
         """Run a single API test"""
         url = f"{self.api_url}/{endpoint}"
-        headers = {'Content-Type': 'application/json'}
+        headers = {}
         if self.token:
             headers['Authorization'] = f'Bearer {self.token}'
+
+        # Only set Content-Type for JSON requests
+        if not files and data:
+            headers['Content-Type'] = 'application/json'
 
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {method} {url}")
@@ -42,7 +46,10 @@ class XSELLAPITester:
             if method == 'GET':
                 response = requests.get(url, headers=headers, params=params)
             elif method == 'POST':
-                response = requests.post(url, json=data, headers=headers)
+                if files:
+                    response = requests.post(url, files=files, headers=headers)
+                else:
+                    response = requests.post(url, json=data, headers=headers)
             elif method == 'PUT':
                 response = requests.put(url, json=data, headers=headers, params=params)
             elif method == 'DELETE':
@@ -65,7 +72,8 @@ class XSELLAPITester:
                 try:
                     return response.json()
                 except:
-                    return {}
+                    # For file downloads, return the response object
+                    return response
             return None
 
         except Exception as e:
