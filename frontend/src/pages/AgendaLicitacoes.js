@@ -121,6 +121,7 @@ export default function AgendaLicitacoes() {
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [filtroCidade, setFiltroCidade] = useState('todos');
   const [filtroPortal, setFiltroPortal] = useState('todos');
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(null);
 
   // Estado do formulário
   const [formData, setFormData] = useState({
