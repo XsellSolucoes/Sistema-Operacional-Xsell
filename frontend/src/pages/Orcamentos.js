@@ -260,15 +260,19 @@ export default function Orcamentos() {
   const calcularTotais = () => {
     const valorItens = itensOrcamento.reduce((acc, item) => acc + item.preco_total, 0);
     const valorFrete = parseFloat(formData.valor_frete) || 0;
-    const outrasDespesas = parseFloat(formData.outras_despesas) || 0;
+    
+    // Calcular despesas a partir do array de múltiplas despesas
+    const totalDespesas = despesasOrcamento.reduce((sum, d) => sum + d.valor, 0);
+    const despesasRepassadas = despesasOrcamento.filter(d => d.repassar).reduce((sum, d) => sum + d.valor, 0);
+    const despesasInternas = totalDespesas - despesasRepassadas;
+    
     const desconto = parseFloat(formData.desconto) || 0;
     
     // Valor para o cliente (considera repasses)
     const freteCliente = formData.repassar_frete ? valorFrete : 0;
-    const outrasCliente = formData.repassar_outras_despesas ? outrasDespesas : 0;
-    const valorFinal = valorItens + freteCliente + outrasCliente - desconto;
+    const valorFinal = valorItens + freteCliente + despesasRepassadas - desconto;
     
-    return { valorItens, valorFrete, outrasDespesas, desconto, freteCliente, outrasCliente, valorFinal };
+    return { valorItens, valorFrete, totalDespesas, despesasRepassadas, despesasInternas, desconto, freteCliente, valorFinal };
   };
 
   const handleSubmit = async (e) => {
@@ -284,6 +288,13 @@ export default function Orcamentos() {
     }
 
     try {
+      // Calcular totais de despesas
+      const totalDespesas = despesasOrcamento.reduce((sum, d) => sum + d.valor, 0);
+      const despesasRepassadas = despesasOrcamento.filter(d => d.repassar).reduce((sum, d) => sum + d.valor, 0);
+      
+      // Criar descrição consolidada das despesas
+      const descricaoDespesas = despesasOrcamento.map(d => `${d.descricao}: R$ ${d.valor.toFixed(2)}${d.repassar ? ' (repassado)' : ''}`).join('; ');
+      
       const payload = {
         cliente_id: formData.cliente_id,
         vendedor: formData.vendedor || null,
@@ -294,9 +305,10 @@ export default function Orcamentos() {
         frete_por_conta: formData.frete_por_conta,
         valor_frete: parseFloat(formData.valor_frete) || 0,
         repassar_frete: formData.repassar_frete,
-        outras_despesas: parseFloat(formData.outras_despesas) || 0,
-        descricao_outras_despesas: formData.descricao_outras_despesas || null,
-        repassar_outras_despesas: formData.repassar_outras_despesas,
+        outras_despesas: totalDespesas,
+        descricao_outras_despesas: descricaoDespesas || null,
+        repassar_outras_despesas: despesasRepassadas > 0,
+        despesas_detalhadas: despesasOrcamento,
         desconto: parseFloat(formData.desconto) || 0,
         dias_cobrar_resposta: formData.dias_cobrar_resposta && formData.dias_cobrar_resposta !== 'none' ? parseInt(formData.dias_cobrar_resposta) : null,
         observacoes: formData.observacoes
