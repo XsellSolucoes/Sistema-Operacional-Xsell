@@ -34,6 +34,7 @@ export default function Pedidos() {
   const [clientes, setClientes] = useState([]);
   const [produtos, setProdutos] = useState([]);
   const [vendedores, setVendedores] = useState([]);
+  const [dadosPagamento, setDadosPagamento] = useState([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
