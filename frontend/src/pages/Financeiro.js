@@ -35,6 +35,8 @@ export default function Financeiro() {
     data_vencimento: new Date().toISOString().split('T')[0],
     status: 'pendente'
   });
+  const [arquivoBoleto, setArquivoBoleto] = useState(null);
+  const [uploadingBoleto, setUploadingBoleto] = useState(false);
   const [movimento, setMovimento] = useState({
     tipo: 'credito',
     valor: '',
