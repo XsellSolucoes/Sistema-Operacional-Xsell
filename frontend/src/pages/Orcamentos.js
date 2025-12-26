@@ -344,14 +344,27 @@ export default function Orcamentos() {
       frete_por_conta: orc.frete_por_conta || 'destinatario',
       valor_frete: orc.valor_frete?.toString() || '0',
       repassar_frete: orc.repassar_frete !== false,
-      outras_despesas: orc.outras_despesas?.toString() || '0',
-      descricao_outras_despesas: orc.descricao_outras_despesas || '',
-      repassar_outras_despesas: orc.repassar_outras_despesas || false,
       desconto: orc.desconto?.toString() || '0',
       dias_cobrar_resposta: orc.dias_cobrar_resposta?.toString() || '',
       observacoes: orc.observacoes || ''
     });
     setItensOrcamento(orc.itens || []);
+    
+    // Carregar despesas detalhadas ou converter do campo antigo
+    if (orc.despesas_detalhadas && orc.despesas_detalhadas.length > 0) {
+      setDespesasOrcamento(orc.despesas_detalhadas);
+    } else if (orc.outras_despesas > 0) {
+      // Converter despesa antiga para formato novo
+      setDespesasOrcamento([{
+        id: Date.now().toString(),
+        descricao: orc.descricao_outras_despesas || 'Outras despesas',
+        valor: orc.outras_despesas,
+        repassar: orc.repassar_outras_despesas || false
+      }]);
+    } else {
+      setDespesasOrcamento([]);
+    }
+    
     setOpen(true);
   };
 
