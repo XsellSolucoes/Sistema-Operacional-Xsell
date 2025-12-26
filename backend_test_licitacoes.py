@@ -645,6 +645,12 @@ class LicitacoesAPITester:
         self.test_create_licitacao_with_contract()
         self.test_get_licitacoes_with_calculations()
         self.test_register_fornecimento()
+        
+        # NEW: Test despesas functionality
+        self.test_register_fornecimento_with_despesas()
+        self.test_profit_calculation_with_despesas()
+        
+        # Continue with other tests
         self.test_supply_validation()
         self.test_percentual_executado_calculation()
         self.test_contract_alerts()
