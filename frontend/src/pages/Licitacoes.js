@@ -1348,11 +1348,85 @@ export default function Licitacoes() {
 
               <Separator />
 
+              {/* Despesas do Pedido */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-red-600">Despesas do Pedido</Label>
+                <div className="p-3 bg-red-50 rounded-lg space-y-3">
+                  {/* Lista de despesas adicionadas */}
+                  {fornecimentoForm.despesasGerais.length > 0 && (
+                    <div className="space-y-2">
+                      {fornecimentoForm.despesasGerais.map((despesa) => (
+                        <div key={despesa.id} className="flex items-center justify-between p-2 bg-white rounded border border-red-200">
+                          <div className="flex-1">
+                            <span className="text-sm">{despesa.descricao}</span>
+                            <span className="ml-2 font-bold text-red-600">{formatCurrency(despesa.valor)}</span>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => removerDespesa(despesa.id)}
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Formulário para adicionar despesa */}
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1 space-y-1">
+                      <Label className="text-xs">Descrição da Despesa</Label>
+                      <Input
+                        value={novaDespesa.descricao}
+                        onChange={(e) => setNovaDespesa({...novaDespesa, descricao: e.target.value})}
+                        placeholder="Ex: Frete, Taxa, Comissão..."
+                        className="h-8"
+                      />
+                    </div>
+                    <div className="w-28 space-y-1">
+                      <Label className="text-xs">Valor (R$)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={novaDespesa.valor}
+                        onChange={(e) => setNovaDespesa({...novaDespesa, valor: e.target.value})}
+                        placeholder="0,00"
+                        className="h-8"
+                      />
+                    </div>
+                    <Button 
+                      type="button" 
+                      size="sm" 
+                      onClick={adicionarDespesa}
+                      className="h-8 bg-red-500 hover:bg-red-600"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {fornecimentoForm.despesasGerais.length > 0 && (
+                    <div className="pt-2 border-t border-red-200">
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>Total Despesas:</span>
+                        <span className="text-red-600">
+                          {formatCurrency(fornecimentoForm.despesasGerais.reduce((acc, d) => acc + d.valor, 0))}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Resumo Financeiro */}
               {(() => {
                 const valores = calcularValoresFornecimento();
                 return (
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-4 gap-3">
                     <div className="p-3 bg-blue-50 rounded-lg text-center">
                       <p className="text-xs text-muted-foreground">Total Venda</p>
                       <p className="text-lg font-bold text-blue-600">{formatCurrency(valores.totalVenda)}</p>
@@ -1360,6 +1434,10 @@ export default function Licitacoes() {
                     <div className="p-3 bg-orange-50 rounded-lg text-center">
                       <p className="text-xs text-muted-foreground">Total Compra</p>
                       <p className="text-lg font-bold text-orange-600">{formatCurrency(valores.totalCompra)}</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded-lg text-center">
+                      <p className="text-xs text-muted-foreground">Despesas</p>
+                      <p className="text-lg font-bold text-red-600">{formatCurrency(valores.totalDespesas)}</p>
                     </div>
                     <div className="p-3 bg-green-100 rounded-lg text-center">
                       <p className="text-xs text-muted-foreground">Lucro</p>
