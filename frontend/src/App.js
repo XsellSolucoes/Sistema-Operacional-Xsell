@@ -141,6 +141,13 @@ function App() {
             </DashboardLayout>
           </PrivateRoute>
         } />
+        <Route path="/agenda-licitacoes" element={
+          <PrivateRoute>
+            <DashboardLayout user={user}>
+              <AgendaLicitacoes />
+            </DashboardLayout>
+          </PrivateRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
