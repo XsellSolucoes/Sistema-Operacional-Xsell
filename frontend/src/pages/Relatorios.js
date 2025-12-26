@@ -1097,53 +1097,83 @@ export default function Relatorios() {
               </Card>
             </TabsContent>
 
-            {/* Transações Recentes */}
-            <TabsContent value="transacoes">
+            {/* Transações Recentes - REMOVIDO, agora há aba de Status */}
+            
+            {/* Por Status */}
+            <TabsContent value="status">
               <Card className="shadow-sm">
                 <CardHeader>
-                  <CardTitle className="font-heading">Transações Recentes</CardTitle>
-                  <CardDescription>Últimas operações realizadas no período</CardDescription>
+                  <CardTitle className="font-heading">Análise por Status do Pedido</CardTitle>
+                  <CardDescription>Distribuição dos pedidos por situação atual</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {(relatorio.transacoes_recentes || []).length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">Nenhuma transação encontrada para os filtros selecionados</p>
+                  {Object.keys(relatorio.por_status || {}).length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">Nenhum dado encontrado para os filtros selecionados</p>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Data</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Número</TableHead>
-                          <TableHead>Cliente/Órgão</TableHead>
-                          <TableHead>Segmento</TableHead>
-                          <TableHead>Vendedor</TableHead>
-                          <TableHead className="text-right">Valor</TableHead>
-                          <TableHead className="text-right">Lucro</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {relatorio.transacoes_recentes.map((trans, index) => (
-                          <TableRow key={index}>
-                            <TableCell>{formatDate(trans.data)}</TableCell>
-                            <TableCell>
-                              <Badge variant={trans.tipo === 'Pedido' ? 'default' : 'secondary'}>
-                                {trans.tipo}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="font-mono text-sm">{trans.numero}</TableCell>
-                            <TableCell className="max-w-[200px] truncate">{trans.cliente}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{getSegmentoLabel(trans.segmento)}</Badge>
-                            </TableCell>
-                            <TableCell>{trans.vendedor}</TableCell>
-                            <TableCell className="text-right">R$ {formatCurrency(trans.valor)}</TableCell>
-                            <TableCell className="text-right text-green-600 font-medium">
-                              R$ {formatCurrency(trans.lucro)}
-                            </TableCell>
-                          </TableRow>
+                    <>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        {Object.entries(relatorio.por_status || {}).map(([status, dados]) => (
+                          <div key={status} className={`p-4 rounded-lg border-l-4 ${
+                            status === 'concluido' ? 'bg-green-50 border-green-500' :
+                            status === 'em_producao' ? 'bg-blue-50 border-blue-500' :
+                            status === 'cancelado' ? 'bg-red-50 border-red-500' :
+                            'bg-yellow-50 border-yellow-500'
+                          }`}>
+                            <p className="text-2xl font-bold">{dados.quantidade}</p>
+                            <p className="text-sm font-medium capitalize">
+                              {status === 'concluido' ? 'Concluídos' :
+                               status === 'em_producao' ? 'Em Produção' :
+                               status === 'cancelado' ? 'Cancelados' :
+                               status === 'pendente' ? 'Pendentes' : status}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              R$ {formatCurrency(dados.faturamento)}
+                            </p>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-center">Quantidade</TableHead>
+                            <TableHead className="text-right">Faturamento</TableHead>
+                            <TableHead className="text-right">Lucro</TableHead>
+                            <TableHead className="text-right">% do Total</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(relatorio.por_status || {})
+                            .sort((a, b) => b[1].faturamento - a[1].faturamento)
+                            .map(([status, dados]) => (
+                            <TableRow key={status}>
+                              <TableCell className="font-medium">
+                                <Badge variant={
+                                  status === 'concluido' ? 'default' :
+                                  status === 'em_producao' ? 'secondary' :
+                                  status === 'cancelado' ? 'destructive' : 'outline'
+                                }>
+                                  {status === 'concluido' ? 'Concluído' :
+                                   status === 'em_producao' ? 'Em Produção' :
+                                   status === 'cancelado' ? 'Cancelado' :
+                                   status === 'pendente' ? 'Pendente' : status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center">{dados.quantidade}</TableCell>
+                              <TableCell className="text-right">R$ {formatCurrency(dados.faturamento)}</TableCell>
+                              <TableCell className="text-right text-green-600 font-medium">
+                                R$ {formatCurrency(dados.lucro)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {relatorio.total_faturado_pedidos > 0 
+                                  ? ((dados.faturamento / relatorio.total_faturado_pedidos) * 100).toFixed(1) 
+                                  : 0}%
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </>
                   )}
                 </CardContent>
               </Card>
