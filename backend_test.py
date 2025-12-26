@@ -75,8 +75,24 @@ class XSELLAPITester:
     def test_login(self):
         """Test login and get token"""
         print("\n🔐 Testing Authentication...")
+        
+        # First try with the test credentials from the review request
         response_data = self.run_test(
-            "User Login",
+            "User Login (testfinanceiro@test.com)",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "testfinanceiro@test.com", "password": "test123"}
+        )
+        
+        if response_data and 'access_token' in response_data:
+            self.token = response_data['access_token']
+            print(f"   Token obtained: {self.token[:20]}...")
+            return True
+        
+        # Fallback to original test user
+        response_data = self.run_test(
+            "User Login (test@xsell.com)",
             "POST",
             "auth/login",
             200,
