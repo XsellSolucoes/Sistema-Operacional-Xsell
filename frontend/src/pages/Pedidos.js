@@ -1601,7 +1601,26 @@ export default function Pedidos() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-primary text-primary">
+                <Button variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+                  <Download className="h-4 w-4 mr-2" />
+                  Salvar PDF
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleSaveCliente(viewingPedido)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Via Cliente
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleSaveInterno(viewingPedido)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Via Interna
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90">
                   <Printer className="h-4 w-4 mr-2" />
                   Imprimir
                   <ChevronDown className="h-4 w-4 ml-2" />
