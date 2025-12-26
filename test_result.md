@@ -6,44 +6,39 @@
 
 ## Changes Made This Session
 
-### 1. Módulo Licitações (REFATORADO - Nova Arquitetura)
-- Nova estrutura centralizada em "Contratos":
-  - Quadro de Contrato: número, data inicial, data final, valor total
-  - Produtos vinculados ao contrato com: quantidade contratada, fornecida, restante
-  - Sistema de fornecimentos parciais com abatimento automático de quantidades
-  - Alertas automáticos: contrato vencido, vence em X dias, 90% executado
-  - Impedimento de fornecimentos que excedam quantidade contratada
-- Backend endpoints funcionando:
-  - POST /api/licitacoes (criar com estrutura de contrato)
-  - GET /api/licitacoes (listar com cálculos de quantidades e alertas)
-  - GET /api/licitacoes/{id} (detalhes)
-  - PUT /api/licitacoes/{id} (atualizar)
-  - DELETE /api/licitacoes/{id} (excluir)
-  - POST /api/licitacoes/{id}/fornecimentos (registrar fornecimento)
-  - PUT /api/licitacoes/{id}/status (marcar como pago)
-- Frontend atualizado:
-  - Formulário com Quadro de Contrato destacado
-  - Abas: Dados Gerais, Produtos, Datas, Financeiro
-  - Modal de visualização com controle de execução
-  - Modal de registro de fornecimento
-  - Tabela com barra de progresso e alertas
+### Módulo Licitações - REFATORAÇÃO COMPLETA (Baseado na tabela de referência)
 
-### 2. Módulo Clientes (UI criada, funcionalidade pendente)
-- Histórico do Cliente: não implementado
-- Ocorrências: não implementado
+**Nova arquitetura de 3 blocos integrados:**
+
+1. **BLOCO CONTRATO:**
+   - Campos obrigatórios: Cidade, Estado, Número do contrato, Data início, Data término
+   - Produtos contratados com: Descrição, Preço venda, Preço compra, Quantidade contratada
+   - Cálculo automático de margem de lucro unitária
+   - Seção EXECUÇÃO: Quantidade fornecida, Quantidade restante
+
+2. **BLOCO FORNECIMENTO:**
+   - Registro com: Produto, Data Nota Empenho, Nº Nota Empenho, Data Fornecimento, Nº Nota Fiscal, Quantidade
+   - Fornecimento com múltiplos produtos em uma única operação
+   - Validação: não permite quantidade superior à restante
+   - VALORES: Total por nota de Empenho, Total de compras, Total de lucros
+
+3. **BLOCO FINANCEIRO:**
+   - Cálculos automáticos (não editáveis):
+     - Total do contrato
+     - Total fornecido
+     - Total de compras
+     - Total de lucros do contrato
+   - % Executado e % Lucro/Contrato
+
+**Regras implementadas:**
+- Status automático: Ativo, Finalizado, Vencido
+- Não permite exclusão de contrato com fornecimentos
+- Não permite exclusão de produto com fornecimento vinculado
+- Atualização em tempo real dos totais
 
 ## Tests To Run
-- Backend: 
-  - POST /api/licitacoes (criar licitação com contrato e produtos)
-  - POST /api/licitacoes/{id}/fornecimentos (registrar fornecimento)
-  - Validar impedimento de exceder quantidade
-  - Validar cálculos de alertas
-- Frontend:
-  - Formulário de nova licitação com contrato
-  - Modal de visualização com abas
-  - Botão "Fornecer" e modal de fornecimento
-  - Barra de progresso de execução
+- Backend: CRUD contratos, registro fornecimento, validações
+- Frontend: Layout 3 colunas, modais, cálculos em tempo real
 
 ## Incorporate User Feedback
-- Prioridade 1: Módulo Licitações com sistema de Contratos (EM TESTE)
-- Prioridade 2: Histórico e Ocorrências do Cliente (PENDENTE)
+- Módulo Licitações refatorado conforme tabela de referência do usuário
