@@ -554,7 +554,205 @@ class XSELLAPITester:
             data=test_produto
         )
         
-        return created_produto.get('id') if created_produto else None
+    def test_boleto_download_functionality(self):
+        """Test complete boleto download functionality as requested in review"""
+        print("\n💳 Testing Boleto Download Functionality...")
+        
+        # Step 1: Create a test user (if needed)
+        test_user = {
+            "email": "testfinanceiro@test.com",
+            "password": "test123",
+            "name": "Test Financeiro User"
+        }
+        
+        user_created = self.run_test(
+            "Create Test User (if not exists)",
+            "POST",
+            "auth/register",
+            200,
+            data=test_user
+        )
+        
+        # Step 2: Create a test despesa
+        test_despesa = {
+            "tipo": "fornecedor",
+            "descricao": "Despesa de teste para boleto",
+            "valor": 1500.00,
+            "data_despesa": datetime.now().isoformat(),
+            "data_vencimento": (datetime.now() + timedelta(days=30)).isoformat(),
+            "status": "pendente"
+        }
+        
+        created_despesa = self.run_test(
+            "Create Test Despesa",
+            "POST",
+            "despesas",
+            200,
+            data=test_despesa
+        )
+        
+        if not created_despesa:
+            print("❌ Failed to create test despesa - cannot continue boleto tests")
+            return False
+        
+        despesa_id = created_despesa.get('id')
+        print(f"   Created despesa ID: {despesa_id}")
+        
+        # Step 3: Create a test PDF file for upload
+        test_pdf_content = b"%PDF-1.4\n1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n>>\nendobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000074 00000 n \n0000000120 00000 n \ntrailer\n<<\n/Size 4\n/Root 1 0 R\n>>\nstartxref\n179\n%%EOF"
+        
+        # Step 4: Upload boleto file
+        files = {
+            'file': ('test_boleto.pdf', io.BytesIO(test_pdf_content), 'application/pdf')
+        }
+        
+        upload_result = self.run_test(
+            "Upload Boleto File",
+            "POST",
+            f"despesas/{despesa_id}/upload-boleto",
+            200,
+            files=files
+        )
+        
+        if not upload_result:
+            print("❌ Failed to upload boleto - cannot continue download tests")
+            return False
+        
+        boleto_info = upload_result.get('boleto', {})
+        print(f"   Uploaded boleto: {boleto_info.get('nome')}")
+        
+        # Step 5: Verify despesa now includes boleto information
+        updated_despesa = self.run_test(
+            "Get Despesa with Boleto Info",
+            "GET",
+            f"despesas",
+            200
+        )
+        
+        if updated_despesa:
+            # Find our despesa in the list
+            our_despesa = None
+            for desp in updated_despesa:
+                if desp.get('id') == despesa_id:
+                    our_despesa = desp
+                    break
+            
+            if our_despesa and our_despesa.get('boleto'):
+                self.log_test(
+                    "Despesa Contains Boleto Info",
+                    True,
+                    f"Boleto attached: {our_despesa['boleto'].get('nome')}"
+                )
+            else:
+                self.log_test(
+                    "Despesa Contains Boleto Info",
+                    False,
+                    "Boleto info not found in despesa"
+                )
+        
+        # Step 6: Test boleto download endpoint
+        download_response = self.run_test(
+            "Download Boleto File",
+            "GET",
+            f"despesas/{despesa_id}/boleto/download",
+            200
+        )
+        
+        if download_response and hasattr(download_response, 'content'):
+            # Verify the downloaded content
+            downloaded_content = download_response.content
+            content_length = len(downloaded_content)
+            
+            # Check if we got some content back
+            download_success = content_length > 0
+            self.log_test(
+                "Boleto Download Content Verification",
+                download_success,
+                f"Downloaded {content_length} bytes"
+            )
+            
+            # Check content type header
+            content_type = download_response.headers.get('content-type', '')
+            correct_content_type = 'application/pdf' in content_type or 'application/octet-stream' in content_type
+            self.log_test(
+                "Boleto Download Content-Type",
+                correct_content_type,
+                f"Content-Type: {content_type}"
+            )
+        
+        # Step 7: Test download of non-existent boleto (should fail)
+        # First create a despesa without boleto
+        despesa_no_boleto = {
+            "tipo": "fornecedor",
+            "descricao": "Despesa sem boleto",
+            "valor": 500.00,
+            "data_despesa": datetime.now().isoformat(),
+            "data_vencimento": (datetime.now() + timedelta(days=15)).isoformat(),
+            "status": "pendente"
+        }
+        
+        created_despesa_no_boleto = self.run_test(
+            "Create Despesa Without Boleto",
+            "POST",
+            "despesas",
+            200,
+            data=despesa_no_boleto
+        )
+        
+        if created_despesa_no_boleto:
+            despesa_no_boleto_id = created_despesa_no_boleto.get('id')
+            
+            # Try to download boleto from despesa without boleto (should fail with 404)
+            self.run_test(
+                "Download Non-existent Boleto (should fail 404)",
+                "GET",
+                f"despesas/{despesa_no_boleto_id}/boleto/download",
+                404
+            )
+        
+        # Step 8: Test download with invalid despesa ID (should fail)
+        self.run_test(
+            "Download Boleto Invalid Despesa ID (should fail 404)",
+            "GET",
+            "despesas/invalid-id/boleto/download",
+            404
+        )
+        
+        # Step 9: Test specific despesa ID mentioned in review request
+        existing_despesa_id = "3306f4a4-f623-4b2f-a886-dcda2fee9d4d"
+        existing_boleto_download = self.run_test(
+            "Download Existing Boleto (ID from review)",
+            "GET",
+            f"despesas/{existing_despesa_id}/boleto/download",
+            200
+        )
+        
+        if existing_boleto_download and hasattr(existing_boleto_download, 'content'):
+            content_length = len(existing_boleto_download.content)
+            self.log_test(
+                "Existing Boleto Download Success",
+                content_length > 0,
+                f"Downloaded {content_length} bytes from existing despesa"
+            )
+        
+        # Step 10: Test boleto deletion
+        delete_result = self.run_test(
+            "Delete Boleto",
+            "DELETE",
+            f"despesas/{despesa_id}/boleto",
+            200
+        )
+        
+        if delete_result:
+            # Verify boleto is removed
+            self.run_test(
+                "Download Deleted Boleto (should fail 404)",
+                "GET",
+                f"despesas/{despesa_id}/boleto/download",
+                404
+            )
+        
+        return True
         """Test complete CRUD operations for Licitações"""
         print("\n📋 Testing Licitações CRUD Operations...")
         
