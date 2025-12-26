@@ -1922,9 +1922,11 @@ async def get_relatorio_geral(
     # Build filter for licitações
     filter_licitacoes = {}
     if data_inicio and data_fim:
+        data_inicio_iso = datetime.fromisoformat(data_inicio).replace(hour=0, minute=0, second=0).isoformat()
+        data_fim_iso = datetime.fromisoformat(data_fim).replace(hour=23, minute=59, second=59).isoformat()
         filter_licitacoes["data_empenho"] = {
-            "$gte": datetime.fromisoformat(data_inicio).isoformat(),
-            "$lte": datetime.fromisoformat(data_fim).isoformat()
+            "$gte": data_inicio_iso,
+            "$lte": data_fim_iso
         }
     if cidade:
         filter_licitacoes["cidade"] = {"$regex": cidade, "$options": "i"}
@@ -1932,9 +1934,11 @@ async def get_relatorio_geral(
     # Build filter for despesas
     filter_despesas = {}
     if data_inicio and data_fim:
+        data_inicio_iso = datetime.fromisoformat(data_inicio).replace(hour=0, minute=0, second=0).isoformat()
+        data_fim_iso = datetime.fromisoformat(data_fim).replace(hour=23, minute=59, second=59).isoformat()
         filter_despesas["data_despesa"] = {
-            "$gte": datetime.fromisoformat(data_inicio).isoformat(),
-            "$lte": datetime.fromisoformat(data_fim).isoformat()
+            "$gte": data_inicio_iso,
+            "$lte": data_fim_iso
         }
     
     # Fetch data
