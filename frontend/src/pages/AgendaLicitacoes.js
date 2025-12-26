@@ -873,8 +873,9 @@ export default function AgendaLicitacoes() {
                         <SelectContent>
                           <SelectItem value="agendada">Agendada</SelectItem>
                           <SelectItem value="em_andamento">Em Andamento</SelectItem>
-                          <SelectItem value="ganha">Ganha</SelectItem>
-                          <SelectItem value="perdida">Perdida</SelectItem>
+                          <SelectItem value="ganha">Vencemos</SelectItem>
+                          <SelectItem value="perdida">Não Ganhamos</SelectItem>
+                          <SelectItem value="aguardando">Aguardando Resultado</SelectItem>
                           <SelectItem value="cancelada">Cancelada</SelectItem>
                         </SelectContent>
                       </Select>
