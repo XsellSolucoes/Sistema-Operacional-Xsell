@@ -955,6 +955,28 @@ export default function Pedidos() {
                     data-testid="prazo-entrega-input"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label>Dados de Pagamento</Label>
+                  <Select 
+                    value={formData.dados_pagamento_id} 
+                    onValueChange={(v) => setFormData({...formData, dados_pagamento_id: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione conta bancária" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhuma</SelectItem>
+                      {dadosPagamento.map(dp => (
+                        <SelectItem key={dp.id} value={dp.id}>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-3 w-3" />
+                            {dp.banco} - {dp.agencia}/{dp.numero_conta}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Área de Despesas do Pedido */}
