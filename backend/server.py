@@ -2680,7 +2680,7 @@ class AgendaLicitacao(BaseModel):
     observacoes: Optional[str] = None
     anexos: List[Dict[str, Any]] = []  # {id, nome, url, tipo, uploaded_at}
     eventos: List[Dict[str, Any]] = []  # Timeline de eventos
-    status: str = "agendada"  # agendada, em_andamento, ganha, perdida, cancelada
+    status: str = "agendada"  # agendada, em_andamento, ganha, perdida, aguardando, cancelada
     historico: List[Dict[str, Any]] = []  # Histórico de alterações
     alertas: List[str] = []
     created_at: datetime
