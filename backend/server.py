@@ -1903,9 +1903,12 @@ async def get_relatorio_geral(
     # Build filter for pedidos
     filter_pedidos = {}
     if data_inicio and data_fim:
+        # Ajustar data_fim para incluir o dia inteiro (até 23:59:59)
+        data_inicio_iso = datetime.fromisoformat(data_inicio).replace(hour=0, minute=0, second=0).isoformat()
+        data_fim_iso = datetime.fromisoformat(data_fim).replace(hour=23, minute=59, second=59).isoformat()
         filter_pedidos["data"] = {
-            "$gte": datetime.fromisoformat(data_inicio).isoformat(),
-            "$lte": datetime.fromisoformat(data_fim).isoformat()
+            "$gte": data_inicio_iso,
+            "$lte": data_fim_iso
         }
     if cliente_id:
         filter_pedidos["cliente_id"] = cliente_id
