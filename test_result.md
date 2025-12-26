@@ -6,39 +6,37 @@
 
 ## Changes Made This Session
 
-### Módulo Licitações - REFATORAÇÃO COMPLETA (Baseado na tabela de referência)
+### Módulo Licitações - DESPESAS DO PEDIDO
 
-**Nova arquitetura de 3 blocos integrados:**
+**Novas funcionalidades:**
 
-1. **BLOCO CONTRATO:**
-   - Campos obrigatórios: Cidade, Estado, Número do contrato, Data início, Data término
-   - Produtos contratados com: Descrição, Preço venda, Preço compra, Quantidade contratada
-   - Cálculo automático de margem de lucro unitária
-   - Seção EXECUÇÃO: Quantidade fornecida, Quantidade restante
+1. **Campo "Despesas do Pedido" no FORNECIMENTO:**
+   - Adicionado campo para especificar despesas no modal de fornecimento
+   - Botão "+ Despesas" para adicionar múltiplas despesas
+   - Cada despesa tem: Descrição e Valor (R$)
+   - Total de despesas calculado automaticamente
+   - Despesas deduzem do lucro em tempo real
 
-2. **BLOCO FORNECIMENTO:**
-   - Registro com: Produto, Data Nota Empenho, Nº Nota Empenho, Data Fornecimento, Nº Nota Fiscal, Quantidade
-   - Fornecimento com múltiplos produtos em uma única operação
-   - Validação: não permite quantidade superior à restante
-   - VALORES: Total por nota de Empenho, Total de compras, Total de lucros
+2. **Seção "DETALHES POR EMPENHO" no FINANCEIRO:**
+   - Lista cada fornecimento por número de nota de empenho
+   - Mostra para cada empenho:
+     - Número da NE e data
+     - Venda, Compra, Despesas, Lucro
+     - Lista das despesas quando existirem
 
-3. **BLOCO FINANCEIRO:**
-   - Cálculos automáticos (não editáveis):
-     - Total do contrato
-     - Total fornecido
-     - Total de compras
-     - Total de lucros do contrato
-   - % Executado e % Lucro/Contrato
+3. **Cálculos atualizados:**
+   - Lucro = Venda - Compra - Despesas
+   - Total de Despesas consolidado
+   - Total de Lucros do Contrato com dedução das despesas
 
-**Regras implementadas:**
-- Status automático: Ativo, Finalizado, Vencido
-- Não permite exclusão de contrato com fornecimentos
-- Não permite exclusão de produto com fornecimento vinculado
-- Atualização em tempo real dos totais
+**Backend atualizado:**
+- Modelo `DespesaFornecimento` adicionado
+- Modelo `FornecimentoCreate` atualizado com campo `despesas` e `numero_nota_empenho`
+- Endpoint POST /api/licitacoes/{id}/fornecimentos salva despesas e total_despesas
 
 ## Tests To Run
-- Backend: CRUD contratos, registro fornecimento, validações
-- Frontend: Layout 3 colunas, modais, cálculos em tempo real
+- Backend: Criar fornecimento com despesas
+- Frontend: Adicionar despesas no modal, verificar dedução do lucro, ver detalhes por empenho
 
 ## Incorporate User Feedback
-- Módulo Licitações refatorado conforme tabela de referência do usuário
+- Despesas do Pedido implementado conforme solicitado
