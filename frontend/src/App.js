@@ -133,6 +133,13 @@ function App() {
             </DashboardLayout>
           </PrivateRoute>
         } />
+        <Route path="/dados-pagamento" element={
+          <PrivateRoute>
+            <DashboardLayout user={user}>
+              <DadosPagamento />
+            </DashboardLayout>
+          </PrivateRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
