@@ -2964,6 +2964,99 @@ async def get_agenda_filtros(current_user: User = Depends(get_current_user)):
     }
 
 
+# Upload de arquivos para Agenda de Licitações
+import os
+import shutil
+UPLOAD_DIR = "/app/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@api_router.post("/agenda-licitacoes/{licitacao_id}/upload")
+async def upload_anexo_agenda(
+    licitacao_id: str, 
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload de arquivo (Edital PDF) para uma licitação da agenda"""
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    # Validar tipo de arquivo
+    allowed_types = ["application/pdf", "application/msword", 
+                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                     "image/jpeg", "image/png"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use PDF, DOC, DOCX, JPG ou PNG.")
+    
+    # Criar diretório para a licitação
+    lic_dir = os.path.join(UPLOAD_DIR, licitacao_id)
+    os.makedirs(lic_dir, exist_ok=True)
+    
+    # Gerar nome único para o arquivo
+    file_id = str(uuid.uuid4())
+    file_ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
+    file_name = f"{file_id}{file_ext}"
+    file_path = os.path.join(lic_dir, file_name)
+    
+    # Salvar arquivo
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar arquivo: {str(e)}")
+    
+    # Criar registro do anexo
+    anexo_doc = {
+        "id": file_id,
+        "nome": file.filename,
+        "nome_arquivo": file_name,
+        "tipo": file.content_type,
+        "tamanho": os.path.getsize(file_path),
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    anexos = existing.get("anexos", [])
+    anexos.append(anexo_doc)
+    
+    historico = existing.get("historico", [])
+    historico.append({
+        "data": datetime.now(timezone.utc).isoformat(),
+        "usuario": current_user.email,
+        "acao": f"Anexo adicionado: {file.filename}"
+    })
+    
+    await db.agenda_licitacoes.update_one(
+        {"id": licitacao_id},
+        {"$set": {"anexos": anexos, "historico": historico, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Arquivo enviado com sucesso", "anexo": anexo_doc}
+
+
+@api_router.get("/agenda-licitacoes/{licitacao_id}/anexos/{anexo_id}/download")
+async def download_anexo_agenda(licitacao_id: str, anexo_id: str, current_user: User = Depends(get_current_user)):
+    """Download de um anexo"""
+    from fastapi.responses import FileResponse
+    
+    existing = await db.agenda_licitacoes.find_one({"id": licitacao_id}, {"_id": 0})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Licitação não encontrada")
+    
+    anexo = next((a for a in existing.get("anexos", []) if a.get("id") == anexo_id), None)
+    if not anexo:
+        raise HTTPException(status_code=404, detail="Anexo não encontrado")
+    
+    file_path = os.path.join(UPLOAD_DIR, licitacao_id, anexo.get("nome_arquivo", ""))
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado no servidor")
+    
+    return FileResponse(
+        file_path, 
+        filename=anexo.get("nome", "anexo"),
+        media_type=anexo.get("tipo", "application/octet-stream")
+    )
+
+
 app.include_router(api_router)
 
 app.add_middleware(
