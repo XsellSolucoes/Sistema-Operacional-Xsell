@@ -11,6 +11,7 @@ from jose import JWTError, jwt
 import os
 import logging
 import asyncio
+import uuid
 from pathlib import Path
 
 # Try to import resend for email notifications
