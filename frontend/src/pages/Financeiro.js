@@ -382,6 +382,80 @@ export default function Financeiro() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Upload de Boleto */}
+                <div className="space-y-2">
+                  <Label>Anexar Boleto (PDF, JPG, PNG)</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    {arquivoBoleto ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-red-500" />
+                          <span className="text-sm font-medium">{arquivoBoleto.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            ({(arquivoBoleto.size / 1024).toFixed(1)} KB)
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setArquivoBoleto(null)}
+                        >
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Arraste o boleto ou clique para selecionar
+                        </p>
+                        <input
+                          type="file"
+                          id="boleto-upload"
+                          className="hidden"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setArquivoBoleto(file);
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => document.getElementById('boleto-upload')?.click()}
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Selecionar Arquivo
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Mostrar boleto existente ao editar */}
+                  {editingDespesa?.boleto && (
+                    <div className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-green-600" />
+                        <span className="text-sm text-green-700">Boleto anexado: {editingDespesa.boleto.nome}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(`${API}/despesas/${editingDespesa.id}/boleto/download`, '_blank')}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Baixar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>Cancelar</Button>
                   <Button type="submit" className="bg-secondary hover:bg-secondary/90" data-testid="save-despesa-button">
