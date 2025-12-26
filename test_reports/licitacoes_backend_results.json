@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-12-26T14:56:49.873061",
+  "timestamp": "2025-12-26T14:58:02.408215",
   "total_tests": 23,
-  "passed_tests": 20,
-  "success_rate": "87.0%",
+  "passed_tests": 22,
+  "success_rate": "95.7%",
   "test_details": [
     {
       "test": "User Registration (if needed)",
@@ -111,13 +111,13 @@
     },
     {
       "test": "Contract expiry alert",
-      "success": false,
-      "details": "No expiry alert found. Alerts: []"
+      "success": true,
+      "details": "Expiry alert generated"
     },
     {
       "test": "90% execution alert",
-      "success": false,
-      "details": "No 90% alert found. Alerts: []"
+      "success": true,
+      "details": "Execution alert generated"
     }
   ]
 }
