@@ -557,6 +557,7 @@ export default function Financeiro() {
                   <TableHead className="text-right">Valor</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-center">Boleto</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
@@ -575,6 +576,22 @@ export default function Financeiro() {
                       <Badge variant={despesa.status === 'pago' ? 'default' : 'secondary'}>
                         {despesa.status.toUpperCase()}
                       </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {despesa.boleto ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-green-600 hover:text-green-700"
+                          onClick={() => window.open(`${API}/despesas/${despesa.id}/boleto/download`, '_blank')}
+                          title={`Baixar: ${despesa.boleto.nome}`}
+                        >
+                          <FileText className="h-4 w-4 mr-1" />
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
                       {despesa.status === 'pendente' && (
