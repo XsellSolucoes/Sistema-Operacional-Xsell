@@ -295,22 +295,48 @@ class OrcamentoCreate(BaseModel):
     dias_cobrar_resposta: Optional[int] = None
 
 
-class ProdutoLicitacao(BaseModel):
+class ProdutoContrato(BaseModel):
+    """Produto vinculado ao contrato de licitação"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     produto_id: Optional[str] = None
     descricao: str
-    quantidade_empenhada: float
-    quantidade_fornecida: float = 0.0
-    quantidade_restante: float = 0.0
+    quantidade_contratada: float  # Quantidade total do contrato
+    quantidade_fornecida: float = 0.0  # Quantidade já entregue
+    quantidade_restante: float = 0.0  # Calculado automaticamente
     preco_compra: float
     preco_venda: float
+    valor_total: float = 0.0  # preco_venda * quantidade_contratada
     despesas_extras: float = 0.0
     lucro_unitario: float = 0.0
+
+
+class FornecimentoContrato(BaseModel):
+    """Registro de fornecimento vinculado a um produto do contrato"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    produto_contrato_id: str  # ID do produto no contrato
+    data_fornecimento: datetime
+    quantidade: float
+    numero_nota_fornecimento: Optional[str] = None
+    observacao: Optional[str] = None
+
+
+class Contrato(BaseModel):
+    """Contrato de Licitação - Elemento central"""
+    numero_contrato: str
+    data_inicio: datetime
+    data_fim: datetime
+    valor_total_contrato: float = 0.0
+    status: str = "vigente"  # vigente, encerrado, vencido
 
 
 class Licitacao(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
     id: str
+    # Dados do Contrato (elemento central)
+    contrato: Optional[Dict[str, Any]] = None
+    
+    # Dados Gerais
     numero_licitacao: str
     cidade: str
     estado: str
@@ -318,24 +344,48 @@ class Licitacao(BaseModel):
     numero_empenho: str
     data_empenho: datetime
     numero_nota_empenho: str
-    numero_nota_fornecimento: Optional[str] = None
+    
+    # Produtos vinculados ao contrato
     produtos: List[Dict[str, Any]]
+    
+    # Fornecimentos realizados
+    fornecimentos: List[Dict[str, Any]] = []
+    
+    # Datas
     previsao_fornecimento: Optional[datetime] = None
     fornecimento_efetivo: Optional[datetime] = None
     previsao_pagamento: Optional[datetime] = None
+    
+    # Financeiro
     frete: float = 0.0
     impostos: float = 0.0
     outras_despesas: float = 0.0
     descricao_outras_despesas: Optional[str] = None
+    
+    # Totais calculados
     valor_total_venda: float = 0.0
     valor_total_compra: float = 0.0
     despesas_totais: float = 0.0
     lucro_total: float = 0.0
+    
+    # Controle
+    quantidade_total_contratada: float = 0.0
+    quantidade_total_fornecida: float = 0.0
+    quantidade_total_restante: float = 0.0
+    percentual_executado: float = 0.0
+    
     status_pagamento: str = "pendente"
+    alertas: List[str] = []
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class LicitacaoCreate(BaseModel):
+    # Contrato
+    numero_contrato: str
+    data_inicio_contrato: datetime
+    data_fim_contrato: datetime
+    
+    # Dados Gerais
     numero_licitacao: str
     cidade: str
     estado: str
@@ -343,11 +393,15 @@ class LicitacaoCreate(BaseModel):
     numero_empenho: str
     data_empenho: datetime
     numero_nota_empenho: str
-    numero_nota_fornecimento: Optional[str] = None
+    
+    # Produtos
     produtos: List[Dict[str, Any]]
+    
+    # Datas
     previsao_fornecimento: Optional[datetime] = None
-    fornecimento_efetivo: Optional[datetime] = None
     previsao_pagamento: Optional[datetime] = None
+    
+    # Financeiro
     frete: float = 0.0
     impostos: float = 0.0
     outras_despesas: float = 0.0
