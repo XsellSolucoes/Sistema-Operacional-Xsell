@@ -1512,6 +1512,22 @@ async def get_licitacao(licitacao_id: str, current_user: User = Depends(get_curr
         alertas.append(f"⚠️ {((qtd_fornecida / qtd_contratada) * 100):.1f}% do contrato executado")
     
     lic["alertas"] = alertas
+    
+    # Calcular despesas totais (despesas fixas + despesas dos fornecimentos)
+    despesas_fixas = lic.get("frete", 0) + lic.get("impostos", 0) + lic.get("outras_despesas", 0)
+    despesas_fornecimentos = sum(f.get("total_despesas", 0) for f in lic.get("fornecimentos", []))
+    lic["despesas_totais"] = despesas_fixas + despesas_fornecimentos
+    
+    # Calcular lucro total (considerando apenas o fornecido)
+    total_venda_fornecido = 0
+    total_compra_fornecido = 0
+    for p in lic.get("produtos", []):
+        qtd_forn = p.get("quantidade_fornecida", 0)
+        total_venda_fornecido += qtd_forn * p.get("preco_venda", 0)
+        total_compra_fornecido += qtd_forn * p.get("preco_compra", 0)
+    
+    lic["lucro_total"] = total_venda_fornecido - total_compra_fornecido - despesas_fornecimentos
+    
     return Licitacao(**lic)
 
 
