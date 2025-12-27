@@ -416,6 +416,36 @@ export default function AgendaLicitacoes() {
   const cidadesUnicas = [...new Set(licitacoes.map(l => l.cidade).filter(Boolean))];
   const portaisUnicos = [...new Set(licitacoes.map(l => l.portal).filter(Boolean))];
 
+  // Estatísticas de participação
+  const estatisticas = useMemo(() => {
+    const totalParticipacoes = licitacoes.length;
+    const licitacoesGanhas = licitacoes.filter(l => l.status === 'ganha');
+    const licitacoesNaoGanhas = licitacoes.filter(l => l.status === 'perdida');
+    const licitacoesAguardando = licitacoes.filter(l => l.status === 'aguardando');
+    
+    const quantidadeGanhas = licitacoesGanhas.length;
+    const quantidadeNaoGanhas = licitacoesNaoGanhas.length;
+    const quantidadeAguardando = licitacoesAguardando.length;
+    
+    // Somar valor estimado das licitações ganhas
+    const valorTotalGanhas = licitacoesGanhas.reduce((acc, lic) => {
+      return acc + (lic.valor_estimado || 0);
+    }, 0);
+    
+    // Taxa de sucesso (considerando apenas finalizadas: ganhas + perdidas)
+    const finalizadas = quantidadeGanhas + quantidadeNaoGanhas;
+    const taxaSucesso = finalizadas > 0 ? (quantidadeGanhas / finalizadas) * 100 : 0;
+    
+    return {
+      totalParticipacoes,
+      quantidadeGanhas,
+      quantidadeNaoGanhas,
+      quantidadeAguardando,
+      valorTotalGanhas,
+      taxaSucesso
+    };
+  }, [licitacoes]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
