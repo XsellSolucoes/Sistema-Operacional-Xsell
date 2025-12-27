@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-12-27T12:27:44.144682",
+  "total_tests": 13,
+  "passed_tests": 13,
+  "failed_tests": 0,
+  "success_rate": 100.0,
+  "test_results": [
+    {
+      "test": "User Login (testfinanceiro@test.com)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Setup: Create Test Cliente",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Setup: Create Test Produto",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Create Pedido with Calculation Test Case",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Total Cliente Calculation (Valor de Venda + Frete Repassado + Despesas Repassadas)",
+      "success": true,
+      "details": "Actual: R$ 1050.00, Expected: R$ 1050.00"
+    },
+    {
+      "test": "Custo Total Calculation (Quantidade \u00d7 Pre\u00e7o Compra)",
+      "success": true,
+      "details": "Actual: R$ 500.00, Expected: R$ 500.00"
+    },
+    {
+      "test": "Lucro Total Calculation (Total Cliente - Custo - Despesas Internas)",
+      "success": true,
+      "details": "Actual: R$ 540.00, Expected: R$ 540.00"
+    },
+    {
+      "test": "Get Created Pedido",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Calculation Persistence After Retrieval",
+      "success": true,
+      "details": "Values maintained after database retrieval"
+    },
+    {
+      "test": "Update Pedido (Frete n\u00e3o repassado)",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Recalculation After Update (Frete Internal)",
+      "success": true,
+      "details": "Total Cliente: R$ 1030.00 (Expected: R$ 1030.00), Lucro: R$ 500.00 (Expected: R$ 500.00)"
+    },
+    {
+      "test": "Create Multi-Item Pedido",
+      "success": true,
+      "details": "Status: 200"
+    },
+    {
+      "test": "Multi-Item Pedido Calculations",
+      "success": true,
+      "details": "Total: R$ 1000.00 (Expected: R$ 1000.00), Custo: R$ 490.00 (Expected: R$ 490.00), Lucro: R$ 500.00 (Expected: R$ 500.00)"
+    }
+  ]
+}
