@@ -966,6 +966,7 @@ export default function Licitacoes() {
                           const qtdContratada = produto.quantidade_contratada || produto.quantidade_empenhada || 0;
                           const qtdFornecida = produto.quantidade_fornecida || 0;
                           const qtdRestante = qtdContratada - qtdFornecida;
+                          const unidade = produto.unidade_fornecimento || 'UN';
                           
                           return (
                             <div key={idx} className="p-2 bg-slate-50 rounded text-xs">
@@ -973,11 +974,11 @@ export default function Licitacoes() {
                               <div className="grid grid-cols-3 gap-1 mt-1">
                                 <span>Venda: {formatCurrency(produto.preco_venda)}</span>
                                 <span>Compra: {formatCurrency(produto.preco_compra)}</span>
-                                <span>Qtd: {qtdContratada}</span>
+                                <span>Qtd: {qtdContratada} {unidade}</span>
                               </div>
                               <div className="mt-1 flex items-center gap-2">
                                 <Progress value={(qtdFornecida / qtdContratada) * 100} className="h-1 flex-1" />
-                                <span className="text-xs">{qtdFornecida}/{qtdContratada}</span>
+                                <span className="text-xs">{qtdFornecida}/{qtdContratada} {unidade}</span>
                               </div>
                             </div>
                           );
