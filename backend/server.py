@@ -843,31 +843,39 @@ async def create_pedido(pedido_data: PedidoCreate, current_user: User = Depends(
     # Usar dicionários diretamente
     itens = pedido_data.itens
     
+    # Custo total dos produtos
     custo_total = sum(item.get("preco_compra", 0) * item.get("quantidade", 0) for item in itens)
     
-    # Calcular valor de venda incluindo personalização repassada ao cliente
-    valor_total_venda = sum(
+    # Valor base de venda (produtos + personalização se repassada)
+    valor_produtos = sum(
         (item.get("preco_venda", 0) + (item.get("valor_personalizacao", 0) if item.get("repassar_personalizacao", False) else 0)) * item.get("quantidade", 0) 
         for item in itens
     )
     
-    # Adicionar frete ao valor de venda se repassar
-    if pedido_data.repassar_frete:
-        valor_total_venda += pedido_data.frete
-    
-    # Calcular despesas repassadas (adicionam ao valor de venda)
+    # Separar despesas repassadas e internas
     despesas_detalhadas = pedido_data.despesas_detalhadas or []
     despesas_repassadas = sum(d.get("valor", 0) for d in despesas_detalhadas if d.get("repassar", False))
-    valor_total_venda += despesas_repassadas
+    despesas_internas = sum(d.get("valor", 0) for d in despesas_detalhadas if not d.get("repassar", False))
     
-    # Calcular despesas totais (frete + todas as despesas detalhadas)
-    despesas_totais = (
-        pedido_data.frete + 
-        sum(d.get("valor", 0) for d in despesas_detalhadas) +
+    # Frete repassado ou interno
+    frete_repassado = pedido_data.frete if pedido_data.repassar_frete else 0
+    frete_interno = 0 if pedido_data.repassar_frete else pedido_data.frete
+    
+    # Total Cliente (valor_total_venda) = Valor Produtos + Despesas Repassadas + Frete Repassado
+    valor_total_venda = valor_produtos + despesas_repassadas + frete_repassado
+    
+    # Total de despesas internas (não inclui repassadas, pois já estão no total cliente)
+    despesas_totais_internas = (
+        despesas_internas + 
+        frete_interno +
         sum((item.get("valor_personalizacao", 0) if not item.get("repassar_personalizacao", False) else 0) * item.get("quantidade", 0) for item in itens)
     )
     
-    lucro_total = valor_total_venda - custo_total - despesas_totais
+    # Total geral de despesas (para referência)
+    despesas_totais = pedido_data.frete + sum(d.get("valor", 0) for d in despesas_detalhadas)
+    
+    # Lucro = Total Cliente - Custo Produtos - Despesas Internas
+    lucro_total = valor_total_venda - custo_total - despesas_totais_internas
     
     pedido_doc = {
         "id": pedido_id,
