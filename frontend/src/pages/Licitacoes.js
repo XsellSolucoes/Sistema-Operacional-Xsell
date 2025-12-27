@@ -650,7 +650,7 @@ export default function Licitacoes() {
                                 <div className="flex-1">
                                   <p className="font-medium">{produto.descricao}</p>
                                   <p className="text-muted-foreground">
-                                    Qtd: {produto.quantidade_contratada} | Venda: {formatCurrency(produto.preco_venda)} | Compra: {formatCurrency(produto.preco_compra)}
+                                    Qtd: {produto.quantidade_contratada} {produto.unidade_fornecimento || 'UN'} | Venda: {formatCurrency(produto.preco_venda)} | Compra: {formatCurrency(produto.preco_compra)}
                                   </p>
                                 </div>
                                 <Button
