@@ -256,35 +256,38 @@ export default function Pedidos() {
   };
 
   const calcularTotais = () => {
+    // Custo total dos produtos
     const custoTotal = itens.reduce((sum, item) => {
       return sum + (item.preco_compra * item.quantidade);
     }, 0);
     
-    let valorTotalVenda = itens.reduce((sum, item) => {
+    // Valor base de venda (apenas produtos)
+    const valorProdutos = itens.reduce((sum, item) => {
       return sum + (item.preco_venda * item.quantidade);
     }, 0);
     
-    // Adiciona frete ao valor se repassar
-    if (formData.repassar_frete) {
-      valorTotalVenda += parseFloat(formData.frete || 0);
-    }
+    // Separar despesas repassadas e internas
+    const despesasRepassadas = despesasPedido.filter(d => d.repassar).reduce((sum, d) => sum + d.valor, 0);
+    const despesasInternas = despesasPedido.filter(d => !d.repassar).reduce((sum, d) => sum + d.valor, 0);
     
-    // Adiciona despesas repassadas ao valor de venda
-    despesasPedido.forEach(d => {
-      if (d.repassar) {
-        valorTotalVenda += d.valor;
-      }
-    });
+    // Frete
+    const frete = parseFloat(formData.frete || 0);
+    const freteRepassado = formData.repassar_frete ? frete : 0;
+    const freteInterno = formData.repassar_frete ? 0 : frete;
     
-    // Total de todas as despesas (frete + despesas do pedido)
-    const despesasTotais = (
-      parseFloat(formData.frete || 0) + 
-      despesasPedido.reduce((sum, d) => sum + d.valor, 0)
-    );
+    // Total Cliente = Valor Produtos + Despesas Repassadas + Frete Repassado
+    const valorTotalVenda = valorProdutos + despesasRepassadas + freteRepassado;
     
-    const lucroTotal = valorTotalVenda - custoTotal - despesasTotais;
+    // Total de despesas internas
+    const despesasTotaisInternas = despesasInternas + freteInterno;
+    
+    // Total de todas as despesas (para referência)
+    const despesasTotais = frete + despesasPedido.reduce((sum, d) => sum + d.valor, 0);
+    
+    // Lucro = Total Cliente - Custo Produtos - Despesas Internas
+    const lucroTotal = valorTotalVenda - custoTotal - despesasTotaisInternas;
 
-    return { custoTotal, valorTotalVenda, despesasTotais, lucroTotal };
+    return { custoTotal, valorTotalVenda, despesasTotais, lucroTotal, valorProdutos };
   };
 
   const handleSubmit = async (e) => {
