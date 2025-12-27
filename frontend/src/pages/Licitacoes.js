@@ -153,6 +153,7 @@ export default function Licitacoes() {
       preco_venda: precoVenda,
       preco_compra: precoCompra,
       quantidade_contratada: qtd,
+      unidade_fornecimento: novoProduto.unidade_fornecimento || 'UN',
       quantidade_fornecida: 0,
       quantidade_restante: qtd,
       margem_lucro_unitaria: margemLucro,
@@ -164,7 +165,8 @@ export default function Licitacoes() {
       descricao: '',
       preco_venda: '',
       preco_compra: '',
-      quantidade_contratada: ''
+      quantidade_contratada: '',
+      unidade_fornecimento: 'UN'
     });
     toast.success('Produto adicionado!');
   };
