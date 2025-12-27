@@ -623,6 +623,19 @@ export default function Licitacoes() {
                               onChange={(e) => setNovoProduto({...novoProduto, quantidade_contratada: e.target.value})}
                               className="h-8 text-sm flex-1"
                             />
+                            <Select
+                              value={novoProduto.unidade_fornecimento}
+                              onValueChange={(value) => setNovoProduto({...novoProduto, unidade_fornecimento: value})}
+                            >
+                              <SelectTrigger className="h-8 w-20 text-sm">
+                                <SelectValue placeholder="UN" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="UN">UN</SelectItem>
+                                <SelectItem value="CX">CX</SelectItem>
+                                <SelectItem value="PCT">PCT</SelectItem>
+                              </SelectContent>
+                            </Select>
                             <Button type="button" size="sm" onClick={adicionarProduto} className="h-8">
                               <Plus className="h-4 w-4" />
                             </Button>
