@@ -117,7 +117,8 @@ export default function Licitacoes() {
       descricao: '',
       preco_venda: '',
       preco_compra: '',
-      quantidade_contratada: ''
+      quantidade_contratada: '',
+      unidade_fornecimento: 'UN'
     });
     setEditingContrato(null);
   };
