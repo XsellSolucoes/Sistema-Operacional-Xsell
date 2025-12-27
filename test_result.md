@@ -21,6 +21,30 @@ O usuário relatou que o download do boleto anexado a uma despesa no módulo Fin
 - `/app/backend/server.py` - Reorganização da variável UPLOAD_DIR
 - `/app/frontend/src/pages/Financeiro.js` - Nova função de download com autenticação
 
+## Latest Fix - Cálculos de Valores no Modal de Pedidos
+
+### Problema Reportado
+Os valores no modal de visualização do pedido não estavam corretos:
+- Total Cliente não incluía despesas repassadas
+- Lucro estava sendo calculado incorretamente (deduzia todas as despesas, não só as internas)
+
+### Lógica Correta Implementada
+- **Valor de Venda** = Soma dos preços de venda dos produtos
+- **Total Cliente** = Valor de Venda + Frete Repassado + Despesas Repassadas
+- **Despesas Internas** = Frete Interno + Despesas com "repassar=false"
+- **Lucro** = Total Cliente - Custo dos Produtos - Despesas Internas
+
+### Arquivos Modificados
+- `/app/frontend/src/pages/Pedidos.js` - Cálculos no modal de visualização e função calcularTotais
+- `/app/backend/server.py` - Cálculos nas funções create_pedido e update_pedido
+
+### O que testar
+1. Criar/editar um pedido com despesas repassadas e internas
+2. Verificar se o "Total Cliente" inclui as despesas repassadas
+3. Verificar se o "Lucro" não deduz as despesas repassadas (pois já estão no Total Cliente)
+
+---
+
 ## Latest Feature - Botão STATUS na Agenda de Licitações
 
 ### Funcionalidade Implementada
