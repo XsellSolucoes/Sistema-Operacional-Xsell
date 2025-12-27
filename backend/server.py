@@ -932,18 +932,40 @@ async def update_pedido(pedido_id: str, pedido_data: PedidoCreate, current_user:
         raise HTTPException(status_code=404, detail="Cliente not found")
     
     itens = pedido_data.itens
+    
+    # Custo total dos produtos
     custo_total = sum(item.get("preco_compra", 0) * item.get("quantidade", 0) for item in itens)
-    valor_total_venda = sum(item.get("preco_venda", 0) * item.get("quantidade", 0) for item in itens)
     
-    if pedido_data.repassar_frete:
-        valor_total_venda += pedido_data.frete
+    # Valor base de venda (produtos + personalização se repassada)
+    valor_produtos = sum(
+        (item.get("preco_venda", 0) + (item.get("valor_personalizacao", 0) if item.get("repassar_personalizacao", False) else 0)) * item.get("quantidade", 0) 
+        for item in itens
+    )
     
+    # Separar despesas repassadas e internas
     despesas_detalhadas = pedido_data.despesas_detalhadas or []
     despesas_repassadas = sum(d.get("valor", 0) for d in despesas_detalhadas if d.get("repassar", False))
-    valor_total_venda += despesas_repassadas
+    despesas_internas = sum(d.get("valor", 0) for d in despesas_detalhadas if not d.get("repassar", False))
     
+    # Frete repassado ou interno
+    frete_repassado = pedido_data.frete if pedido_data.repassar_frete else 0
+    frete_interno = 0 if pedido_data.repassar_frete else pedido_data.frete
+    
+    # Total Cliente (valor_total_venda) = Valor Produtos + Despesas Repassadas + Frete Repassado
+    valor_total_venda = valor_produtos + despesas_repassadas + frete_repassado
+    
+    # Total de despesas internas
+    despesas_totais_internas = (
+        despesas_internas + 
+        frete_interno +
+        sum((item.get("valor_personalizacao", 0) if not item.get("repassar_personalizacao", False) else 0) * item.get("quantidade", 0) for item in itens)
+    )
+    
+    # Total geral de despesas
     despesas_totais = pedido_data.frete + sum(d.get("valor", 0) for d in despesas_detalhadas)
-    lucro_total = valor_total_venda - custo_total - despesas_totais
+    
+    # Lucro = Total Cliente - Custo Produtos - Despesas Internas
+    lucro_total = valor_total_venda - custo_total - despesas_totais_internas
     
     update_doc = {
         "cliente_id": pedido_data.cliente_id,
