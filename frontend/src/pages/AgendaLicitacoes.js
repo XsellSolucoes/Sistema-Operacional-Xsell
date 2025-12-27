@@ -848,6 +848,113 @@ export default function AgendaLicitacoes() {
         </CardContent>
       </Card>
 
+      {/* Estatísticas de Participação */}
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle className="font-heading flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Estatísticas de Participação
+          </CardTitle>
+          <CardDescription>Resumo do desempenho nas licitações</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+            {/* Total de Participações */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500 rounded-lg">
+                  <Target className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">Participações</p>
+                  <p className="text-2xl font-bold text-blue-700">{estatisticas.totalParticipacoes}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Licitações Ganhas */}
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500 rounded-lg">
+                  <Trophy className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-green-600 font-medium">Ganhas</p>
+                  <p className="text-2xl font-bold text-green-700">{estatisticas.quantidadeGanhas}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Licitações Não Ganhas */}
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500 rounded-lg">
+                  <XCircle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-red-600 font-medium">Não Ganhas</p>
+                  <p className="text-2xl font-bold text-red-700">{estatisticas.quantidadeNaoGanhas}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Aguardando Resultado */}
+            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-500 rounded-lg">
+                  <Hourglass className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">Aguardando</p>
+                  <p className="text-2xl font-bold text-orange-700">{estatisticas.quantidadeAguardando}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Valor Total das Ganhas */}
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-emerald-500 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm text-emerald-600 font-medium">Valor Total Ganho</p>
+                  <p className="text-xl font-bold text-emerald-700">
+                    {formatCurrency(estatisticas.valorTotalGanhas)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Taxa de Sucesso */}
+          {(estatisticas.quantidadeGanhas + estatisticas.quantidadeNaoGanhas) > 0 && (
+            <div className="mt-4 p-4 bg-slate-50 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  <span className="font-medium">Taxa de Sucesso</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-48 h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500 rounded-full transition-all duration-500"
+                      style={{ width: `${estatisticas.taxaSucesso}%` }}
+                    />
+                  </div>
+                  <span className="font-bold text-lg text-primary">
+                    {estatisticas.taxaSucesso.toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Calculado com base nas licitações finalizadas ({estatisticas.quantidadeGanhas + estatisticas.quantidadeNaoGanhas} licitações)
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Modal de Visualização */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
