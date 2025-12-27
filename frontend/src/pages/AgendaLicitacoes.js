@@ -15,7 +15,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { 
   Plus, Eye, Pencil, Trash2, Calendar, Clock, MapPin, Building2, 
   FileText, AlertTriangle, CheckCircle, X, Search, Filter, 
-  Download, Upload, History, Bell, CircleDot, ChevronRight, Trophy, XCircle, Hourglass
+  Download, Upload, History, Bell, CircleDot, ChevronRight, Trophy, XCircle, Hourglass,
+  BarChart3, TrendingUp, DollarSign, Target
 } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
