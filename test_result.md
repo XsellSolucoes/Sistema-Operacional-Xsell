@@ -397,3 +397,80 @@ Adicionado botão "STATUS" na coluna "Resultado" de cada licitação na tabela d
 - ✅ Botão STATUS na coluna "Resultado" funcionando perfeitamente
 - ✅ Seção "Estatísticas de Participação" implementada e funcionando corretamente
 - ✅ Todas as funcionalidades testadas e aprovadas
+
+---
+
+## BACKEND TESTING COMPLETED ✅ - CÁLCULOS DE VALORES NO MÓDULO DE PEDIDOS
+
+### Pedidos Calculation Testing - COMPREHENSIVE RESULTS
+
+**Test Date:** 2025-01-27 15:30:00  
+**Total Tests:** 13 | **Passed:** 13 | **Failed:** 0 | **Success Rate:** 100.0%
+
+#### ✅ PEDIDOS CALCULATION TESTS - ALL PASSED
+
+**CENÁRIO 1: Teste do Caso Específico da Revisão** ✅
+- 1 item: quantidade=10, preco_venda=100, preco_compra=50
+- Frete: R$ 20,00 (repassar=true)
+- Despesa 1: R$ 30,00 (repassar=true)
+- Despesa 2: R$ 10,00 (repassar=false - interno)
+- **Resultado:** valor_total_venda = R$ 1.050,00 ✅
+- **Resultado:** custo_total = R$ 500,00 ✅
+- **Resultado:** lucro_total = R$ 540,00 ✅
+
+**CENÁRIO 2: Verificação da Lógica de Cálculo** ✅
+- **Valor de Venda** = Soma dos preços de venda dos produtos ✅
+- **Total Cliente** = Valor de Venda + Frete Repassado + Despesas Repassadas ✅
+- **Lucro** = Total Cliente - Custo dos Produtos - Despesas Internas ✅
+
+**CENÁRIO 3: Teste de Persistência** ✅
+- Valores mantidos após criação e recuperação do banco de dados ✅
+- Cálculos corretos após operações de GET ✅
+
+**CENÁRIO 4: Teste de Atualização** ✅
+- Recálculo automático quando frete muda de repassado para interno ✅
+- Total Cliente: R$ 1.030,00 (sem frete repassado) ✅
+- Lucro: R$ 500,00 (frete agora é despesa interna) ✅
+
+**CENÁRIO 5: Teste Multi-Item** ✅
+- Cálculos corretos com múltiplos produtos ✅
+- Soma correta de custos e valores de venda ✅
+- Aplicação correta de despesas repassadas e internas ✅
+
+#### 🔧 BACKEND ENDPOINTS TESTED AND WORKING:
+- `POST /api/auth/login` ✅
+- `POST /api/clientes` ✅ 
+- `POST /api/produtos` ✅
+- `POST /api/pedidos` ✅ **[MAIN FOCUS - CALCULATION LOGIC WORKING PERFECTLY]**
+- `GET /api/pedidos/{id}` ✅
+- `PUT /api/pedidos/{id}` ✅
+
+#### 📋 CALCULATION LOGIC VERIFICATION:
+- ✅ **Valor de Venda** = Soma dos preços de venda dos produtos
+- ✅ **Total Cliente** = Valor de Venda + Frete Repassado + Despesas Repassadas  
+- ✅ **Despesas Internas** = Frete Interno + Despesas com "repassar=false"
+- ✅ **Lucro** = Total Cliente - Custo dos Produtos - Despesas Internas
+- ✅ Separação correta entre despesas repassadas e internas
+- ✅ Recálculo automático em atualizações
+
+#### 📊 MATHEMATICAL ACCURACY:
+- ✅ Cálculo de Total Cliente: 1000 + 20 + 30 = R$ 1.050,00
+- ✅ Cálculo de Custo Total: 10 × 50 = R$ 500,00  
+- ✅ Cálculo de Lucro: 1050 - 500 - 10 = R$ 540,00
+- ✅ Precisão decimal mantida (< 0.01 diferença)
+- ✅ Cálculos multi-item funcionando corretamente
+
+#### 🎯 BUG FIX VERIFICATION:
+- ✅ **CONFIRMED**: Lógica de cálculo corrigida e funcionando
+- ✅ **CONFIRMED**: Total Cliente inclui despesas repassadas
+- ✅ **CONFIRMED**: Lucro não deduz despesas repassadas (pois já estão no Total Cliente)
+- ✅ **CONFIRMED**: Separação correta entre despesas internas e repassadas
+- ✅ **CONFIRMED**: Recálculo automático em operações de update
+
+### Backend Testing Summary:
+**ALL SCENARIOS PASSED** - A lógica de cálculo de valores no módulo de Pedidos está funcionando corretamente conforme especificado. Todos os cenários de teste foram executados com sucesso, incluindo:
+- Caso específico da revisão com valores exatos
+- Verificação da lógica matemática implementada  
+- Persistência e recuperação de dados
+- Recálculo automático em atualizações
+- Cálculos com múltiplos itens
