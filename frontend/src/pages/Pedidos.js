@@ -1575,13 +1575,44 @@ export default function Pedidos() {
               )}
 
               <div className="space-y-2 text-right border-t pt-4">
-                <div><span className="font-medium">Valor de Venda:</span> R$ {viewingPedido.valor_total_venda.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
-                <div className="text-lg font-bold text-secondary">
-                  Total Cliente: R$ {(viewingPedido.valor_total_venda + (viewingPedido.repassar_frete ? viewingPedido.frete : 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
-                <div className="text-lg font-bold text-primary">
-                  Lucro: R$ {viewingPedido.lucro_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </div>
+                {/* Calcular totais corretamente */}
+                {(() => {
+                  // Valor base dos produtos
+                  const valorProdutos = viewingPedido.itens.reduce((sum, item) => sum + (item.preco_venda * item.quantidade), 0);
+                  
+                  // Custo dos produtos
+                  const custoProdutos = viewingPedido.itens.reduce((sum, item) => sum + ((item.preco_compra || 0) * item.quantidade), 0);
+                  
+                  // Separar despesas repassadas e internas
+                  const despesasDetalhadas = viewingPedido.despesas_detalhadas || [];
+                  const despesasRepassadas = despesasDetalhadas.filter(d => d.repassar).reduce((sum, d) => sum + d.valor, 0);
+                  const despesasInternas = despesasDetalhadas.filter(d => !d.repassar).reduce((sum, d) => sum + d.valor, 0);
+                  
+                  // Frete repassado ou interno
+                  const freteRepassado = viewingPedido.repassar_frete ? (viewingPedido.frete || 0) : 0;
+                  const freteInterno = viewingPedido.repassar_frete ? 0 : (viewingPedido.frete || 0);
+                  
+                  // Total Cliente = Valor Produtos + Despesas Repassadas + Frete Repassado
+                  const totalCliente = valorProdutos + despesasRepassadas + freteRepassado;
+                  
+                  // Total Despesas Internas
+                  const totalDespesasInternas = despesasInternas + freteInterno;
+                  
+                  // Lucro = Total Cliente - Custo Produtos - Despesas Internas
+                  const lucroCalculado = totalCliente - custoProdutos - totalDespesasInternas;
+                  
+                  return (
+                    <>
+                      <div><span className="font-medium">Valor de Venda:</span> R$ {valorProdutos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</div>
+                      <div className="text-lg font-bold text-secondary">
+                        Total Cliente: R$ {totalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        Lucro: R$ {lucroCalculado.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
           )}
